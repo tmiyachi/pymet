@@ -54,7 +54,7 @@ __all__ = ['dvardx', 'dvardy', 'dvardp', 'd2vardx2', 'd2vardy2', 'div', 'rot', '
 #=== 微分と差分 ====================================================================================
 
 def dvardx(var, lon, xdim, cyclic=True):
-    u"""
+    ur"""
     経度方向の微分を中央差分で計算。
 
     :Arguments:
@@ -73,7 +73,27 @@ def dvardx(var, lon, xdim, cyclic=True):
      **result** : ndarray
        varと同じ形状。
 
-       
+
+    .. note::
+       差分は次のように計算している。
+
+       .. math:: \left(\frac{\partial X}{\partial x} \right)_{i} = \frac{1}{a}\frac{X_{i+1} - X_{i-1}}{\lambda_{i+1} - \lambda_{i-1}}
+
+       ここで、lambdaは経度(degrees)、aは地球半径。
+
+       cyclic=Falseの場合は、
+
+       .. math:: \left( \frac{\partial X}{\partial x} \right)_{0}
+               = \frac{1}{a}\frac{X_{1} - X_{0}}{\lambda_{1} - \lambda_{0}}
+                 \hspace{3em}
+                 \left( \frac{\partial X}{\partial x} \right)_{N-1}
+               = \frac{1}{a}\frac{X_{N-1} - X_{N-2}}{\lambda_{N-1} - \lambda_{N-2}}
+
+       で計算する。
+
+
+
+        
     **Examples**
     
     >>> var.shape

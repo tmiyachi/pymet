@@ -1,0 +1,831 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>プロットのためのモジュール (pymet.plot) &mdash; pymet 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="pymet 1.0 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">pymet 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <span class="target" id="module-pymet.plot"></span><div class="section" id="pymet-plot">
+<h1>プロットのためのモジュール (<a class="reference internal" href="#module-pymet.plot" title="pymet.plot"><tt class="xref py py-mod docutils literal"><span class="pre">pymet.plot</span></tt></a>)<a class="headerlink" href="#pymet-plot" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="id1">
+<h2>地図描画<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#pymet.plot.MyBasemap" title="pymet.plot.MyBasemap"><tt class="xref py py-obj docutils literal"><span class="pre">MyBasemap</span></tt></a>([lon,&nbsp;lat,&nbsp;xlint,&nbsp;ylint,&nbsp;nocoast,&nbsp;...])</td>
+<td>Basemapを使いやすくするためのラッパー。</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#pymet.plot.MyBasemap.fillcontinents" title="pymet.plot.MyBasemap.fillcontinents"><tt class="xref py py-obj docutils literal"><span class="pre">MyBasemap.fillcontinents</span></tt></a>([color,&nbsp;zorder])</td>
+<td>大陸に色をつける。</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#pymet.plot.MyBasemap.plot" title="pymet.plot.MyBasemap.plot"><tt class="xref py py-obj docutils literal"><span class="pre">MyBasemap.plot</span></tt></a>(lon,&nbsp;lat,&nbsp;*args,&nbsp;**kwargs)</td>
+<td>プロット。</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#pymet.plot.MyBasemap.contour" title="pymet.plot.MyBasemap.contour"><tt class="xref py py-obj docutils literal"><span class="pre">MyBasemap.contour</span></tt></a>(lon,&nbsp;lat,&nbsp;data,&nbsp;*args,&nbsp;...)</td>
+<td>コンターをプロットする。</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#pymet.plot.MyBasemap.contourf" title="pymet.plot.MyBasemap.contourf"><tt class="xref py py-obj docutils literal"><span class="pre">MyBasemap.contourf</span></tt></a>(lon,&nbsp;lat,&nbsp;data,&nbsp;*args,&nbsp;...)</td>
+<td>塗りつぶしコンターをプロットする。</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#pymet.plot.MyBasemap.quiver" title="pymet.plot.MyBasemap.quiver"><tt class="xref py py-obj docutils literal"><span class="pre">MyBasemap.quiver</span></tt></a>(lon,&nbsp;lat,&nbsp;u,&nbsp;v,&nbsp;*args,&nbsp;**kwargs)</td>
+<td>ベクトルをプロットする。</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#pymet.plot.MyBasemap.colorbar" title="pymet.plot.MyBasemap.colorbar"><tt class="xref py py-obj docutils literal"><span class="pre">MyBasemap.colorbar</span></tt></a>([mappable,&nbsp;location,&nbsp;...])</td>
+<td>カラーバーを描画する。</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#pymet.plot.MyBasemap.quiverkey" title="pymet.plot.MyBasemap.quiverkey"><tt class="xref py py-obj docutils literal"><span class="pre">MyBasemap.quiverkey</span></tt></a>(QV,&nbsp;**kwargs)</td>
+<td>ベクトルプロットのreferrence arrowを描画する。</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#pymet.plot.MyBasemap.set_xlint" title="pymet.plot.MyBasemap.set_xlint"><tt class="xref py py-obj docutils literal"><span class="pre">MyBasemap.set_xlint</span></tt></a>(xlint)</td>
+<td>x軸目盛りの間隔(degrees)を指定する。</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#pymet.plot.MyBasemap.set_ylint" title="pymet.plot.MyBasemap.set_ylint"><tt class="xref py py-obj docutils literal"><span class="pre">MyBasemap.set_ylint</span></tt></a>(ylint)</td>
+<td>y軸目盛りの間隔(degrees)を指定する。</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="id2">
+<h2>緯度経度ラベル<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#pymet.plot.BasemapXaxisLocator" title="pymet.plot.BasemapXaxisLocator"><tt class="xref py py-obj docutils literal"><span class="pre">BasemapXaxisLocator</span></tt></a>(baseMap,&nbsp;lonlocs)</td>
+<td>経度目盛を等間隔でふるためのLocator。</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#pymet.plot.BasemapYaxisLocator" title="pymet.plot.BasemapYaxisLocator"><tt class="xref py py-obj docutils literal"><span class="pre">BasemapYaxisLocator</span></tt></a>(baseMap,&nbsp;latlocs)</td>
+<td>緯度目盛りを等間隔でふるためのLocator。</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#pymet.plot.BasemapXaxisFormatter" title="pymet.plot.BasemapXaxisFormatter"><tt class="xref py py-obj docutils literal"><span class="pre">BasemapXaxisFormatter</span></tt></a>(baseMap)</td>
+<td>経度ラベルためのFormatter。</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#pymet.plot.BasemapYaxisFormatter" title="pymet.plot.BasemapYaxisFormatter"><tt class="xref py py-obj docutils literal"><span class="pre">BasemapYaxisFormatter</span></tt></a>(baseMap)</td>
+<td>緯度ラベルのためのFormatter。</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#pymet.plot.lon2txt" title="pymet.plot.lon2txt"><tt class="xref py py-obj docutils literal"><span class="pre">lon2txt</span></tt></a>(lon[,&nbsp;pos])</td>
+<td>経度の値を文字列に変換する。</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#pymet.plot.lat2txt" title="pymet.plot.lat2txt"><tt class="xref py py-obj docutils literal"><span class="pre">lat2txt</span></tt></a>(lat[,&nbsp;pos])</td>
+<td>緯度の値を文字列に変換する。</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="matplotlib">
+<h2>matplotlib<a class="headerlink" href="#matplotlib" title="Permalink to this headline">¶</a></h2>
+<hr class="docutils" />
+<dl class="class">
+<dt id="pymet.plot.MyBasemap">
+<em class="property">class </em><tt class="descclassname">pymet.plot.</tt><tt class="descname">MyBasemap</tt><big>(</big><em>lon=None</em>, <em>lat=None</em>, <em>xlint=None</em>, <em>ylint=None</em>, <em>nocoast=False</em>, <em>grid=False</em>, <em>**keys</em><big>)</big><a class="headerlink" href="#pymet.plot.MyBasemap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Basemapを使いやすくするためのラッパー。</p>
+<dl class="docutils">
+<dt><strong>Keeyward</strong></dt>
+<dd><dl class="first last docutils">
+<dt><strong>projection</strong></dt>
+<dd><p class="first">地図の種類。</p>
+<table border="1" class="last docutils">
+<colgroup>
+<col width="12%" />
+<col width="88%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Value</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>cyl</td>
+<td>正距円筒図法(Cylindrical Equidistant)。同緯度経度で表示。</td>
+</tr>
+<tr class="row-odd"><td>merc</td>
+<td>メルカトル図法(Mercator)。角度が正しい図法。</td>
+</tr>
+<tr class="row-even"><td>lcc</td>
+<td>ランベルト正角円錐図法(Lambert Conformal Conic)。</td>
+</tr>
+<tr class="row-odd"><td>npstere</td>
+<td>北極ステレオ投影図法(Polar Stereographic Projection)。</td>
+</tr>
+<tr class="row-even"><td>spstere</td>
+<td>南極ステレオ投影図法(South Stereographic Projection)。</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt><strong>地図の範囲</strong></dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="9%" />
+<col width="91%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Keyword</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>lon</td>
+<td>地図の経度の範囲。デフォルトは(-180, 180)。</td>
+</tr>
+<tr class="row-odd"><td>lat</td>
+<td>地図の緯度の範囲。デフォルトは(-90, 90)。npstere,spstereでは(lat[0],90),(-90,lat[-1])になる。</td>
+</tr>
+<tr class="row-even"><td>lon_0</td>
+<td>地図の中心経度。cyl,mercでは無視される。デフォルトは(lon[0]+lon[1])/2。</td>
+</tr>
+<tr class="row-odd"><td>lat_0</td>
+<td>地図の中心緯度。cyl,mercでは無視される。デフォルトは(lat[0]+lat[1])/2。</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt><strong>軸、枠</strong>  </dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="9%" />
+<col width="91%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Keyword</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>xlint</td>
+<td>経度メモリの間隔(degrees)。</td>
+</tr>
+<tr class="row-odd"><td>ylint</td>
+<td>緯度メモリの間隔(degrees)。</td>
+</tr>
+<tr class="row-even"><td>grid</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt><strong>その他</strong></dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>ax</td>
+<td>地図を作成するaxesオブジェクトを指定する場合。指定しない場合はplt.gca()。</td>
+</tr>
+</tbody>
+</table>
+</dd>
+</dl>
+</dd>
+<dt><strong>Methods</strong></dt>
+<dd><table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">__init__</span></tt></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">fill_continents</span></tt></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">set_xlint</span></tt></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">set_ylint</span></tt></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">plot</span></tt></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">contour</span></tt></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">contourf</span></tt></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">colorbar</span></tt></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">quiver</span></tt></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">quiverkey</span></tt></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt><strong>Examples</strong></dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="go">&gt;&gt;&gt;</span>
+<span class="go">&gt;&gt;&gt;</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">see more deatail<a class="reference external" href="http://matplotlib.org/basemap/">http://matplotlib.org/basemap/</a></p>
+</div>
+<dl class="method">
+<dt id="pymet.plot.MyBasemap.colorbar">
+<tt class="descname">colorbar</tt><big>(</big><em>mappable=None</em>, <em>location='right'</em>, <em>size='5%'</em>, <em>pad='2%'</em>, <em>fig=None</em>, <em>ax=None</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pymet.plot.MyBasemap.colorbar" title="Permalink to this definition">¶</a></dt>
+<dd><p>カラーバーを描画する。</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pymet.plot.MyBasemap.contour">
+<tt class="descname">contour</tt><big>(</big><em>lon</em>, <em>lat</em>, <em>data</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pymet.plot.MyBasemap.contour" title="Permalink to this definition">¶</a></dt>
+<dd><p>コンターをプロットする。</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Arguments :</th><td class="field-body"><dl class="first docutils">
+<dt><strong>lon</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd><p class="first last">緯度。</p>
+</dd>
+<dt><strong>lat</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd><p class="first last">経度。</p>
+</dd>
+<dt><strong>data</strong> <span class="classifier-delimiter">:</span> <span class="classifier">2darray</span></dt>
+<dd><p class="first last">プロットするデータ。</p>
+</dd>
+</dl>
+<table class="last docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt><strong>Keyword</strong></dt>
+<dd><p class="first">指定可能なキーワード(一部)</p>
+<table border="1" class="last docutils">
+<colgroup>
+<col width="14%" />
+<col width="10%" />
+<col width="76%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Value</th>
+<th class="head">Default</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>colors</td>
+<td>&#8216;k&#8217;</td>
+<td>コンターの色。</td>
+</tr>
+<tr class="row-odd"><td>skip</td>
+<td>1</td>
+<td>データの表示間隔。data[::skip,::skip]が使われる。</td>
+</tr>
+<tr class="row-even"><td>cint</td>
+<td>None</td>
+<td>コンター間隔。指定しない場合は自動で決定される。</td>
+</tr>
+<tr class="row-odd"><td>cinttext</td>
+<td>True</td>
+<td>図の右下にcontour interval= &#8216;cint unit&#8217;の形式でコンター間隔の説明を表示。cintを指定した場合に有効。</td>
+</tr>
+<tr class="row-even"><td>unit</td>
+<td>&#8216;&#8217;</td>
+<td>cinttext=Trueの場合に表示する単位。</td>
+</tr>
+<tr class="row-odd"><td>textpos</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>zorder</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt><strong>Examples</strong></dt>
+<dd><p class="first">(<a class="reference external" href="./_figure/contour.py">Source code</a>,<a class="reference external" href="./_figure/contour.png">png</a>,<a class="reference external" href="./_figure/contour.hires.png">hires.png</a>,<a class="reference external" href="./_figure/contour.pdf">pdf</a>)</p>
+<div class="last figure">
+<img alt="_images/contour.png" src="_images/contour.png" />
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pymet.plot.MyBasemap.contourf">
+<tt class="descname">contourf</tt><big>(</big><em>lon</em>, <em>lat</em>, <em>data</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pymet.plot.MyBasemap.contourf" title="Permalink to this definition">¶</a></dt>
+<dd><p>塗りつぶしコンターをプロットする。</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Arguments :</th><td class="field-body"><dl class="first docutils">
+<dt><strong>lon</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd><p class="first last">緯度。</p>
+</dd>
+<dt><strong>lat</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd><p class="first last">経度。</p>
+</dd>
+<dt><strong>data</strong> <span class="classifier-delimiter">:</span> <span class="classifier">2darray</span></dt>
+<dd><p class="first last">プロットするベクトルのx,y成分。</p>
+</dd>
+</dl>
+<table class="last docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>CF</strong>: QuadContourSet object</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt><strong>Keyword</strong></dt>
+<dd><p class="first">独自キーワード</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="14%" />
+<col width="10%" />
+<col width="76%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Value</th>
+<th class="head">Default</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>skip</td>
+<td>1</td>
+<td>データの表示間隔。data[::skip,::skip]が使われる。</td>
+</tr>
+<tr class="row-odd"><td>zorder</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<p>basemapと共通のキーワード(デフォルトを独自に設定しているもの)</p>
+<table border="1" class="last docutils">
+<colgroup>
+<col width="14%" />
+<col width="10%" />
+<col width="76%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Value</th>
+<th class="head">Default</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>exntend</td>
+<td>&#8216;both&#8217;</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt><strong>Examples</strong></dt>
+<dd><p class="first">(<a class="reference external" href="./_figure/contourf.py">Source code</a>,<a class="reference external" href="./_figure/contourf.png">png</a>,<a class="reference external" href="./_figure/contourf.hires.png">hires.png</a>,<a class="reference external" href="./_figure/contourf.pdf">pdf</a>)</p>
+<div class="last figure">
+<img alt="_images/contourf.png" src="_images/contourf.png" />
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pymet.plot.MyBasemap.fillcontinents">
+<tt class="descname">fillcontinents</tt><big>(</big><em>color='lightgray'</em>, <em>zorder=0</em>, <em>**keys</em><big>)</big><a class="headerlink" href="#pymet.plot.MyBasemap.fillcontinents" title="Permalink to this definition">¶</a></dt>
+<dd><p>大陸に色をつける。</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Arguments :</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>color</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">塗りつぶす色。デフォルトはlightgray。</p>
+</dd>
+<dt><strong>zorder</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int, optional</span></dt>
+<dd><p class="first last">Artistsオブジェクトを描く順番。小さい番号から描画される。</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt><strong>Exmaples</strong></dt>
+<dd><dl class="first docutils">
+<dt>zorderをcontourやcontourfで指定したものより大きくすると、大陸マスクのように描画できる。</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">contourf</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">fillcontinents</span><span class="p">(</span><span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>(<a class="reference external" href="./_figure/fillcontinents.py">Source code</a>,<a class="reference external" href="./_figure/fillcontinents.png">png</a>,<a class="reference external" href="./_figure/fillcontinents.hires.png">hires.png</a>,<a class="reference external" href="./_figure/fillcontinents.pdf">pdf</a>)</p>
+<div class="last figure">
+<img alt="_images/fillcontinents.png" src="_images/fillcontinents.png" />
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pymet.plot.MyBasemap.plot">
+<tt class="descname">plot</tt><big>(</big><em>lon</em>, <em>lat</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pymet.plot.MyBasemap.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>プロット。</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pymet.plot.MyBasemap.quiver">
+<tt class="descname">quiver</tt><big>(</big><em>lon</em>, <em>lat</em>, <em>u</em>, <em>v</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pymet.plot.MyBasemap.quiver" title="Permalink to this definition">¶</a></dt>
+<dd><p>ベクトルをプロットする。</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Arguments :</th><td class="field-body"><dl class="first docutils">
+<dt><strong>lon</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd><p class="first last">緯度。</p>
+</dd>
+<dt><strong>lat</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd><p class="first last">経度。</p>
+</dd>
+<dt><strong>u, v</strong> <span class="classifier-delimiter">:</span> <span class="classifier">2darray</span></dt>
+<dd><p class="first last">プロットするデータ。</p>
+</dd>
+</dl>
+<table class="last docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">matplotlib.</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt><strong>Keyword</strong></dt>
+<dd><p class="first">独自キーワード</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="20%" />
+<col width="9%" />
+<col width="71%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Value</th>
+<th class="head">Default</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>skip</td>
+<td>1</td>
+<td>データの表示間隔。data[::skip,::skip]が使われる。</td>
+</tr>
+</tbody>
+</table>
+<p>デフォルトを独自に設定しているキーワード</p>
+<table border="1" class="last docutils">
+<colgroup>
+<col width="20%" />
+<col width="9%" />
+<col width="71%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Value</th>
+<th class="head">Default</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>headwidth</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>headaxislength</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>headlength</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>linewidth</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>width</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>zorder</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt><strong>Examples</strong></dt>
+<dd><p class="first">(<a class="reference external" href="./_figure/quiver.py">Source code</a>,<a class="reference external" href="./_figure/quiver.png">png</a>,<a class="reference external" href="./_figure/quiver.hires.png">hires.png</a>,<a class="reference external" href="./_figure/quiver.pdf">pdf</a>)</p>
+<div class="last figure">
+<img alt="_images/quiver.png" src="_images/quiver.png" />
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pymet.plot.MyBasemap.quiverkey">
+<tt class="descname">quiverkey</tt><big>(</big><em>QV</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pymet.plot.MyBasemap.quiverkey" title="Permalink to this definition">¶</a></dt>
+<dd><p>ベクトルプロットのreferrence arrowを描画する。</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Arguments :</th><td class="field-body"><p class="first"><strong>QV</strong>:</p>
+<dl class="last docutils">
+<dt><strong>unit</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">referrence arrowの値につける単位。</p>
+</dd>
+<dt><strong>loc</strong> <span class="classifier-delimiter">:</span> <span class="classifier">tuple, optional</span></dt>
+<dd><p class="first last">referrence arrowの位置。</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pymet.plot.MyBasemap.set_xlint">
+<tt class="descname">set_xlint</tt><big>(</big><em>xlint</em><big>)</big><a class="headerlink" href="#pymet.plot.MyBasemap.set_xlint" title="Permalink to this definition">¶</a></dt>
+<dd><p>x軸目盛りの間隔(degrees)を指定する。</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Arguments :</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>xlint</strong>: float</dt>
+<dd><p class="first last">目盛り間隔(degrees)。</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pymet.plot.MyBasemap.set_ylint">
+<tt class="descname">set_ylint</tt><big>(</big><em>ylint</em><big>)</big><a class="headerlink" href="#pymet.plot.MyBasemap.set_ylint" title="Permalink to this definition">¶</a></dt>
+<dd><p>y軸目盛りの間隔(degrees)を指定する。</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Arguments :</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>ylint</strong>: float</dt>
+<dd><p class="first last">目盛り間隔(degrees)。</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pymet.plot.BasemapXaxisFormatter">
+<em class="property">class </em><tt class="descclassname">pymet.plot.</tt><tt class="descname">BasemapXaxisFormatter</tt><big>(</big><em>baseMap</em><big>)</big><a class="headerlink" href="#pymet.plot.BasemapXaxisFormatter" title="Permalink to this definition">¶</a></dt>
+<dd><p>経度ラベルためのFormatter。</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pymet.plot.BasemapYaxisFormatter">
+<em class="property">class </em><tt class="descclassname">pymet.plot.</tt><tt class="descname">BasemapYaxisFormatter</tt><big>(</big><em>baseMap</em><big>)</big><a class="headerlink" href="#pymet.plot.BasemapYaxisFormatter" title="Permalink to this definition">¶</a></dt>
+<dd><p>緯度ラベルのためのFormatter。</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pymet.plot.BasemapXaxisLocator">
+<em class="property">class </em><tt class="descclassname">pymet.plot.</tt><tt class="descname">BasemapXaxisLocator</tt><big>(</big><em>baseMap</em>, <em>lonlocs</em><big>)</big><a class="headerlink" href="#pymet.plot.BasemapXaxisLocator" title="Permalink to this definition">¶</a></dt>
+<dd><p>経度目盛を等間隔でふるためのLocator。</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pymet.plot.BasemapYaxisLocator">
+<em class="property">class </em><tt class="descclassname">pymet.plot.</tt><tt class="descname">BasemapYaxisLocator</tt><big>(</big><em>baseMap</em>, <em>latlocs</em><big>)</big><a class="headerlink" href="#pymet.plot.BasemapYaxisLocator" title="Permalink to this definition">¶</a></dt>
+<dd><p>緯度目盛りを等間隔でふるためのLocator。</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pymet.plot.lon2txt">
+<tt class="descclassname">pymet.plot.</tt><tt class="descname">lon2txt</tt><big>(</big><em>lon</em>, <em>pos=None</em><big>)</big><a class="headerlink" href="#pymet.plot.lon2txt" title="Permalink to this definition">¶</a></dt>
+<dd><p>経度の値を文字列に変換する。</p>
+<p>0度からの相対経度を東経、西経の文字列(30°E,140°Wなど)に変換する。</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Argumets :</th><td class="field-body"><dl class="first docutils">
+<dt><strong>lon</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd><p class="first last">経度(degrees)。0度からの相対経度で表す。</p>
+</dd>
+<dt><strong>pos</strong> <span class="classifier-delimiter">:</span> <span class="classifier">optional</span></dt>
+<dd></dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>lonlab</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd><p class="first last">経度のラベル。</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt><strong>Examples</strong></dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lon2txt</span><span class="p">(</span><span class="mi">135</span><span class="p">)</span>
+<span class="go">&#39;135°E&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lon2txt</span><span class="p">(</span><span class="o">-</span><span class="mi">30</span><span class="p">)</span>
+<span class="go">&#39;30°W&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lon2txt</span><span class="p">(</span><span class="mi">250</span><span class="p">)</span>
+<span class="go">&#39;110°W&#39;</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pymet.plot.lat2txt">
+<tt class="descclassname">pymet.plot.</tt><tt class="descname">lat2txt</tt><big>(</big><em>lat</em>, <em>pos=None</em><big>)</big><a class="headerlink" href="#pymet.plot.lat2txt" title="Permalink to this definition">¶</a></dt>
+<dd><p>緯度の値を文字列に変換する。</p>
+<p>緯度を北緯、南緯の文字列(30°N,60°Sなど)に変換する。</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Argumets :</th><td class="field-body"><dl class="first docutils">
+<dt><strong>lon</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd><p class="first last">緯度(degrees)。南緯はマイナス、北緯はプラス。</p>
+</dd>
+<dt><strong>pos</strong> <span class="classifier-delimiter">:</span> <span class="classifier">optional</span></dt>
+<dd></dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>lonlab</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd><p class="first last">緯度のラベル。</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt><strong>Examples</strong></dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lat2txt</span><span class="p">(</span><span class="mi">60</span><span class="p">)</span>
+<span class="go">&#39;60°N&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lat2txt</span><span class="p">(</span><span class="o">-</span><span class="mi">30</span><span class="p">)</span>
+<span class="go">&#39;30°S&#39;</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">プロットのためのモジュール (<tt class="docutils literal"><span class="pre">pymet.plot</span></tt>)</a><ul>
+<li><a class="reference internal" href="#id1">地図描画</a></li>
+<li><a class="reference internal" href="#id2">緯度経度ラベル</a></li>
+<li><a class="reference internal" href="#matplotlib">matplotlib</a></li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/pymet.plot.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">pymet 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Teturo Miyachi.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

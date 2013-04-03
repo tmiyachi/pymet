@@ -220,17 +220,17 @@
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference external" href="http://docs.python.org/library/copy.html#copy" title="(in Python v2.7)"><tt class="xref py py-obj docutils literal"><span class="pre">copy</span></tt></a></td>
-<td>Generic (shallow and deep) copying operations.</td>
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">copy</span></tt>()</td>
+<td>McGridオブジェクトの深いコピーを返す。</td>
 </tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">gridmask</span></tt></td>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">gridmask</span></tt>(**kwargs)</td>
+<td>指定した範囲の値をインデキシングするためのbool型配列を求める。</td>
+</tr>
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">__init__</span></tt>([name,&nbsp;lon,&nbsp;lat,&nbsp;lev,&nbsp;tyme,&nbsp;dims,&nbsp;...])</td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">__init__</span></tt></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">__getattr__</span></tt></td>
-<td></td>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">__getattr__</span></tt>(name)</td>
+<td>xdim, ydim, zdim, tdim, edim を属性で呼び出したときに、dims属性に対応する</td>
 </tr>
 </tbody>
 </table>

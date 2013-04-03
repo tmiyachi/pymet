@@ -105,7 +105,7 @@
 <span class="c">#=== 微分と差分 ====================================================================================</span>
 
 <div class="viewcode-block" id="dvardx"><a class="viewcode-back" href="../../pymet.grid.html#pymet.grid.dvardx">[docs]</a><span class="k">def</span> <span class="nf">dvardx</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">xdim</span><span class="p">,</span> <span class="n">cyclic</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
-    <span class="sd">u&quot;&quot;&quot;</span>
+    <span class="sd">ur&quot;&quot;&quot;</span>
 <span class="sd">    経度方向の微分を中央差分で計算。</span>
 
 <span class="sd">    :Arguments:</span>
@@ -124,7 +124,27 @@
 <span class="sd">     **result** : ndarray</span>
 <span class="sd">       varと同じ形状。</span>
 
-<span class="sd">       </span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">       差分は次のように計算している。</span>
+
+<span class="sd">       .. math:: \left(\frac{\partial X}{\partial x} \right)_{i} = \frac{1}{a}\frac{X_{i+1} - X_{i-1}}{\lambda_{i+1} - \lambda_{i-1}}</span>
+
+<span class="sd">       ここで、lambdaは経度(degrees)、aは地球半径。</span>
+
+<span class="sd">       cyclic=Falseの場合は、</span>
+
+<span class="sd">       .. math:: \left( \frac{\partial X}{\partial x} \right)_{0}</span>
+<span class="sd">               = \frac{1}{a}\frac{X_{1} - X_{0}}{\lambda_{1} - \lambda_{0}}</span>
+<span class="sd">                 \hspace{3em}</span>
+<span class="sd">                 \left( \frac{\partial X}{\partial x} \right)_{N-1}</span>
+<span class="sd">               = \frac{1}{a}\frac{X_{N-1} - X_{N-2}}{\lambda_{N-1} - \lambda_{N-2}}</span>
+
+<span class="sd">       で計算する。</span>
+
+
+
+<span class="sd">        </span>
 <span class="sd">    **Examples**</span>
 <span class="sd">    </span>
 <span class="sd">    &gt;&gt;&gt; var.shape</span>

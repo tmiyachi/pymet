@@ -66,7 +66,7 @@ class McGrid:
 
     **Methods**
 
-    .. currentmodule:: pymet.mcfield.core.McGrid
+    .. currentmodule:: pymet.field.core.McGrid
     
     ..  autosummary::
     

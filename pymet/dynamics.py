@@ -25,7 +25,7 @@ rd = constants.air_rd
 g = constants.earth_gravity
 
 def pottemp(temp, lev, zdim, punit=100., p0=100000.):
-    u"""
+    ur"""
     温位を計算する。
 
     :Arguments:
@@ -45,6 +45,8 @@ def pottemp(temp, lev, zdim, punit=100., p0=100000.):
 
     .. note::
        温位は次のように定義される。
+
+       .. math:: \theta = T\left( \frac{p_{0}}{p}  \right)^{\frac{R_d}{C_p}}
 
     **Referrences**
     

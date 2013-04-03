@@ -152,6 +152,21 @@
 </tr>
 </tbody>
 </table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>差分は次のように計算している。</p>
+<div class="math">
+<p><img src="_images/math/9adf7b368e08acf5847d6526fe2bfb74d26d140d.png" alt="\left(\frac{\partial X}{\partial x} \right)_{i} = \frac{1}{a}\frac{X_{i+1} - X_{i-1}}{\lambda_{i+1} - \lambda_{i-1}}"/></p>
+</div><p>ここで、lambdaは経度(degrees)、aは地球半径。</p>
+<p>cyclic=Falseの場合は、</p>
+<div class="math">
+<p><img src="_images/math/7123ee244809a4a15bc2f18f940a9f822b884f17.png" alt="\left( \frac{\partial X}{\partial x} \right)_{0}
+= \frac{1}{a}\frac{X_{1} - X_{0}}{\lambda_{1} - \lambda_{0}}
+  \hspace{3em}
+  \left( \frac{\partial X}{\partial x} \right)_{N-1}
+= \frac{1}{a}\frac{X_{N-1} - X_{N-2}}{\lambda_{N-1} - \lambda_{N-2}}"/></p>
+</div><p class="last">で計算する。</p>
+</div>
 <p><strong>Examples</strong></p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">var</span><span class="o">.</span><span class="n">shape</span>
 <span class="go">(24, 73, 144)</span>

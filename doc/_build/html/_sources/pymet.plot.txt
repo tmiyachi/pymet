@@ -1,0 +1,2 @@
+.. automodule:: pymet.plot
+   :members:
