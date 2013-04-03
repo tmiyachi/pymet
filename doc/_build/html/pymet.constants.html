@@ -1,0 +1,283 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>定数モジュール (pymet.constants) &mdash; pymet 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="pymet 1.0 documentation" href="index.html" />
+    <link rel="next" title="物理量計算モジュール (pymet.dynamics)" href="pymet.dynamics.html" />
+    <link rel="prev" title="Welcome to pymet’s documentation!" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="pymet.dynamics.html" title="物理量計算モジュール (pymet.dynamics)"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to pymet’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">pymet 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <span class="target" id="module-pymet.constants"></span><div class="section" id="pymet-constants">
+<h1>定数モジュール (<a class="reference internal" href="#module-pymet.constants" title="pymet.constants"><tt class="xref py py-mod docutils literal"><span class="pre">pymet.constants</span></tt></a>)<a class="headerlink" href="#pymet-constants" title="Permalink to this headline">¶</a></h1>
+<p>物理・数学定数</p>
+<div class="section" id="id1">
+<h2>数学定数<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="19%" />
+<col width="81%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">pi</span></tt></td>
+<td>PI</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="id2">
+<h2>地球科学定数<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="26%" />
+<col width="74%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">earth_radius</span></tt></td>
+<td>地球半径     [m]</td>
+</tr>
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">earth_daysec</span></tt></td>
+<td>地球自転周期 [sec]</td>
+</tr>
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">earth_omega</span></tt></td>
+<td>地球回転角速度 [rad/sec]</td>
+</tr>
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">earth_gravity</span></tt></td>
+<td>重力加速度 [m s^-2]</td>
+</tr>
+</tbody>
+</table>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#pymet.constants.earth_f" title="pymet.constants.earth_f"><tt class="xref py py-obj docutils literal"><span class="pre">earth_f</span></tt></a>(lat)</td>
+<td>コリオリパラメータを緯度から計算する。</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#pymet.constants.earth_beta" title="pymet.constants.earth_beta"><tt class="xref py py-obj docutils literal"><span class="pre">earth_beta</span></tt></a>(lat)</td>
+<td>ベータパラメータを緯度から計算する。</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="id3">
+<h2>気体に関する定数<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="16%" />
+<col width="84%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">air_rd</span></tt></td>
+<td>乾燥空気の気体定数<img class="math" src="_images/math/99fa42fe479b7f56faf9ba22fc085d0a66ed9465.png" alt="R_{d}"/>[J K^-1 Kg^-1]</td>
+</tr>
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">air_cp</span></tt></td>
+<td>乾燥空気の定圧比熱<img class="math" src="_images/math/e1e53bb331c5dcd1b8efb3ac031208f694f4dbbf.png" alt="C_{p}"/>[J K^-1 Kg^-1]</td>
+</tr>
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">air_cv</span></tt></td>
+<td>乾燥空気の定積比熱<img class="math" src="_images/math/7e4b62e92154042bd5fe38fec16e1b8e92ef5bc5.png" alt="C_{v}"/>[J K^-1 Kg^-1]</td>
+</tr>
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">air_gamma</span></tt></td>
+<td>比熱比<img class="math" src="_images/math/30e9a464f7962b36be5cc2b9bbee12524f07d15c.png" alt="\gamma=C_{p}/C_{v}"/></td>
+</tr>
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">air_kappa</span></tt></td>
+<td><img class="math" src="_images/math/3cf0e6902292e667259ea30e9f415b5d5c805033.png" alt="R_{d}/C_{p}"/></td>
+</tr>
+</tbody>
+</table>
+<hr class="docutils" />
+<dl class="function">
+<dt id="pymet.constants.earth_beta">
+<tt class="descclassname">pymet.constants.</tt><tt class="descname">earth_beta</tt><big>(</big><em>lat</em><big>)</big><a class="reference internal" href="_modules/pymet/constants.html#earth_beta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymet.constants.earth_beta" title="Permalink to this definition">¶</a></dt>
+<dd><p>ベータパラメータを緯度から計算する。</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><dl class="first docutils">
+<dt><strong>lat</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd><p class="first last">latitude (degrees) to be converted</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>beta</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float or array of floats</span></dt>
+<dd><p class="first last">beta parameter</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt><strong>Notes</strong></dt>
+<dd>Computes<tt class="docutils literal"><span class="pre">beta</span> <span class="pre">=</span> <span class="pre">df/dy</span> <span class="pre">=</span> <span class="pre">2*earth_omega/earth_radius*cos(lat)</span></tt></dd>
+<dt><strong>Examples</strong></dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pymet.constants.mod_const</span> <span class="kn">import</span> <span class="n">earth_beta</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">earth_beta</span><span class="p">(</span><span class="n">_np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">30.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">30.</span><span class="p">))</span>
+<span class="go">array()</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pymet.constants.earth_f">
+<tt class="descclassname">pymet.constants.</tt><tt class="descname">earth_f</tt><big>(</big><em>lat</em><big>)</big><a class="reference internal" href="_modules/pymet/constants.html#earth_f"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymet.constants.earth_f" title="Permalink to this definition">¶</a></dt>
+<dd><p>コリオリパラメータを緯度から計算する。</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><dl class="first docutils">
+<dt><strong>lat</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd><p class="first last">コリオリパタメータを求める緯度(度)</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>f</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float or array of floats</span></dt>
+<dd><p class="first last">コリオリパラメータ</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Computes<tt class="docutils literal"><span class="pre">f</span> <span class="pre">=</span> <span class="pre">2</span> <span class="pre">*</span> <span class="pre">earth_omega*sin(lat)</span></tt></p>
+</div>
+<dl class="docutils">
+<dt><strong>Examples</strong></dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pymet.constants.mod_const</span> <span class="kn">import</span> <span class="n">earth_f</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">earth_f</span><span class="p">(</span><span class="n">_np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">30.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">30.</span><span class="p">))</span>
+<span class="go">array()</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">定数モジュール (<tt class="docutils literal"><span class="pre">pymet.constants</span></tt>)</a><ul>
+<li><a class="reference internal" href="#id1">数学定数</a></li>
+<li><a class="reference internal" href="#id2">地球科学定数</a></li>
+<li><a class="reference internal" href="#id3">気体に関する定数</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to pymet&#8217;s documentation!</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="pymet.dynamics.html"
+                        title="next chapter">物理量計算モジュール (<tt class="docutils literal"><span class="pre">pymet.dynamics</span></tt>)</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/pymet.constants.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="pymet.dynamics.html" title="物理量計算モジュール (pymet.dynamics)"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to pymet’s documentation!"
+             >previous</a> |</li>
+        <li><a href="index.html">pymet 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Teturo Miyachi.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

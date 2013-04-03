@@ -1,0 +1,498 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>格子点データを扱うためのモジュール (pymet.field) &mdash; pymet 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="pymet 1.0 documentation" href="index.html" />
+    <link rel="prev" title="IOモジュール (pymet.io)" href="pymet.io.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="pymet.io.html" title="IOモジュール (pymet.io)"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">pymet 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <span class="target" id="module-pymet.field"></span><div class="section" id="pymet-field">
+<h1>格子点データを扱うためのモジュール (<a class="reference internal" href="#module-pymet.field" title="pymet.field"><tt class="xref py py-mod docutils literal"><span class="pre">pymet.field</span></tt></a>)<a class="headerlink" href="#pymet-field" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="id1">
+<h2>格子点データを扱うクラス<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#pymet.field.McField" title="pymet.field.McField"><tt class="xref py py-obj docutils literal"><span class="pre">McField</span></tt></a>(data[,&nbsp;name,&nbsp;grid])</td>
+<td>格子点データを扱うためのクラス。</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#pymet.field.McGrid" title="pymet.field.McGrid"><tt class="xref py py-obj docutils literal"><span class="pre">McGrid</span></tt></a>([name,&nbsp;lon,&nbsp;lat,&nbsp;lev,&nbsp;tyme,&nbsp;dims,&nbsp;punit])</td>
+<td>グリッド情報を扱うためのクラス</td>
+</tr>
+</tbody>
+</table>
+<hr class="docutils" />
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#pymet.field.join" title="pymet.field.join"><tt class="xref py py-obj docutils literal"><span class="pre">join</span></tt></a>(args[,&nbsp;axis])</td>
+<td>McFieldオブジェクトを指定した次元方向に結合する。</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="pymet-grid">
+<h2>pymet.gridへのラッパー<a class="headerlink" href="#pymet-grid" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#pymet.field.dvardx" title="pymet.field.dvardx"><tt class="xref py py-obj docutils literal"><span class="pre">dvardx</span></tt></a>(field[,&nbsp;cyclic])</td>
+<td>経度方向の微分を中央差分で計算。</td>
+</tr>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">dvardy</span></tt>(field)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">dvardp</span></tt>(field)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">d2vardx2</span></tt>(field[,&nbsp;cyclic])</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">d2vardy2</span></tt>(field)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">div</span></tt>(ufield,&nbsp;vfield[,&nbsp;cyclic])</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">rot</span></tt>(ufield,&nbsp;vfield[,&nbsp;cyclic])</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="pymet-dynamics">
+<h2>pymet.dynamicsへのラッパー<a class="headerlink" href="#pymet-dynamics" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#pymet.field.pottemp" title="pymet.field.pottemp"><tt class="xref py py-obj docutils literal"><span class="pre">pottemp</span></tt></a>(tfield[,&nbsp;p0])</td>
+<td>温位を気温から計算する。</td>
+</tr>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">ertelpv</span></tt>(ufield,&nbsp;vfield,&nbsp;tfield[,&nbsp;cyclic,&nbsp;punit])</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">stability</span></tt></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">tnflux2d</span></tt>(Ufield,&nbsp;Vfield,&nbsp;strmfield[,&nbsp;...])</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">tnflux3d</span></tt></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="class">
+<dt id="pymet.field.McGrid">
+<em class="property">class </em><tt class="descclassname">pymet.field.</tt><tt class="descname">McGrid</tt><big>(</big><em>name=None</em>, <em>lon=None</em>, <em>lat=None</em>, <em>lev=None</em>, <em>tyme=None</em>, <em>dims=None</em>, <em>punit=100.0</em><big>)</big><a class="headerlink" href="#pymet.field.McGrid" title="Permalink to this definition">¶</a></dt>
+<dd><p>グリッド情報を扱うためのクラス</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>name</strong></p>
+<p><strong>lon</strong></p>
+<p><strong>lat</strong></p>
+<p><strong>lev</strong></p>
+<p><strong>tyme</strong></p>
+<p><strong>dims</strong></p>
+<dl class="last docutils">
+<dt><strong>punit</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float, optional</span></dt>
+<dd><p class="first last">等圧面の気圧をPaに変換するためのパラメータ。デフォルトは100.でhPa-&gt;Paへの変換。</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Notes</strong></p>
+<dl class="docutils">
+<dt><strong>Examples</strong></dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">grid</span> <span class="o">=</span> <span class="n">pymet</span><span class="o">.</span><span class="n">McGrid</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;test_grid&#39;</span><span class="p">,</span> <span class="n">lon</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">360</span><span class="p">,</span><span class="mf">2.5</span><span class="p">),</span> <span class="n">lat</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mi">90</span><span class="p">,</span><span class="mf">90.1</span><span class="p">,</span><span class="mf">2.5</span><span class="p">)),</span>
+<span class="go">                        lev=[1000.,500.,200.], tyme=[datetime(2009,10,11),datetime(2009,10,12),</span>
+<span class="go">                        dims=[&#39;tyme&#39;,&#39;lev&#39;,&#39;lat&#39;,&#39;lon&#39;])</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p><strong>Attributes</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="24%" />
+<col width="76%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>name</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>lon</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>lat</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>lev</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>tyme</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>dims</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>punit</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>xdim</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>ydim</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>zdim</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>tdim</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Methods</strong></p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference external" href="http://docs.python.org/library/copy.html#copy" title="(in Python v2.7)"><tt class="xref py py-obj docutils literal"><span class="pre">copy</span></tt></a></td>
+<td>Generic (shallow and deep) copying operations.</td>
+</tr>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">gridmask</span></tt></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">__init__</span></tt></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">__getattr__</span></tt></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="pymet.field.McGrid.copy">
+<tt class="descname">copy</tt><big>(</big><big>)</big><a class="headerlink" href="#pymet.field.McGrid.copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>McGridオブジェクトの深いコピーを返す。</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pymet.field.McGrid.gridmask">
+<tt class="descname">gridmask</tt><big>(</big><em>**kwargs</em><big>)</big><a class="headerlink" href="#pymet.field.McGrid.gridmask" title="Permalink to this definition">¶</a></dt>
+<dd><p>指定した範囲の値をインデキシングするためのbool型配列を求める。</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Arguments :</th><td class="field-body"><dl class="first docutils">
+<dt><strong>lon, lat, lev</strong> <span class="classifier-delimiter">:</span> <span class="classifier">tuple or list of floats, or float, optional</span></dt>
+<dd><p class="first last">経度、緯度、鉛直次元の指定する領域。</p>
+</dd>
+<dt><strong>tyme</strong> <span class="classifier-delimiter">:</span> <span class="classifier">tuple or list of datetime object, or datetime object, optional</span></dt>
+<dd><p class="first last">時間次元の範囲。</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last"><strong>mask</strong>: bool type ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt><strong>Examples</strong>    </dt>
+<dd><p class="first">範囲を指定する場合はタプルまたはリストで指定する。&gt;&gt;&gt; grid = pymet.McGrid(name=&#8217;test_grid&#8217;, lon=np.arange(0,360,2.5), lat=np.arange(-90,90.1,2.5)),</p>
+<blockquote>
+<div>lev=[1000.,500.,200.], tyme=[datetime(2009,10,11),datetime(2009,10,12),dims=[&#8216;tyme&#8217;,&#8217;lev&#8217;,&#8217;lat&#8217;,&#8217;lon&#8217;])</div></blockquote>
+<div class="last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mask</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">gridmask</span><span class="p">(</span><span class="n">lon</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">180.</span><span class="p">),</span> <span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pymet.field.McField">
+<em class="property">class </em><tt class="descclassname">pymet.field.</tt><tt class="descname">McField</tt><big>(</big><em>data</em>, <em>name=None</em>, <em>grid=None</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pymet.field.McField" title="Permalink to this definition">¶</a></dt>
+<dd><p>格子点データを扱うためのクラス。</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Arguments :</th><td class="field-body"><dl class="first docutils">
+<dt><strong>data</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd><p class="first last">格子点データ</p>
+</dd>
+</dl>
+<p class="last"><strong>name</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Methods</strong></p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference external" href="http://docs.python.org/library/copy.html#copy" title="(in Python v2.7)"><tt class="xref py py-obj docutils literal"><span class="pre">copy</span></tt></a></td>
+<td>Generic (shallow and deep) copying operations.</td>
+</tr>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">anom</span></tt></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">mean</span></tt></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="pymet.field.McField.copy">
+<tt class="descname">copy</tt><big>(</big><big>)</big><a class="headerlink" href="#pymet.field.McField.copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a copy of McField instance.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="pymet.field.join">
+<tt class="descclassname">pymet.field.</tt><tt class="descname">join</tt><big>(</big><em>args</em>, <em>axis=0</em><big>)</big><a class="headerlink" href="#pymet.field.join" title="Permalink to this definition">¶</a></dt>
+<dd><p>McFieldオブジェクトを指定した次元方向に結合する。</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Arguments :</th><td class="field-body"><dl class="first docutils">
+<dt><strong>args</strong> <span class="classifier-delimiter">:</span> <span class="classifier">tuple or list of McField objects</span></dt>
+<dd><p class="first last">結合するMcFieldオブジェクトのリストまたはタプル。結合する次元以外は同じ形状でなければならない。</p>
+</dd>
+<dt><strong>axis</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int ot str, optional</span></dt>
+<dd><p class="first last">結合する軸を指定する。次元名(&#8216;lon&#8217;,&#8217;lat&#8217;,&#8217;lev&#8217;,&#8217;tyme&#8217;)で指定することもできる。デフォルトは0で先頭。</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last"><strong>out</strong>: McField instance</p>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt><strong>Examples</strong></dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">field1</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">dims</span>
+<span class="go">[&#39;tyme&#39;, &#39;lev&#39;, &#39;lat&#39;, &#39;lon&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">field2</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">dims</span>
+<span class="go">[&#39;tyme&#39;, &#39;lev&#39;, &#39;lat&#39;, &#39;lon&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">field1</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">field2</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">((2, 3, 73, 144), (4, 3, 73, 144))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">field1</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">tyme</span>
+<span class="go">array([2009-10-11 00:00:00, 2009-10-12 00:00:00], dtype=object)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">field2</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">tyme</span>
+<span class="go">array([2009-10-13 00:00:00, 2009-10-14 00:00:00, 2009-10-15 00:00:00,</span>
+<span class="go">       2009-10-16 00:00:00], dtype=object)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">pymet</span><span class="o">.</span><span class="n">mcfield</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">field1</span><span class="p">,</span> <span class="n">field2</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="s">&#39;tyme&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(6, 3, 73, 144)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">tyme</span>
+<span class="go">array([2009-10-11 00:00:00, 2009-10-12 00:00:00, 2009-10-13 00:00:00,</span>
+<span class="go">       2009-10-14 00:00:00, 2009-10-15 00:00:00, 2009-10-16 00:00:00], dtype=object)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pymet.field.dvardx">
+<tt class="descclassname">pymet.field.</tt><tt class="descname">dvardx</tt><big>(</big><em>field</em>, <em>cyclic=True</em><big>)</big><a class="headerlink" href="#pymet.field.dvardx" title="Permalink to this definition">¶</a></dt>
+<dd><p>経度方向の微分を中央差分で計算。</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Arguments :</th><td class="field-body"><p class="first"><strong>field</strong>: McField object</p>
+<dl class="docutils">
+<dt><strong>cyclic</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">東西の境界を周期境界として扱うかどうか。False の場合は周期境界を用いずに前方、後方差分で計算する。デフォルトは True。</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last"><strong>result</strong>: McField object</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p><strong>See Also</strong></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pymet.field.pottemp">
+<tt class="descclassname">pymet.field.</tt><tt class="descname">pottemp</tt><big>(</big><em>tfield</em>, <em>p0=1000000.0</em><big>)</big><a class="headerlink" href="#pymet.field.pottemp" title="Permalink to this definition">¶</a></dt>
+<dd><p>温位を気温から計算する。</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Arguments :</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>tfield</strong> <span class="classifier-delimiter">:</span> <span class="classifier">McField object</span></dt>
+<dd><p class="first last">気温 [K]</p>
+</dd>
+<dt><strong>p0</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float, optional</span></dt>
+<dd><p class="first last">標準気圧。デフォルトは1000hPa。</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="pymet.dynamics.html#pymet.dynamics.pottemp" title="pymet.dynamics.pottemp"><tt class="xref py py-obj docutils literal"><span class="pre">pymet.dynamics.pottemp</span></tt></a></td>
+<td>温位を計算する。</td>
+</tr>
+</tbody>
+</table>
+</div>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">格子点データを扱うためのモジュール (<tt class="docutils literal"><span class="pre">pymet.field</span></tt>)</a><ul>
+<li><a class="reference internal" href="#id1">格子点データを扱うクラス</a></li>
+<li><a class="reference internal" href="#pymet-grid">pymet.gridへのラッパー</a></li>
+<li><a class="reference internal" href="#pymet-dynamics">pymet.dynamicsへのラッパー</a><ul>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="pymet.io.html"
+                        title="previous chapter">IOモジュール (<tt class="docutils literal"><span class="pre">pymet.io</span></tt>)</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/pymet.field.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="pymet.io.html" title="IOモジュール (pymet.io)"
+             >previous</a> |</li>
+        <li><a href="index.html">pymet 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Teturo Miyachi.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

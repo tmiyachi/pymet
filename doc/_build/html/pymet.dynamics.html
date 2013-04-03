@@ -1,0 +1,427 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>物理量計算モジュール (pymet.dynamics) &mdash; pymet 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="pymet 1.0 documentation" href="index.html" />
+    <link rel="next" title="格子点データ計算モジュール (pymet.grid)" href="pymet.grid.html" />
+    <link rel="prev" title="定数モジュール (pymet.constants)" href="pymet.constants.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="pymet.grid.html" title="格子点データ計算モジュール (pymet.grid)"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="pymet.constants.html" title="定数モジュール (pymet.constants)"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">pymet 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <span class="target" id="module-pymet.dynamics"></span><div class="section" id="pymet-dynamics">
+<h1>物理量計算モジュール (<a class="reference internal" href="#module-pymet.dynamics" title="pymet.dynamics"><tt class="xref py py-mod docutils literal"><span class="pre">pymet.dynamics</span></tt></a>)<a class="headerlink" href="#pymet-dynamics" title="Permalink to this headline">¶</a></h1>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#pymet.dynamics.pottemp" title="pymet.dynamics.pottemp"><tt class="xref py py-obj docutils literal"><span class="pre">pottemp</span></tt></a>(temp,&nbsp;lev,&nbsp;zdim[,&nbsp;punit,&nbsp;p0])</td>
+<td>温位を計算する。</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#pymet.dynamics.ertelpv" title="pymet.dynamics.ertelpv"><tt class="xref py py-obj docutils literal"><span class="pre">ertelpv</span></tt></a>(uwnd,&nbsp;vwnd,&nbsp;temp,&nbsp;lon,&nbsp;lat,&nbsp;lev,&nbsp;...)</td>
+<td>エルテルのポテンシャル渦度を計算する。</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#pymet.dynamics.stability" title="pymet.dynamics.stability"><tt class="xref py py-obj docutils literal"><span class="pre">stability</span></tt></a>(temp,&nbsp;lev,&nbsp;zdim[,&nbsp;punit])</td>
+<td>p座標系での静的安定度(Brunt-Vaisala振動数)を計算する。</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#pymet.dynamics.tnflux2d" title="pymet.dynamics.tnflux2d"><tt class="xref py py-obj docutils literal"><span class="pre">tnflux2d</span></tt></a>(U,&nbsp;V,&nbsp;strm,&nbsp;lon,&nbsp;lat,&nbsp;xdim,&nbsp;ydim[,&nbsp;...])</td>
+<td>Takaya &amp; Nakamura (2001) の波活動度フラックスの水平成分をp面上で計算する。</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#pymet.dynamics.tnflux3d" title="pymet.dynamics.tnflux3d"><tt class="xref py py-obj docutils literal"><span class="pre">tnflux3d</span></tt></a>(U,&nbsp;V,&nbsp;T,&nbsp;strm,&nbsp;lon,&nbsp;lat,&nbsp;lev,&nbsp;xdim,&nbsp;...)</td>
+<td>Takaya &amp; Nakamura (2001) の波活動度フラックスをp面上で計算する。</td>
+</tr>
+</tbody>
+</table>
+<hr class="docutils" />
+<dl class="function">
+<dt id="pymet.dynamics.pottemp">
+<tt class="descclassname">pymet.dynamics.</tt><tt class="descname">pottemp</tt><big>(</big><em>temp</em>, <em>lev</em>, <em>zdim</em>, <em>punit=100.0</em>, <em>p0=100000.0</em><big>)</big><a class="reference internal" href="_modules/pymet/dynamics.html#pottemp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymet.dynamics.pottemp" title="Permalink to this definition">¶</a></dt>
+<dd><p>温位を計算する。</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Arguments :</th><td class="field-body"><dl class="first docutils">
+<dt><strong>temp</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd><p class="first last">気温 [K]</p>
+</dd>
+<dt><strong>lev</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd><p class="first last">気圧 [punit*Pa]</p>
+</dd>
+<dt><strong>zdim</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd><p class="first last">鉛直次元の軸</p>
+</dd>
+</dl>
+<p><strong>punit</strong>: float, optional</p>
+<dl class="docutils">
+<dt><strong>p0</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float, optional</span></dt>
+<dd><p class="first last">基準気圧。デフォルトは1000hPa。</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last"><strong>out</strong>: ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">温位は次のように定義される。</p>
+</div>
+<p><strong>Referrences</strong></p>
+<p><strong>Examples</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="go">&gt;&gt;&gt;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pymet.dynamics.ertelpv">
+<tt class="descclassname">pymet.dynamics.</tt><tt class="descname">ertelpv</tt><big>(</big><em>uwnd</em>, <em>vwnd</em>, <em>temp</em>, <em>lon</em>, <em>lat</em>, <em>lev</em>, <em>xdim</em>, <em>ydim</em>, <em>zdim</em>, <em>cyclic=True</em>, <em>punit=100.0</em><big>)</big><a class="reference internal" href="_modules/pymet/dynamics.html#ertelpv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymet.dynamics.ertelpv" title="Permalink to this definition">¶</a></dt>
+<dd><p>エルテルのポテンシャル渦度を計算する。</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Arguments :</th><td class="field-body"><dl class="first docutils">
+<dt><strong>uwnd, vwnd</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd><p class="first last">東西風、南北風 [m/s]</p>
+</dd>
+<dt><strong>temp</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd><p class="first last">気温 [K]</p>
+</dd>
+<dt><strong>lon, lat</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd><p class="first last">経度、緯度 [degrees]</p>
+</dd>
+<dt><strong>lev</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd><p class="first last">気圧 [punit*Pa]</p>
+</dd>
+<dt><strong>xdim, ydim, zdim</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd><p class="first last">東西、南北、鉛直次元の軸</p>
+</dd>
+<dt><strong>cyclic</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">東西境界を周期境界で扱うか。デフォルトはTrue。</p>
+</dd>
+<dt><strong>punit</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float, optional</span></dt>
+<dd><p class="first last">Paに換算するための定数。デフォルトは100、すなわちlevはhPaで与えられると解釈する。</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last"><strong>out</strong>: ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>p座標系のポテンシャル渦度は次のように定義される。</p>
+<div class="math">
+<p><img src="_images/math/739a41e469a3775d9518fb7ad0a29b6f482a5730.png" alt="P = -g (f\mathbf{k}+\nabla_{p}\times\mathbf{v})\cdot\nabla_{p}\theta"/></p>
+</div><p>鉛直風を含む項は他の項に比べ小さいから、次の近似的値を計算している。</p>
+<div class="last math">
+<p><img src="_images/math/3bb817959380ce0ed7a993e03954c50c0e2b4ea6.png" alt="P \simeq -g\left\{ (f + \zeta)\frac{\partial\theta}{\partial p} - \frac{\partial v}{\partial p} \frac{\partial\theta}{\partial x} + \frac{\partial u}{\partial p}\frac{\partial\theta}{\partial y}\right\}"/></p>
+</div></div>
+<dl class="docutils">
+<dt><strong>Referrences</strong></dt>
+<dd>Hoskins, B.J., M.E. McIntyre and A.E. Robertson, 1985: On the use and significance of isentropic potential vorticity maps,<cite>QJRMS</cite>, 111, 877-946, &lt;<a class="reference external" href="http://onlinelibrary.wiley.com/doi/10.1002/qj.49711147002/abstract">http://onlinelibrary.wiley.com/doi/10.1002/qj.49711147002/abstract</a>&gt;</dd>
+<dt><strong>Examples</strong>   </dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="go">&gt;&gt;&gt;</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pymet.dynamics.tnflux2d">
+<tt class="descclassname">pymet.dynamics.</tt><tt class="descname">tnflux2d</tt><big>(</big><em>U</em>, <em>V</em>, <em>strm</em>, <em>lon</em>, <em>lat</em>, <em>xdim</em>, <em>ydim</em>, <em>cyclic=True</em>, <em>limit=100</em><big>)</big><a class="reference internal" href="_modules/pymet/dynamics.html#tnflux2d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymet.dynamics.tnflux2d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takaya &amp; Nakamura (2001) の波活動度フラックスの水平成分をp面上で計算する。</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Arguments :</th><td class="field-body"><dl class="first docutils">
+<dt><strong>U, V</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd><p class="first last">気候値東西風、南北風 [m/s]</p>
+</dd>
+<dt><strong>strm</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd><p class="first last">流線関数 [m^2/s]</p>
+</dd>
+<dt><strong>lon, lat</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd><p class="first last">経度、緯度 [degrees]</p>
+</dd>
+<dt><strong>xdim, ydim</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd><p class="first last">東西、南北次元の軸</p>
+</dd>
+<dt><strong>cyclic</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">東西境界を周期境界で扱うか。デフォルトはTrue。</p>
+</dd>
+<dt><strong>limit</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float, optional</span></dt>
+<dd><p class="first last">デフォルトは100.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>tnx, tny</strong> <span class="classifier-delimiter">:</span> <span class="classifier">MaskedArray</span></dt>
+<dd><p class="first last">フラックスの東西、南北成分</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>p座標系のwave-activityフラックスのx,y成分は次で定義される。</p>
+<div class="last math">
+<p><img src="_images/math/6775e3f366aba378667e4c7f08219dec239d2da3.png" alt="\mathbf{W}=\frac{1}{2|\mathbf{U}|}
+\left( \begin{array}{c}
+U({\Psi'}_{x}^{2}-\Psi'{\Psi'}_{xx})        + V({\Psi'}_{x}{\Psi'}_{y}-\Psi'{\Psi'}_{xy})\\
+U({\Psi'}_{x}{\Psi'}_{y}-\Psi'{\Psi'}_{xy}) + V({\Psi'}_{x}^{2}-\Psi'{\Psi'}_{xx})
+\end{array} \right)"/></p>
+</div></div>
+<dl class="docutils">
+<dt><strong>References</strong></dt>
+<dd><p class="first">Takaya, K and H. Nakamura, 2001: A formulation of a phase-independent wave-activity flux for stationary and migratory quasigeostrophic eddies on a zonally varying basic flow,<cite>JAS</cite>, 58, 608-627.</p>
+<p class="last">&lt;<a class="reference external" href="http://journals.ametsoc.org/doi/abs/10.1175/1520-0469%282001%29058%3C0608%3AAFOAPI%3E2.0.CO%3B2">http://journals.ametsoc.org/doi/abs/10.1175/1520-0469%282001%29058%3C0608%3AAFOAPI%3E2.0.CO%3B2</a>&gt;</p>
+</dd>
+<dt><strong>Examples</strong></dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="go">&gt;&gt;&gt;</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pymet.dynamics.tnflux3d">
+<tt class="descclassname">pymet.dynamics.</tt><tt class="descname">tnflux3d</tt><big>(</big><em>U</em>, <em>V</em>, <em>T</em>, <em>strm</em>, <em>lon</em>, <em>lat</em>, <em>lev</em>, <em>xdim</em>, <em>ydim</em>, <em>zdim</em>, <em>cyclic=True</em>, <em>limit=100</em>, <em>punit=100.0</em><big>)</big><a class="reference internal" href="_modules/pymet/dynamics.html#tnflux3d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymet.dynamics.tnflux3d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takaya &amp; Nakamura (2001) の波活動度フラックスをp面上で計算する。</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Arguments :</th><td class="field-body"><dl class="first docutils">
+<dt><strong>U, V</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd><p class="first last">気候値東西風、南北風 [m/s]</p>
+</dd>
+<dt><strong>T</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd><p class="first last">気候値気温 [K]</p>
+</dd>
+<dt><strong>strm</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd><p class="first last">流線関数偏差 [m^2/s]</p>
+</dd>
+<dt><strong>lon, lat</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd><p class="first last">経度、緯度 [degrees]</p>
+</dd>
+<dt><strong>lev</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd><p class="first last">等圧面の気圧</p>
+</dd>
+<dt><strong>xdim, ydim, zdim</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd><p class="first last">東西、南北、鉛直次元の軸</p>
+</dd>
+<dt><strong>cyclic</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">東西境界を周期境界で扱うか。デフォルトはTrue。</p>
+</dd>
+<dt><strong>limit</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float, optional</span></dt>
+<dd><p class="first last">デフォルトは100.</p>
+</dd>
+<dt><strong>punit</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float, optional</span></dt>
+<dd><p class="first last">等圧面の気圧levをPaに変換するファクター。デフォルトは100.、すなわちhPaからPaへ変換。</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>tnx, tny, tnz</strong> <span class="classifier-delimiter">:</span> <span class="classifier">MaskedArray</span></dt>
+<dd><p class="first last">フラックスの東西、南北、鉛直成分</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>p座標系のwave-activityフラックスは次で定義される。</p>
+<div class="math">
+<p><img src="_images/math/b3d359c0c192bb79c1f4f23ef133bb56ba708ef1.png" alt="\mathbf{W}=\frac{1}{2|\mathbf{U}|}
+\left( \begin{array}{c}
+ U({\Psi'}_{x}^{2}-\Psi'{\Psi'}_{xx})        + V({\Psi'}_{x}{\Psi'}_{y}-\Psi'{\Psi'}_{xy})\\
+ U({\Psi'}_{x}{\Psi'}_{y}-\Psi'{\Psi'}_{xy}) + V({\Psi'}_{x}^{2}-\Psi'{\Psi'}_{xx}) \\
+ \frac{f^2}{S^2}[U({\Psi'}_{x}{\Psi'}_{p}-\Psi'{\Psi'}_{xp}) + V({\Psi'}_{y}{\Psi'}_{p}-\Psi'{\Psi'}_{yp})]
+ \end{array} \right)"/></p>
+</div><p class="last">ここでSは静的安定度。</p>
+</div>
+<dl class="docutils">
+<dt><strong>References</strong></dt>
+<dd><p class="first">Takaya, K and H. Nakamura, 2001: A formulation of a phase-independent wave-activity flux for stationaryand migratory quasigeostrophic eddies on a zonally varying basic flow,<cite>JAS</cite>, 58, 608-627.</p>
+<p class="last">&lt;<a class="reference external" href="http://journals.ametsoc.org/doi/abs/10.1175/1520-0469%282001%29058%3C0608%3AAFOAPI%3E2.0.CO%3B2">http://journals.ametsoc.org/doi/abs/10.1175/1520-0469%282001%29058%3C0608%3AAFOAPI%3E2.0.CO%3B2</a>&gt;</p>
+</dd>
+<dt><strong>Examples</strong></dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="go">&gt;&gt;&gt;</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pymet.dynamics.stability">
+<tt class="descclassname">pymet.dynamics.</tt><tt class="descname">stability</tt><big>(</big><em>temp</em>, <em>lev</em>, <em>zdim</em>, <em>punit=100.0</em><big>)</big><a class="reference internal" href="_modules/pymet/dynamics.html#stability"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymet.dynamics.stability" title="Permalink to this definition">¶</a></dt>
+<dd><p>p座標系での静的安定度(Brunt-Vaisala振動数)を計算する。</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Arguments :</th><td class="field-body"><dl class="first docutils">
+<dt><strong>temp</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd><p class="first last">気温 [K]</p>
+</dd>
+<dt><strong>lev</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd><p class="first last">等圧面の気圧</p>
+</dd>
+<dt><strong>zdim</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd><p class="first last">鉛直次元の位置</p>
+</dd>
+<dt><strong>punit</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float, optional</span></dt>
+<dd><p class="first last">Paに変換するためのファクター。デフォルトは100.。</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>N</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd><p class="first last">静的安定度</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>p面上の静的安定度は次式で定義される。</p>
+<div class="last math">
+<p><img src="_images/math/3d76d7e4f1ea137c0a64ac278abfe2ce16009431.png" alt="N^2 = g\frac{\partial (\ln\theta)}{\partial z} = -\alpha\frac{\partial(\ln\theta)}{\partial p}"/></p>
+</div></div>
+<p><strong>References</strong></p>
+<dl class="docutils">
+<dt><strong>Examples</strong></dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="go">&gt;&gt;&gt;</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="pymet.constants.html"
+                        title="previous chapter">定数モジュール (<tt class="docutils literal docutils literal docutils literal"><span class="pre">pymet.constants</span></tt>)</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="pymet.grid.html"
+                        title="next chapter">格子点データ計算モジュール (<tt class="docutils literal"><span class="pre">pymet.grid</span></tt>)</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/pymet.dynamics.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="pymet.grid.html" title="格子点データ計算モジュール (pymet.grid)"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="pymet.constants.html" title="定数モジュール (pymet.constants)"
+             >previous</a> |</li>
+        <li><a href="index.html">pymet 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Teturo Miyachi.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

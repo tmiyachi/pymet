@@ -1,0 +1,520 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pymet.stats &mdash; pymet 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="pymet 1.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">pymet 1.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pymet.stats</h1><div class="highlight"><pre>
+<span class="c"># coding: utf-8</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">================================================</span>
+<span class="sd">時空間・統計解析モジュール (:mod:`pymet.stats`)</span>
+<span class="sd">================================================</span>
+<span class="sd">.. autosummary::</span>
+
+<span class="sd">   runave</span>
+<span class="sd">   regression</span>
+<span class="sd">   eof</span>
+
+<span class="sd">---------------   </span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.signal</span> <span class="kn">as</span> <span class="nn">signal</span>
+<span class="kn">import</span> <span class="nn">tools</span><span class="o">,</span> <span class="nn">constants</span>
+<span class="kn">import</span> <span class="nn">scipy.linalg</span> <span class="kn">as</span> <span class="nn">linalg</span>
+<span class="kn">import</span> <span class="nn">scipy.stats</span> <span class="kn">as</span> <span class="nn">stats</span>
+<span class="n">PI</span> <span class="o">=</span> <span class="n">constants</span><span class="o">.</span><span class="n">pi</span>
+<span class="n">NA</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;runave&#39;</span><span class="p">,</span> <span class="s">&#39;regression&#39;</span><span class="p">,</span> <span class="s">&#39;eof&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="runave"><a class="viewcode-back" href="../../pymet.stats.html#pymet.stats.runave">[docs]</a><span class="k">def</span> <span class="nf">runave</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="s">&#39;mask&#39;</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;</span>
+<span class="sd">    移動平均。</span>
+
+<span class="sd">    :Arguments:</span>
+<span class="sd">     **a**      : array_like</span>
+<span class="sd">      </span>
+<span class="sd">     **length** : int</span>
+<span class="sd">      移動平均の項数</span>
+<span class="sd">     **axis**   : int, optional</span>
+<span class="sd">      移動平均をする軸。デフォルトは 0。</span>
+<span class="sd">     **bound**  : {&#39;mask&#39;, &#39;valid&#39;}, optional</span>
+<span class="sd">      &#39;mask&#39;:</span>
+<span class="sd">        By default, mode is same. This returns output of first dimension length N.</span>
+<span class="sd">        Boundary componets are masked.</span>
+<span class="sd">      &#39;valid&#39;:</span>
+<span class="sd">       Mode valid returns output of length N - length + 1.</span>
+<span class="sd">       running average is only given for points where the signals overlap completely.</span>
+
+<span class="sd">    :Returns:</span>
+<span class="sd">      **out** : ndarray or MaskedArray</span>
+
+
+<span class="sd">    **Notes**</span>
+
+<span class="sd">    lengthが奇数の場合は前後length/2項、偶数の場合はlength+1項を使って先頭と末尾に0.5の重みをつける。</span>
+<span class="sd">    すなわち、length=5のときは、out[i] = (a[i-2]+a[i-1]+a[i]+a[i+1]+a[i+2])/5. 、    </span>
+<span class="sd">    length=4のときは、out[i] = (0.5*a[i-2]+a[i-1]+a[i]+a[i+1]+0.5*a[i+2])/5. となる。    </span>
+
+<span class="sd">    </span>
+<span class="sd">    **Examples**</span>
+<span class="sd">       </span>
+<span class="sd">     &gt;&gt;&gt; runave([1, 2, 3, 4, 5], 3, bound=&#39;mask&#39;)</span>
+<span class="sd">     masked_array(data = [-- 2.0 3.0 4.0 --], </span>
+<span class="sd">                  mask = [ True False False False True ],</span>
+<span class="sd">            fill_value = 1e+20)</span>
+
+<span class="sd">     &gt;&gt;&gt; runave([1, 2, 3, 4, 5], 3, bound=&#39;valid&#39;)</span>
+<span class="sd">     array([ 2.  3.  4.])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rdata</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+    <span class="n">ndim</span> <span class="o">=</span> <span class="n">rdata</span><span class="o">.</span><span class="n">ndim</span>
+    <span class="n">rdata</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rollaxis</span><span class="p">(</span><span class="n">rdata</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">ndim</span><span class="p">)</span>
+    <span class="n">ntim</span> <span class="o">=</span> <span class="n">rdata</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">ntim</span> <span class="o">&lt;</span> <span class="n">length</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="s">&quot;input array first dimension length must be larger than length.&quot;</span>
+
+    <span class="k">if</span> <span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">length</span><span class="o">%</span><span class="mi">2</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">length</span><span class="p">)</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">length</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">length</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.5</span><span class="p">]</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">length</span><span class="p">)</span>                
+        <span class="n">out</span> <span class="o">=</span> <span class="n">signal</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span><span class="n">rdata</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s">&#39;same&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">bound</span><span class="o">==</span><span class="s">&#39;mask&#39;</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+            <span class="n">out</span><span class="p">[:</span><span class="n">length</span><span class="o">/</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="p">(</span><span class="n">length</span><span class="o">/</span><span class="mi">2</span><span class="p">):]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked</span>
+        <span class="k">elif</span> <span class="s">&#39;valid&#39;</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="p">[(</span><span class="n">length</span><span class="o">/</span><span class="mi">2</span><span class="p">):</span><span class="o">-</span><span class="p">(</span><span class="n">length</span><span class="o">/</span><span class="mi">2</span><span class="p">)]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="s">&quot;unexpected boud option &#39;%{0}&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bound</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">rdata</span><span class="p">,</span> <span class="n">oldshape</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">unshape</span><span class="p">(</span><span class="n">rdata</span><span class="p">)</span> 
+        <span class="k">if</span> <span class="n">length</span><span class="o">%</span><span class="mi">2</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">length</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">length</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">length</span><span class="p">)))</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">length</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">length</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">length</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.5</span><span class="p">],</span>\
+                           <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">length</span><span class="o">+</span><span class="mi">1</span><span class="p">)))</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">length</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">signal</span><span class="o">.</span><span class="n">convolve2d</span><span class="p">(</span><span class="n">rdata</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s">&#39;same&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">bound</span><span class="o">==</span><span class="s">&#39;mask&#39;</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+            <span class="n">out</span><span class="p">[:</span><span class="n">length</span><span class="o">/</span><span class="mi">2</span><span class="p">,:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="p">(</span><span class="n">length</span><span class="o">/</span><span class="mi">2</span><span class="p">):,:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked</span>
+        <span class="k">elif</span> <span class="s">&#39;valid&#39;</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="p">[(</span><span class="n">length</span><span class="o">/</span><span class="mi">2</span><span class="p">):</span><span class="o">-</span><span class="p">(</span><span class="n">length</span><span class="o">/</span><span class="mi">2</span><span class="p">),:]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="s">&quot;unexpected boud option &#39;%{0}&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bound</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">deunshape</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">oldshape</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rollaxis</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">ndim</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">out</span>
+</div>
+<span class="k">def</span> <span class="nf">lancoz</span><span class="p">(</span><span class="n">rdata</span><span class="p">,</span><span class="n">cutoff</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="s">&#39;same&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;calculate low-pass filter (Duchon, 1979)    </span>
+
+<span class="sd">    Arguments:</span>
+
+<span class="sd">       &#39;array&#39;  -- (N,...) first dimension must be time. </span>
+
+<span class="sd">       &#39;cutoff&#39; -- cutoff frquency </span>
+
+<span class="sd">       &#39;mode&#39;   -- {&#39;valid&#39;, &#39;same&#39;}, optional</span>
+<span class="sd">              &#39;same&#39;:</span>
+<span class="sd">                    By default, mode is same. This returns output of first dimension length N.</span>
+<span class="sd">                    Boundary componets are masked.</span>
+<span class="sd">              &#39;valid&#39;:</span>
+<span class="sd">                    Mode valid returns output of length N - 2*cutoff.</span>
+<span class="sd">                    running average is only given for points where the signals overlap completely. </span>
+
+<span class="sd">    Return:</span>
+<span class="sd">       &#39;out&#39;    -- filtered array</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ntim</span> <span class="o">=</span> <span class="n">rdata</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">ntim</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="o">*</span><span class="n">cutoff</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&quot;input array first dimension length must be larger than 2*fl+1.&quot;</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">cutoff</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mf">2.</span><span class="o">*</span><span class="n">PI</span><span class="o">*</span><span class="n">cutoff</span><span class="o">*</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">PI</span><span class="o">*</span><span class="n">i</span><span class="o">/</span><span class="n">n</span><span class="p">)</span><span class="o">/</span><span class="n">PI</span><span class="o">/</span><span class="n">i</span><span class="o">/</span><span class="n">PI</span><span class="o">/</span><span class="n">pi</span><span class="o">*</span><span class="n">n</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">w</span><span class="o">/</span><span class="n">w</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">rdata</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span><span class="n">rdata</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">mode</span><span class="o">==</span><span class="s">&#39;same&#39;</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[:</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="n">n</span><span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked</span>
+    <span class="k">elif</span> <span class="n">rdata</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">w</span><span class="p">)),</span><span class="n">w</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">w</span><span class="p">))])</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">convolve2d</span><span class="p">(</span><span class="n">rdata</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">mode</span><span class="o">==</span><span class="s">&#39;same&#39;</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[:</span><span class="n">n</span><span class="p">,:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="n">n</span><span class="p">:,:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked</span>
+    <span class="k">else</span> <span class="p">:</span>
+        <span class="n">rdata</span><span class="p">,</span> <span class="n">oldshape</span> <span class="o">=</span> <span class="n">unshape</span><span class="p">(</span><span class="n">rdata</span><span class="p">)</span> 
+        <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">w</span><span class="p">)),</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">length</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">w</span><span class="p">))])</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">convolve2d</span><span class="p">(</span><span class="n">rdata</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s">&#39;same&#39;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">mode</span><span class="o">==</span><span class="s">&#39;same&#39;</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[:</span><span class="n">n</span><span class="p">,:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="n">n</span><span class="p">:,:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="p">[</span><span class="n">n</span><span class="p">:</span><span class="o">-</span><span class="n">n</span><span class="p">,:]</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,)</span><span class="o">+</span><span class="n">oldshape</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+
+    <span class="k">return</span> <span class="n">out</span>
+
+<div class="viewcode-block" id="regression"><a class="viewcode-back" href="../../pymet.stats.html#pymet.stats.regression">[docs]</a><span class="k">def</span> <span class="nf">regression</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">dof</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;</span>
+<span class="sd">    線形回帰式を求める。</span>
+
+<span class="sd">    :Arguments:</span>
+<span class="sd">     **x**    : array_like</span>
+
+<span class="sd">     **y**    : ndarray</span>
+
+<span class="sd">     **axis** : int, optional</span>
+<span class="sd">       </span>
+<span class="sd">     **dof** : int, optional</span>
+<span class="sd">       自由度。</span>
+
+<span class="sd">    :Returns:</span>
+<span class="sd">     **a, b** : floats or ndarray</span>
+<span class="sd">       線形回帰式 y = a*x + b の係数 a, b。yと同じ形状になる。</span>
+<span class="sd">     **prob** : floats or ndarray</span>
+<span class="sd">       t-検定における??????</span>
+
+<span class="sd">    **Notes**</span>
+
+<span class="sd">    **Examples**    </span>
+<span class="sd">     &gt;&gt;&gt; x = </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+    <span class="n">ndim</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">ndim</span>
+    <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="s">&quot;error x must be 1-D array&quot;</span>
+    <span class="k">if</span> <span class="n">dof</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span> <span class="n">dof</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        
+    <span class="k">if</span> <span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c"># 1次線形回帰</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        
+        <span class="c"># 自由度dofのt-検定</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">y</span> <span class="o">-</span> <span class="n">a</span><span class="o">*</span><span class="n">x</span> <span class="o">-</span> <span class="n">b</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">a</span><span class="o">*</span><span class="n">x</span><span class="o">.</span><span class="n">var</span><span class="p">()</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">var</span><span class="p">()</span><span class="o">/</span><span class="p">(</span><span class="n">dof</span><span class="o">-</span><span class="mf">2.</span><span class="p">))</span>
+        <span class="n">prob</span> <span class="o">=</span> <span class="mi">1</span><span class="o">-</span><span class="n">stats</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">t</span><span class="p">),</span><span class="n">dof</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span>        
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c"># 回帰する軸を先頭に</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rollaxis</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">y</span><span class="p">,</span> <span class="n">oldshape</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">unshape</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+        <span class="c"># 1次線形回帰</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="c"># t-検定</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">y</span> <span class="o">-</span> <span class="n">x</span><span class="p">[:,</span><span class="n">NA</span><span class="p">]</span><span class="o">*</span><span class="n">a</span><span class="p">[</span><span class="n">NA</span><span class="p">,:]</span> <span class="o">-</span> <span class="n">b</span><span class="p">[</span><span class="n">NA</span><span class="p">,:]</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">a</span><span class="o">*</span><span class="n">x</span><span class="o">.</span><span class="n">var</span><span class="p">()</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">dof</span><span class="o">-</span><span class="mf">2.</span><span class="p">))</span>
+        <span class="n">prob</span> <span class="o">=</span> <span class="mi">1</span><span class="o">-</span><span class="n">stats</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">t</span><span class="p">),</span><span class="n">dof</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span>
+    
+        <span class="c"># 元の形状に戻す</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">deunshape</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">oldshape</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">deunshape</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">oldshape</span><span class="p">)</span>
+        <span class="n">prob</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">deunshape</span><span class="p">(</span><span class="n">prob</span><span class="p">,</span> <span class="n">oldshape</span><span class="p">)</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rollaxis</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">axis</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rollaxis</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">axis</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rollaxis</span><span class="p">(</span><span class="n">prob</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">axis</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">prob</span>
+</div>
+<span class="k">def</span> <span class="nf">eofold</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="n">lat</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">ano</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">    EOF解析。</span>
+
+<span class="sd">    :Arguments: </span>
+<span class="sd">      **data** : ndarray</span>
+
+<span class="sd">      **tdim** : int, optional</span>
+<span class="sd">      **lat**  : array_like, optional</span>
+
+<span class="sd">      **ydim** : int, optional</span>
+
+<span class="sd">    :Returns:</span>
+<span class="sd">     **EOFs**</span>
+<span class="sd">      mth eof mode</span>
+<span class="sd">     **PCs**</span>
+<span class="sd">       mth of pc</span>
+<span class="sd">     **explained**</span>
+<span class="sd">       explains of mth mode (%)</span>
+
+<span class="sd">    **Notes**</span>
+<span class="sd">       </span>
+<span class="sd">    **Referrences**</span>
+<span class="sd">     </span>
+<span class="sd">    **Examples**</span>
+<span class="sd">     &gt;&gt;&gt;</span>
+<span class="sd">     </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">print</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">ndim</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="n">tn</span><span class="p">,</span> <span class="n">xn</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">elif</span> <span class="n">data</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">ndim</span> <span class="o">=</span> <span class="mi">3</span>
+        <span class="n">tn</span><span class="p">,</span> <span class="n">yn</span><span class="p">,</span> <span class="n">xn</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="s">&#39;array must be 2D or 3D.&#39;</span>
+        
+    <span class="c">#calculate anomaly</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ano</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span> <span class="o">-</span> <span class="n">data</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="c"># weight cos(lat)</span>
+    <span class="k">if</span> <span class="n">lat</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">factor</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">PI</span><span class="o">/</span><span class="mf">180.</span><span class="o">*</span><span class="n">lat</span><span class="p">))</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span> <span class="o">*</span> <span class="n">factor</span><span class="p">[</span><span class="n">NA</span><span class="p">,:,</span><span class="n">NA</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">tn</span><span class="p">,</span><span class="n">xn</span><span class="o">*</span><span class="n">yn</span><span class="p">)</span>
+
+    <span class="c">#force double precision</span>
+    <span class="n">dtype</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">dtype</span>
+    <span class="k">if</span> <span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+                
+    <span class="c">#SVD</span>
+    <span class="n">A</span><span class="p">,</span> <span class="n">Lh</span><span class="p">,</span> <span class="n">E</span> <span class="o">=</span> <span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">full_matrices</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+    <span class="n">lambdas</span> <span class="o">=</span> <span class="n">Lh</span><span class="o">*</span><span class="n">Lh</span><span class="o">/</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">EOFs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">E</span><span class="p">)</span>
+    <span class="n">PCs</span> <span class="o">=</span> <span class="n">A</span><span class="o">*</span><span class="n">Lh</span>
+
+    <span class="c">#renormalized</span>
+    <span class="n">EOFs</span> <span class="o">=</span> <span class="n">EOFs</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">lambdas</span><span class="p">)[</span><span class="n">NA</span><span class="p">,:]</span>
+    <span class="n">PCs</span> <span class="o">=</span> <span class="n">PCs</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">lambdas</span><span class="p">)[</span><span class="n">NA</span><span class="p">,:]</span>
+
+    <span class="c">#reshape</span>
+    <span class="k">if</span> <span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">EOFs</span> <span class="o">=</span> <span class="n">EOFs</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">yn</span><span class="p">,</span><span class="n">xn</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c">#cos(lat)</span>
+    <span class="k">if</span> <span class="n">lat</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">EOFs</span> <span class="o">=</span> <span class="n">EOFs</span> <span class="o">/</span> <span class="n">factor</span><span class="p">[:,</span><span class="n">NA</span><span class="p">,</span><span class="n">NA</span><span class="p">]</span>
+    <span class="c">#kiyoritu</span>
+    <span class="n">explained</span> <span class="o">=</span> <span class="n">lambdas</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span><span class="n">lambdas</span><span class="p">)</span> <span class="o">*</span><span class="mf">100.</span>
+    <span class="n">EOFs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rollaxis</span><span class="p">(</span><span class="n">EOFs</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">PCs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rollaxis</span><span class="p">(</span><span class="n">PCs</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>    
+
+    <span class="k">if</span> <span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">:</span>
+        <span class="n">explained</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="n">explained</span><span class="p">)</span>
+        <span class="n">EOFs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="n">EOFs</span><span class="p">)</span>
+        <span class="n">PCs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="n">PCs</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">EOFs</span><span class="p">,</span> <span class="n">PCs</span><span class="p">,</span> <span class="n">explained</span>
+
+<div class="viewcode-block" id="eof"><a class="viewcode-back" href="../../pymet.stats.html#pymet.stats.eof">[docs]</a><span class="k">def</span> <span class="nf">eof</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">tdim</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">lat</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">ydim</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">    EOF解析。</span>
+
+<span class="sd">    :Arguments: </span>
+<span class="sd">      **data** : ndarray</span>
+<span class="sd">       入力する2次元以上のデータ配列。</span>
+<span class="sd">      **tdim** : int, optional</span>
+<span class="sd">       入力データの時間次元の軸。デフォルトは0、すなわち先頭。</span>
+<span class="sd">      **lat**  : array_like, optional</span>
+<span class="sd">       指定すると緯度に応じた面積重みをつける。       </span>
+<span class="sd">      **ydim** : int, optional</span>
+<span class="sd">       latを指定した場合の緯度次元の軸</span>
+<span class="sd">       </span>
+<span class="sd">    :Returns:</span>
+<span class="sd">     **EOFs** : ndarray</span>
+<span class="sd">       m番目のEOFモードの空間構造。形状(M,Xn),Xnは空間方向のデータ数、M=min(Xn,Tn)</span>
+<span class="sd">     **PCs** : ndarray</span>
+<span class="sd">       m番目のEOFモードの時系列。形状(M,Tn),Tnは時間方向のデータ数。M=min(Xn,Tn)</span>
+<span class="sd">     **lambdas** : 1darray</span>
+<span class="sd">       m番目のEOFモードの寄与率[%]。長さM。</span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">     計算の際にはSVD解析を用いる。</span>
+<span class="sd">       </span>
+<span class="sd">    **Referrences**</span>
+<span class="sd">     </span>
+<span class="sd">    **Examples**</span>
+<span class="sd">     &gt;&gt;&gt;</span>
+<span class="sd">     </span>
+<span class="sd">    &quot;&quot;&quot;</span>    
+    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">ndim</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">ndim</span>
+    <span class="n">dtype</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">dtype</span>
+    <span class="k">if</span> <span class="n">ndim</span><span class="o">&lt;</span><span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="s">&quot;input data must have more than two dimendin.&quot;</span>
+
+    <span class="c">#緯度重みを考慮</span>
+    <span class="k">if</span> <span class="n">lat</span><span class="o">!=</span><span class="bp">None</span> <span class="ow">and</span> <span class="n">ydim</span><span class="o">!=</span><span class="bp">None</span><span class="p">:</span>
+        <span class="n">factor</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">PI</span><span class="o">/</span><span class="mf">180.</span><span class="o">*</span><span class="n">lat</span><span class="p">)),</span> <span class="n">ndim</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">ydim</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span> <span class="o">*</span> <span class="n">factor</span>
+        
+    <span class="c">#時間軸を先頭に</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rollaxis</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">tdim</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">data</span><span class="p">,</span> <span class="n">oldshape</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">unshape</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">tn</span><span class="p">,</span> <span class="n">xn</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+        
+    <span class="c">#SVD</span>
+    <span class="n">A</span><span class="p">,</span> <span class="n">Lh</span><span class="p">,</span> <span class="n">E</span> <span class="o">=</span> <span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">full_matrices</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+    <span class="n">lambdas</span> <span class="o">=</span> <span class="n">Lh</span><span class="o">*</span><span class="n">Lh</span><span class="o">/</span><span class="n">tn</span>
+
+    <span class="n">EOFs</span> <span class="o">=</span> <span class="n">E</span>
+    <span class="n">PCs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">A</span><span class="o">*</span><span class="n">Lh</span><span class="p">)</span>
+    
+    <span class="c">#規格化</span>
+    <span class="n">EOFs</span> <span class="o">=</span> <span class="n">EOFs</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">lambdas</span><span class="p">)[:,</span><span class="n">NA</span><span class="p">]</span>
+    <span class="n">PCs</span> <span class="o">=</span> <span class="n">PCs</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">lambdas</span><span class="p">)[:,</span><span class="n">NA</span><span class="p">]</span>
+
+    <span class="c">#寄与率</span>
+    <span class="n">lambdas</span> <span class="o">=</span> <span class="n">lambdas</span> <span class="o">/</span> <span class="n">lambdas</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">*</span> <span class="mf">100.</span>
+    
+    <span class="c"># 形状を戻す</span>
+    <span class="n">eofshape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">oldshape</span><span class="p">)</span>
+    <span class="n">eofshape</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">tdim</span><span class="p">)</span>
+    <span class="n">eofshape</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">lambdas</span><span class="p">))</span>
+    <span class="n">EOFs</span> <span class="o">=</span> <span class="n">EOFs</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">eofshape</span><span class="p">)</span>           <span class="c">#(M,Tn,...)</span>
+    <span class="k">print</span> <span class="n">eofshape</span>
+    <span class="c">#緯度重みを考慮</span>
+    <span class="k">if</span> <span class="n">lat</span><span class="o">!=</span><span class="bp">None</span> <span class="ow">and</span> <span class="n">ydim</span><span class="o">!=</span><span class="bp">None</span><span class="p">:</span>
+        <span class="n">factor</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">PI</span><span class="o">/</span><span class="mf">180.</span><span class="o">*</span><span class="n">lat</span><span class="p">)),</span> <span class="n">ndim</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">ydim</span><span class="p">)</span>
+        <span class="n">EOFs</span> <span class="o">=</span> <span class="n">EOFs</span> <span class="o">/</span> <span class="n">factor</span>
+
+    <span class="k">return</span> <span class="n">EOFs</span><span class="p">,</span> <span class="n">PCs</span><span class="p">,</span> <span class="n">lambdas</span>
+</div>
+<span class="k">def</span> <span class="nf">ceof</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="n">tdim</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    複素EOF解析。</span>
+
+<span class="sd">    :Arguments:</span>
+<span class="sd">     **data** : ndarray</span>
+
+<span class="sd">     **tdim** : int, optional</span>
+
+
+<span class="sd">    :Returns:</span>
+
+
+
+<span class="sd">    .. note::</span>
+
+
+<span class="sd">    **Examples**</span>
+<span class="sd">     &gt;&gt;&gt;</span>
+<span class="sd">     </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">ndim</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">ndim</span>
+    <span class="k">if</span> <span class="n">ndim</span><span class="o">&lt;</span><span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="s">&quot;input data have more than two dimension.&quot;</span>
+
+    <span class="c">#データ行列X(t,x)の作成</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rollaxis</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">tdim</span><span class="p">,</span> <span class="n">ndim</span><span class="p">)</span>
+    <span class="n">X</span><span class="p">,</span> <span class="n">oldshape</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">unshape</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">tn</span><span class="p">,</span> <span class="n">xn</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span>
+    
+    <span class="c">#精度向上のためdouble型にする</span>
+    
+    <span class="c">#Hilbert変換</span>
+    <span class="n">Z</span> <span class="o">=</span> <span class="n">signal</span><span class="o">.</span><span class="n">hilbert</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="c">#共分散行列の計算</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">signal</span><span class="o">.</span><span class="n">convolve</span>
+    
+    <span class="n">out</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">deunshape</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">oldshape</span><span class="p">)</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">rollaxis</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">tdim</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">ndim</span><span class="p">)</span>
+
+    
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">pymet 1.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Teturo Miyachi.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

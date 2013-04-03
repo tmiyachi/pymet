@@ -1,0 +1,285 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pymet.tools &mdash; pymet 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="pymet 1.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">pymet 1.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pymet.tools</h1><div class="highlight"><pre>
+<span class="c"># coding: utf-8</span>
+<span class="sd">u&quot;&quot;&quot;</span>
+<span class="sd">==============================================</span>
+<span class="sd">ユーティリティモジュール (:mod:`pymet.tools`)</span>
+<span class="sd">==============================================</span>
+
+<span class="sd">.. autosummary::</span>
+
+<span class="sd">    unshape</span>
+<span class="sd">    deunshape</span>
+<span class="sd">    expand</span>
+
+<span class="sd">--------------    </span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;unshape&#39;</span><span class="p">,</span> <span class="s">&#39;deunshape&#39;</span><span class="p">,</span> <span class="s">&#39;expand&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="unshape"><a class="viewcode-back" href="../../pymet.tools.html#pymet.tools.unshape">[docs]</a><span class="k">def</span> <span class="nf">unshape</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;</span>
+<span class="sd">    ndarray の第0軸以外を次元をつぶした 2d-array のコピーを返す。</span>
+
+<span class="sd">    :Arguments:</span>
+<span class="sd">     **a** : array_like</span>
+<span class="sd">      2次元以上。</span>
+
+<span class="sd">    :Returns:</span>
+<span class="sd">     **array2d**  : 2darray</span>
+<span class="sd">      2次元のndarray</span>
+<span class="sd">     **oldshape** : tuple</span>
+<span class="sd">      入力配列 a の形状</span>
+<span class="sd">    </span>
+<span class="sd">     </span>
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    &gt;&gt;&gt; a = np.arange(40).reshape(2,4,5)</span>
+<span class="sd">    &gt;&gt;&gt; a.shape</span>
+<span class="sd">    (2, 4, 5)</span>
+<span class="sd">    &gt;&gt;&gt; b, oldshape = tools.unshape(a)</span>
+<span class="sd">    &gt;&gt;&gt; b.shape</span>
+<span class="sd">    (2, 20)    </span>
+<span class="sd">    &gt;&gt;&gt; c = tools.deunshape(b, oldshape)</span>
+<span class="sd">    &gt;&gt;&gt; c.shape</span>
+<span class="sd">    (2, 4, 5)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">a</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="s">&quot;a must be at least 2 dimension&quot;</span>
+    
+    <span class="n">oldshape</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">array2d</span>  <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">oldshape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">array2d</span><span class="p">,</span> <span class="n">oldshape</span>
+</div>
+<div class="viewcode-block" id="deunshape"><a class="viewcode-back" href="../../pymet.tools.html#pymet.tools.deunshape">[docs]</a><span class="k">def</span> <span class="nf">deunshape</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">oldshape</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;</span>
+<span class="sd">    unshape で reshape したndarrayを元に戻すための関数。</span>
+
+<span class="sd">    :Arguments:</span>
+<span class="sd">     **a**        : array_like</span>
+<span class="sd">     **oldshape** : tuple</span>
+
+<span class="sd">    :Returns:</span>
+<span class="sd">     **arraynd**  : ndarray</span>
+<span class="sd">      </span>
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    &gt;&gt;&gt; a = np.arange(40).reshape(2,4,5)</span>
+<span class="sd">    &gt;&gt;&gt; a.shape</span>
+<span class="sd">    (2, 4, 5)</span>
+<span class="sd">    &gt;&gt;&gt; b, oldshape = tools.unshape(a)</span>
+<span class="sd">    &gt;&gt;&gt; b.shape</span>
+<span class="sd">    (2, 20)</span>
+<span class="sd">    &gt;&gt;&gt; c = tools.deunshape(b, oldshape)</span>
+<span class="sd">    &gt;&gt;&gt; c.shape</span>
+<span class="sd">    (2, 4, 5)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">arraynd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+    <span class="n">arraynd</span> <span class="o">=</span> <span class="n">arraynd</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">oldshape</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">arraynd</span>
+</div>
+<div class="viewcode-block" id="expand"><a class="viewcode-back" href="../../pymet.tools.html#pymet.tools.expand">[docs]</a><span class="k">def</span> <span class="nf">expand</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">ndim</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">u&quot;&quot;&quot;</span>
+<span class="sd">    1次元配列にnp.newaxisを挿入して次元を拡張する。</span>
+
+<span class="sd">    :Arguments:</span>
+<span class="sd">     **a**    : array_like</span>
+<span class="sd">      入力配列</span>
+<span class="sd">     **ndim** : int</span>
+<span class="sd">      出力配列の次元数</span>
+<span class="sd">     **axis** : int, optional</span>
+<span class="sd">      入力配列の要素を残す位置。デフォルトはゼロ(先頭)で後ろにnp.newaxisが挿入される。</span>
+
+<span class="sd">    :Returns:</span>
+<span class="sd">     **res** : ndarray</span>
+<span class="sd">      出力配列。次元数はndim。</span>
+
+<span class="sd">    **Examples**</span>
+<span class="sd">     &gt;&gt;&gt; x = np.array([1, 2, 3])</span>
+<span class="sd">     &gt;&gt;&gt; y = tools.expand(x, 3, axis=1)</span>
+<span class="sd">     &gt;&gt;&gt; y.shape</span>
+<span class="sd">     (1, 3, 1)</span>
+<span class="sd">     &gt;&gt;&gt; y</span>
+<span class="sd">     array([[[1],</span>
+<span class="sd">             [2],</span>
+<span class="sd">             [3]]])</span>
+
+<span class="sd">    これは以下と同じである。</span>
+<span class="sd">     &gt;&gt;&gt; NA = np.newaxis</span>
+<span class="sd">     &gt;&gt;&gt; y = x[NA, :, NA]     </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">res</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="s">&quot;input array must be one dimensional array&quot;</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">ndim</span><span class="p">)</span>
+    <span class="n">idx</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">idx</span><span class="p">:</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">i</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">res</span>
+
+<span class="c">## class Timemask():</span>
+<span class="c">##     #mask array for sequential time series manipuration</span>
+<span class="c">##     def __init__(self, start, end):</span>
+<span class="c">##         &#39;&#39;&#39;</span>
+<span class="c">##         time sampling is days only!!</span>
+        
+<span class="c">##         Arguments:</span>
+
+<span class="c">##             start -- start date string  ex. 1979-6-3</span>
+
+<span class="c">##             end   -- end date string</span>
+<span class="c">##         &#39;&#39;&#39;</span>
+<span class="c">##         startdate = parser.parse(start)</span>
+<span class="c">##         enddate = parser.parse(end)</span>
+<span class="c">##         deltadate = timedelta(days=1)</span>
+<span class="c">##         tnum = (enddate-startdate).days+1</span>
+
+<span class="c">##         self.timeint = numpy.array([int((startdate + deltadate*i).strftime(&#39;%Y%m%j&#39;)) for i in range(tnum)])</span>
+<span class="c">##         self.year = self.timeint/100000</span>
+<span class="c">##         self.month = self.timeint%100000/1000</span>
+<span class="c">##         self.days = self.timeint%1000</span>
+
+<span class="c">## class Time():</span>
+<span class="c">##     #mask array for sequential time series manipuration</span>
+<span class="c">##     def __init__(self, start, end, delta):</span>
+<span class="c">##         &#39;&#39;&#39;</span>
+<span class="c">##         time sampling is days only!!</span>
+        
+<span class="c">##         Arguments:</span>
+
+<span class="c">##             start -- start date string  ex. 1979-6-3</span>
+
+<span class="c">##             end   -- end date string</span>
+<span class="c">##         &#39;&#39;&#39;</span>
+<span class="c">##         years, months, days, hours = 0, 0, 0, 0</span>
+<span class="c">##         string = &#39;&#39;</span>
+<span class="c">##         for i in delta:</span>
+<span class="c">##             if i == &#39;y&#39; or i == &#39;Y&#39;:</span>
+<span class="c">##                 years = int(string)</span>
+<span class="c">##                 string = &#39;&#39;</span>
+<span class="c">##             elif i == &#39;m&#39; or i == &#39;M&#39;:</span>
+<span class="c">##                 months = int(string)</span>
+<span class="c">##                 string = &#39;&#39;</span>
+<span class="c">##             elif i == &#39;d&#39; or i == &#39;D&#39;:</span>
+<span class="c">##                 days = int(string)</span>
+<span class="c">##                 string = &#39;&#39;</span>
+<span class="c">##             elif i == &#39;h&#39; or i == &#39;H&#39;:</span>
+<span class="c">##                 hours = int(string)</span>
+<span class="c">##                 string = &#39;&#39;</span>
+<span class="c">##             else:</span>
+<span class="c">##                 string = string + i</span>
+            
+<span class="c">##         startdate = parser.parse(start)</span>
+<span class="c">##         enddate = parser.parse(end)</span>
+<span class="c">##         deltadate = relativedelta(years=years,months=months,days=days,hours=hours)</span>
+
+<span class="c">##         time = []</span>
+<span class="c">##         timeint = []</span>
+<span class="c">##         date = startdate</span>
+<span class="c">##         while(date &lt;= enddate):</span>
+<span class="c">##             time.append(date)</span>
+<span class="c">##             timeint.append(int(date.strftime(&#39;%Y%m%j&#39;)))</span>
+<span class="c">##             date += deltadate</span>
+
+<span class="c">##         self.time = numpy.array(time)</span>
+<span class="c">##         self.timeint = numpy.array(timeint)</span>
+<span class="c">##         self.year = self.timeint/100000</span>
+<span class="c">##         self.month = self.timeint%100000/1000</span>
+<span class="c">##         self.days = self.timeint%1000</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">pymet 1.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Teturo Miyachi.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
