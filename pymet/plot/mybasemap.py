@@ -12,7 +12,9 @@ import locale
 
 __all__ = ['MyBasemap',
            'BasemapXaxisFormatter','BasemapYaxisFormatter',
-           'BasemapXaxisLocator','BasemapYaxisLocator','lon2txt','lat2txt']
+           'BasemapXaxisLocator','BasemapYaxisLocator','lon2txt','lat2txt',
+           'crossplot','crosscontour','crosscontourf',
+           'hovmoller','hovmollerf']
 
 class MyBasemap(Basemap):
     u"""
@@ -58,12 +60,12 @@ class MyBasemap(Basemap):
       ======== ========================================================================= 
      
     **Methods**
-     .. currentmodule:: MyBasemap
+     .. currentmodule:: pymet.plot.mybasemap.MyBasemap
 
      .. autosummary::
 
         __init__
-        fill_continents
+        fillcontinents
         set_xlint
         set_ylint
         plot
@@ -79,7 +81,7 @@ class MyBasemap(Basemap):
      >>>
 
     .. seealso::
-       see more deatail  http://matplotlib.org/basemap/
+       see more deatail <http://matplotlib.org/basemap/>
 
 
         
@@ -244,8 +246,8 @@ class MyBasemap(Basemap):
          **data** : 2darray
           プロットするベクトルのx,y成分。
 
-         :Returns:
-          **CF** : QuadContourSet object
+        :Returns:
+         **CF** : QuadContourSet object
           
         **Keyword**
          独自キーワード
@@ -267,6 +269,7 @@ class MyBasemap(Basemap):
                   
         **Examples**
          .. plot:: _figure/contourf.py
+        
         """
         if (lon.ndim<2 and lat.ndim<2): lon, lat = np.meshgrid(lon, lat)
         skip = kwargs.pop('skip',1)
@@ -287,8 +290,8 @@ class MyBasemap(Basemap):
          **u, v** : 2darray
           プロットするデータ。
 
-         :Returns: matplotlib.
-
+        :Returns: 
+         **QV** 
 
         **Keyword**
          独自キーワード
@@ -424,7 +427,6 @@ def lon2txt(lon, pos=None):
      **lon** : int
       経度(degrees)。0度からの相対経度で表す。
      **pos** : optional
-      ????
      
     :Returns:
      **lonlab** : str
@@ -462,7 +464,6 @@ def lat2txt(lat, pos=None):
      **lon** : int
       緯度(degrees)。南緯はマイナス、北緯はプラス。
      **pos** : optional
-      ????
      
     :Returns:
      **lonlab** : str
@@ -487,12 +488,35 @@ def lat2txt(lat, pos=None):
     return latlab
 
 #------------------------------------------------------------------------------
-#
+# 鉛直断面図のための関数
 #------------------------------------------------------------------------------
 
-def crosscontourf(xy,z,data,zlog=True,yinvert=True,xlabel=None,**kwargs):
+def crosscontourf(xy,z,data,zlog=True,zinvert=True,xlabel=None,**kwargs):
+    u"""
+    東西・南北-鉛直断面の塗りつぶしコンタープロット。
+
+    :Arguments:
+     **xy** : array_like
+      東西、南北座標または緯度・経度。
+     **z** : array_like
+      鉛直座標。
+     **data** : 2darray
+      プロットするデータ。
+     **zlog** : bool, optional
+      縦軸を対数座標にするかどうか。デフォルトはTrue。
+     **zinvert** : bool, optional
+      縦軸の向きを逆(減少方向)にするかどうか。デフォルトはTrue。
+     **xlabel** : {'lon', 'lat'}, optional
+      横軸を経度表示にする場合はlon,緯度表示にする場合はlatを指定する。
+
+    :Returns:
+     **CF**
+
+    **Examples**
+    
+    """
     ax = kwargs.get('ax',plt.gca())
-    if yinvert:
+    if zinvert:
         ax.set_ylim(z.max(),z.min())
     if zlog: 
         ax.set_yscale('log')
@@ -507,10 +531,35 @@ def crosscontourf(xy,z,data,zlog=True,yinvert=True,xlabel=None,**kwargs):
         ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lat2txt))
     return ax.contourf(xy,z,data,**kwargs)
 
-def crosscontour(xy,z,data,zlog=True,yinvert=True,xlabel=None,cint=None,**kwargs):
+def crosscontour(xy,z,data,zlog=True,zinvert=True,xlabel=None,cint=None,**kwargs):
+    u"""
+    東西・南北-鉛直断面のコンタープロット。
+
+    :Arguments:
+     **xy** : array_like
+      東西、南北座標または緯度・経度。
+     **z** : array_like
+      鉛直座標。
+     **data** : 2darray
+      プロットするデータ。
+     **zlog** : bool, optional
+      縦軸を対数座標にするかどうか。デフォルトはTrue。
+     **zinvert** : bool, optional
+      縦軸の向きを逆(減少方向)にするかどうか。デフォルトはTrue。
+     **xlabel** : {'lon', 'lat'}, optional
+      横軸を経度表示にする場合はlon,緯度表示にする場合はlatを指定する
+     **cint** : float, optional
+      コンター間隔。
+
+    :Returns:
+     **CR**
+
+    **Examples**
+    
+    """
     ax = kwargs.get('ax',plt.gca())
     kwargs.setdefault('colors','k')
-    if yinvert:
+    if zinvert:
         ax.set_ylim(z.max(),z.min())
     if zlog: 
         ax.set_yscale('log')
@@ -530,7 +579,29 @@ def crosscontour(xy,z,data,zlog=True,yinvert=True,xlabel=None,cint=None,**kwargs
                 transform=ax.transAxes,ha='right')#,fontsize=10)
     return ax.contour(xy,z,data,**kwargs)
 
-def crossplot(data,z,zlog=True,zinvert=True,**kwargs):
+def crossplot(xy,z,zlog=True,zinvert=True,**kwargs):
+    u"""
+    鉛直断面プロット。
+
+    :Arguments:
+     **xy** : array_like
+      x or y座標。
+     **z** : array_like
+      鉛直座標。
+     **zlog** : bool, optional
+      縦軸を対数座標にするかどうか。デフォルトはTrue。
+     **zinvert** : bool, optional
+      縦軸の向きを逆(減少方向)にするかどうか。デフォルトはTrue。
+     **xlabel** : {'lon', 'lat'}, optional
+      横軸を経度表示にする場合はlon,緯度表示にする場合はlatを指定する
+
+    :Returns:
+
+
+    **Examples**
+
+    
+    """
     ax = kwargs.get('ax',plt.gca())
     if zinvert:
         ax.set_ylim(z.max(),z.min())
@@ -542,9 +613,37 @@ def crossplot(data,z,zlog=True,zinvert=True,**kwargs):
         fmt = matplotlib.ticker.FormatStrFormatter("%g")
         ax.yaxis.set_major_locator(loc)
         ax.yaxis.set_major_formatter(fmt)
-    return ax.plot(data,z,**kwargs)
+    if xlabel=='lon':
+        ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lon2txt))
+    elif xlabel=='lat':
+        ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lat2txt))
+
+    return ax.plot(xy, z, **kwargs)
 
 def hovmoller(xy,tyme,data,*args,**kwargs):
+    u"""
+    ホフメラー図のコンタープロット。
+
+    :Arguments:
+     **xy** : array_like
+      x or y or 緯度経度座標。
+     **tyme** : array_like of datetime objects
+      時間軸。datetimeオブジェクトのarray。
+     **data** : 2darray
+      プロットするデータ。
+     **xlabel** : {'lon', 'lat'}, optional
+      横軸を経度表示にする場合はlon,緯度表示にする場合はlatを指定する
+     **fmt** : str, optional
+      時間軸ラベルの表示形式。デフォルトは%Hz%d%b%Y。
+     **cint** : float, optional
+      コンター間隔。
+
+    :Returns:
+     **CR**
+
+    **Examples**
+      
+    """
     locale.setlocale(locale.LC_ALL,'en_US')
     ax = kwargs.get('ax',plt.gca())
     xlabel = kwargs.pop('xlabel',None)
@@ -565,6 +664,29 @@ def hovmoller(xy,tyme,data,*args,**kwargs):
     return ax.contour(xy,tyme,data,*args,**kwargs)
 
 def hovmollerf(xy,tyme,data,*args,**kwargs):
+    u"""
+    ホフメラー図の塗りつぶしコンタープロット。
+
+    :Arguments:
+     **xy** : array_like
+      x or y or 緯度経度座標。
+     **tyme** : array_like of datetime objects
+      時間軸。datetimeオブジェクトのarray。
+     **data** : 2darray
+      プロットするデータ。
+     **xlabel** : {'lon', 'lat'}, optional
+      横軸を経度表示にする場合はlon,緯度表示にする場合はlatを指定する
+     **fmt** : str, optional
+      時間軸ラベルの表示形式。デフォルトは%Hz%d%b%Y。
+     **cint** : float, optional
+      コンター間隔。
+
+    :Returns:
+     **CF**
+
+    **Examples**
+      
+    """
     ax = kwargs.get('ax',plt.gca())
     xlabel = kwargs.pop('xlabel',None)
     ax.set_ylim(tyme.max(),tyme.min())
