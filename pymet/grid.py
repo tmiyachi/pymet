@@ -49,7 +49,7 @@ d2r=PI/180.
 
 __all__ = ['dvardx', 'dvardy', 'dvardp', 'd2vardx2', 'd2vardy2', 'div', 'rot', 'dvardvar',
            'vint',
-           'vinterp']
+           'vinterp','distance']
 
 #=== 微分と差分 ====================================================================================
 
@@ -338,7 +338,7 @@ def div(u, v, lon, lat, xdim, ydim, cyclic=True):
 
     :Arguments:
      **u, v** : ndarray
-     
+       ベクトルの東西、南北成分。
      **lon, lat** : array_like
        緯度と経度
      **xdim, ydim** : int
@@ -411,7 +411,6 @@ def dvardvar(var1, var2, dim, cyclic=True):
 def vint(var, bottom, top, lev, zdim, punit=100.):
     u"""
     質量重み付き鉛直積分。
-    vint = 
     
     :Arguments:
      **var** : array_like
@@ -430,16 +429,21 @@ def vint(var, bottom, top, lev, zdim, punit=100.):
      **result** : array_like
        入力配列から鉛直次元を除いた形状と同じ。
 
+    .. note::
+
+       .. math:: vint = \frac{1}{g}\int_{bottom}^{top} X dp
+
        
     **Examples**
 
     >>>
     >>>
     """
-    var = np.array(var)
+    var = np.asarray(var)
+    lev = np.asarray(lev)
     ndim = var.ndim
 
-    lev = np.array(lev)[(lev <= bottom)&(lev >= top)]
+    lev = lev[(lev <= bottom)&(lev >= top)]
     lev_m = np.r_[bottom,(lev[1:] + lev[:-1])/2.,top]
     dp = lev_m[:-1] - lev_m[1:]
 
