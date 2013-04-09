@@ -1,8 +1,10 @@
 # coding: utf-8
-import pymet.grid as grid
+import pymet.grid
+import numpy as np
 from core import *
 
-__all__ = ['dvardx', 'dvardy', 'dvardp', 'div', 'rot', 'd2vardx2', 'd2vardy2']
+__all__ = ['dvardx', 'dvardy', 'dvardp', 'div', 'rot', 'd2vardx2', 'd2vardy2',
+           'vint']
 
 def dvardx(field, cyclic=True):
     u"""
@@ -31,7 +33,7 @@ def dvardx(field, cyclic=True):
     data = np.ma.getdata(field, subok=False)
     mask = np.ma.getmask(field)
 
-    result = grid.dvardx(data, grid.lon, grid.xdim, cyclic=True)
+    result = pymet.grid.dvardx(data, grid.lon, grid.xdim, cyclic=True)
     if not result.ndim:
         return result
     return McField(result, name=field.name, grid=grid, mask=mask)
@@ -59,7 +61,7 @@ def dvardy(field):
     data = np.ma.getdata(field, subok=False)
     mask = np.ma.getmask(field)
 
-    result = grid.dvardy(data, grid.lat, grid.ydim)
+    result = pymet.grid.dvardy(data, grid.lat, grid.ydim)
     if not result.ndim:
         return result
     return McField(result, name=field.name, grid=grid, mask=mask)
@@ -87,7 +89,7 @@ def dvardp(field):
     data = np.ma.getdata(field, subok=False)
     mask = np.ma.getmask(field)
 
-    result = grid.dvardp(data, grid.lev, grid.zdim, grid.punit)
+    result = pymet.grid.dvardp(data, grid.lev, grid.zdim, grid.punit)
     if not result.ndim:
         return result
     return McField(result, name=field.name, grid=grid, mask=mask)
@@ -119,7 +121,7 @@ def d2vardx2(field, cyclic=True):
     data = np.ma.getdata(field, subok=False)
     mask = np.ma.getmask(field)
 
-    result = grid.d2vardx2(data, grid.lon, grid.xdim, cyclic=True)
+    result = pymet.grid.d2vardx2(data, grid.lon, grid.xdim, cyclic=True)
     if not result.ndim:
         return result
     return McField(result, name=field.name, grid=grid, mask=mask)
@@ -181,7 +183,7 @@ def div(ufield, vfield, cyclic=True):
     v = np.ma.getdata(vfield, subok=False)
     mask = np.ma.getmask(ufield) | np.ma.getmask(vfield)
 
-    result = grid.div(u, v, grid.lon, grid.lat, grid.xdim, grid.ydim, cyclic=True)
+    result = pymet.grid.div(u, v, grid.lon, grid.lat, grid.xdim, grid.ydim, cyclic=True)
     if not result.ndim:
         return result
     return McField(result, name='div', grid=grid, mask=mask)
@@ -214,7 +216,39 @@ def rot(ufield, vfield, cyclic=True):
     v = np.ma.getdata(vfield, subok=False)
     mask = np.ma.getmask(ufield) | np.ma.getmask(vfield)
 
-    result = grid.rot(u, v, grid.lon, grid.lat, grid.xdim, grid.ydim, cyclic=True)
+    result = pymet.grid.rot(u, v, grid.lon, grid.lat, grid.xdim, grid.ydim, cyclic=True)
     if not result.ndim:
         return result
     return McField(result, name='rot', grid=grid, mask=mask)
+
+def vint(field, bottom, top):
+    u"""
+    質量重み付き鉛直積分。
+
+    :Argument:
+     **field** : McField object
+      入力データ。
+     **bottom** : float
+      下端
+     **top** : float
+      上端
+
+    :Returns:
+     **result** : McField object     
+    """
+    if not isinstance(field, McField):
+        raise TypeError, "input must be McField instance"
+
+    grid = field.grid.copy()
+    var = np.ma.getdata(field, subok=False)
+    mask = np.ma.getmask(field)
+
+    result = pymet.grid.vint(var, bottom, top, lev=grid.lev, zdim=grid.zdim, punit=grid.punit)
+
+    if not result.ndim:
+        return result
+    grid.name = field.name + '_vint'
+    grid.lev = None
+    grid.dims.remove('lev')
+    return McField(result, name=grid.name, grid=grid)
+    
