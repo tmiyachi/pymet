@@ -64,8 +64,8 @@ def runave(a, length, axis=0, bound='mask'):
     rdata = np.array(a)
     ndim = rdata.ndim
     rdata = np.rollaxis(rdata, axis, ndim)
-    ntim = rdata[0]
-    if ntim < length:
+    nt = rdata.shape[axis]
+    if nt < length:
         raise ValueError, "input array first dimension length must be larger than length."
 
     if ndim == 1:
@@ -124,8 +124,8 @@ def lancoz(rdata,cutoff,mode='same'):
        'out'    -- filtered array
 
     """
-    ntim = rdata.shape[0]
-    if ntim < 2*cutoff+1:
+    nt = rdata.shape[0]
+    if nt < 2*cutoff+1:
         print "input array first dimension length must be larger than 2*fl+1."
         sys.exit()
     n = cutoff
