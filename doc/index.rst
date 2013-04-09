@@ -25,7 +25,7 @@ References
    pymet.tools
    pymet.io
    pymet.field
-   pymet.plot
+   pymet.metplt
 
 Indices and tables
 ==================

@@ -1,6 +1,6 @@
 # coding:utf-8
 from matplotlib.ticker import MultipleLocator
-from pymet.plot import MyBasemap
+from pymet.metplt import MyBasemap
 # requires netcdf4-python (netcdf4-python.googlecode.com)
 from netCDF4 import Dataset
 

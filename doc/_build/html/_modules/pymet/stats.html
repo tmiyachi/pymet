@@ -115,8 +115,8 @@
     <span class="n">rdata</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
     <span class="n">ndim</span> <span class="o">=</span> <span class="n">rdata</span><span class="o">.</span><span class="n">ndim</span>
     <span class="n">rdata</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rollaxis</span><span class="p">(</span><span class="n">rdata</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">ndim</span><span class="p">)</span>
-    <span class="n">ntim</span> <span class="o">=</span> <span class="n">rdata</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">ntim</span> <span class="o">&lt;</span> <span class="n">length</span><span class="p">:</span>
+    <span class="n">nt</span> <span class="o">=</span> <span class="n">rdata</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">nt</span> <span class="o">&lt;</span> <span class="n">length</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="s">&quot;input array first dimension length must be larger than length.&quot;</span>
 
     <span class="k">if</span> <span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
@@ -175,8 +175,8 @@
 <span class="sd">       &#39;out&#39;    -- filtered array</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">ntim</span> <span class="o">=</span> <span class="n">rdata</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">ntim</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="o">*</span><span class="n">cutoff</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span>
+    <span class="n">nt</span> <span class="o">=</span> <span class="n">rdata</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">nt</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="o">*</span><span class="n">cutoff</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span>
         <span class="k">print</span> <span class="s">&quot;input array first dimension length must be larger than 2*fl+1.&quot;</span>
         <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
     <span class="n">n</span> <span class="o">=</span> <span class="n">cutoff</span>

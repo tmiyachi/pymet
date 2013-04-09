@@ -26,6 +26,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="pymet 1.0 documentation" href="index.html" />
+    <link rel="next" title="気象でよく使うプロットのためのモジュール (pymet.metplt)" href="pymet.metplt.html" />
     <link rel="prev" title="IOモジュール (pymet.io)" href="pymet.io.html" /> 
   </head>
   <body>
@@ -38,6 +39,9 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="pymet.metplt.html" title="気象でよく使うプロットのためのモジュール (pymet.metplt)"
+             accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="pymet.io.html" title="IOモジュール (pymet.io)"
              accesskey="P">previous</a> |</li>
@@ -63,7 +67,7 @@
 <tr class="row-odd"><td><a class="reference internal" href="#pymet.field.McField" title="pymet.field.McField"><tt class="xref py py-obj docutils literal"><span class="pre">McField</span></tt></a>(data[,&nbsp;name,&nbsp;grid])</td>
 <td>格子点データを扱うためのクラス。</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="#pymet.field.McGrid" title="pymet.field.McGrid"><tt class="xref py py-obj docutils literal"><span class="pre">McGrid</span></tt></a>([name,&nbsp;lon,&nbsp;lat,&nbsp;lev,&nbsp;tyme,&nbsp;dims,&nbsp;punit])</td>
+<tr class="row-even"><td><a class="reference internal" href="#pymet.field.McGrid" title="pymet.field.McGrid"><tt class="xref py py-obj docutils literal"><span class="pre">McGrid</span></tt></a>([name,&nbsp;lon,&nbsp;lat,&nbsp;lev,&nbsp;time,&nbsp;dims,&nbsp;punit])</td>
 <td>グリッド情報を扱うためのクラス</td>
 </tr>
 </tbody>
@@ -92,23 +96,23 @@
 <tr class="row-odd"><td><a class="reference internal" href="#pymet.field.dvardx" title="pymet.field.dvardx"><tt class="xref py py-obj docutils literal"><span class="pre">dvardx</span></tt></a>(field[,&nbsp;cyclic])</td>
 <td>経度方向の微分を中央差分で計算。</td>
 </tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">dvardy</span></tt>(field)</td>
-<td></td>
+<tr class="row-even"><td><a class="reference internal" href="#pymet.field.dvardy" title="pymet.field.dvardy"><tt class="xref py py-obj docutils literal"><span class="pre">dvardy</span></tt></a>(field)</td>
+<td>緯度方向の微分を中央差分で計算。</td>
 </tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">dvardp</span></tt>(field)</td>
-<td></td>
+<tr class="row-odd"><td><a class="reference internal" href="#pymet.field.dvardp" title="pymet.field.dvardp"><tt class="xref py py-obj docutils literal"><span class="pre">dvardp</span></tt></a>(field)</td>
+<td>鉛直方向の微分をlog(p)の中央差分で計算。</td>
 </tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">d2vardx2</span></tt>(field[,&nbsp;cyclic])</td>
-<td></td>
+<tr class="row-even"><td><a class="reference internal" href="#pymet.field.d2vardx2" title="pymet.field.d2vardx2"><tt class="xref py py-obj docutils literal"><span class="pre">d2vardx2</span></tt></a>(field[,&nbsp;cyclic])</td>
+<td>経度方向の2階微分を中央差分で計算。</td>
 </tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">d2vardy2</span></tt>(field)</td>
-<td></td>
+<tr class="row-odd"><td><a class="reference internal" href="#pymet.field.d2vardy2" title="pymet.field.d2vardy2"><tt class="xref py py-obj docutils literal"><span class="pre">d2vardy2</span></tt></a>(field)</td>
+<td>緯度方向の微分を中央差分で計算。</td>
 </tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">div</span></tt>(ufield,&nbsp;vfield[,&nbsp;cyclic])</td>
-<td></td>
+<tr class="row-even"><td><a class="reference internal" href="#pymet.field.div" title="pymet.field.div"><tt class="xref py py-obj docutils literal"><span class="pre">div</span></tt></a>(ufield,&nbsp;vfield[,&nbsp;cyclic])</td>
+<td>水平発散を計算する。</td>
 </tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">rot</span></tt>(ufield,&nbsp;vfield[,&nbsp;cyclic])</td>
-<td></td>
+<tr class="row-odd"><td><a class="reference internal" href="#pymet.field.rot" title="pymet.field.rot"><tt class="xref py py-obj docutils literal"><span class="pre">rot</span></tt></a>(ufield,&nbsp;vfield[,&nbsp;cyclic])</td>
+<td>回転の鉛直成分を計算する。</td>
 </tr>
 </tbody>
 </table>
@@ -124,23 +128,24 @@
 <tr class="row-odd"><td><a class="reference internal" href="#pymet.field.pottemp" title="pymet.field.pottemp"><tt class="xref py py-obj docutils literal"><span class="pre">pottemp</span></tt></a>(tfield[,&nbsp;p0])</td>
 <td>温位を気温から計算する。</td>
 </tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">ertelpv</span></tt>(ufield,&nbsp;vfield,&nbsp;tfield[,&nbsp;cyclic,&nbsp;punit])</td>
-<td></td>
+<tr class="row-even"><td><a class="reference internal" href="#pymet.field.ertelpv" title="pymet.field.ertelpv"><tt class="xref py py-obj docutils literal"><span class="pre">ertelpv</span></tt></a>(ufield,&nbsp;vfield,&nbsp;tfield[,&nbsp;cyclic])</td>
+<td>エルテルのポテンシャル渦度を計算する。</td>
 </tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">stability</span></tt></td>
-<td></td>
+<tr class="row-odd"><td><a class="reference internal" href="#pymet.field.stability" title="pymet.field.stability"><tt class="xref py py-obj docutils literal"><span class="pre">stability</span></tt></a>(tfield)</td>
+<td>p座標系での静的安定度(Brunt-Vaisala振動数)を計算する。</td>
 </tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">tnflux2d</span></tt>(Ufield,&nbsp;Vfield,&nbsp;strmfield[,&nbsp;...])</td>
-<td></td>
+<tr class="row-even"><td><a class="reference internal" href="#pymet.field.tnflux2d" title="pymet.field.tnflux2d"><tt class="xref py py-obj docutils literal"><span class="pre">tnflux2d</span></tt></a>(Ufield,&nbsp;Vfield,&nbsp;strmfield[,&nbsp;...])</td>
+<td>Takaya &amp; Nakamura (2001) の波活動度フラックスの水平成分をp面上で計算する。</td>
 </tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">tnflux3d</span></tt></td>
-<td></td>
+<tr class="row-odd"><td><a class="reference internal" href="#pymet.field.tnflux3d" title="pymet.field.tnflux3d"><tt class="xref py py-obj docutils literal"><span class="pre">tnflux3d</span></tt></a>(Ufield,&nbsp;Vfield,&nbsp;Tfield,&nbsp;strmfield)</td>
+<td>Takaya &amp; Nakamura (2001) の波活動度フラックスをp面上で計算する。</td>
 </tr>
 </tbody>
 </table>
+<hr class="docutils" />
 <dl class="class">
 <dt id="pymet.field.McGrid">
-<em class="property">class </em><tt class="descclassname">pymet.field.</tt><tt class="descname">McGrid</tt><big>(</big><em>name=None</em>, <em>lon=None</em>, <em>lat=None</em>, <em>lev=None</em>, <em>tyme=None</em>, <em>dims=None</em>, <em>punit=100.0</em><big>)</big><a class="headerlink" href="#pymet.field.McGrid" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">pymet.field.</tt><tt class="descname">McGrid</tt><big>(</big><em>name=None</em>, <em>lon=None</em>, <em>lat=None</em>, <em>lev=None</em>, <em>time=None</em>, <em>dims=None</em>, <em>punit=100.0</em><big>)</big><a class="headerlink" href="#pymet.field.McGrid" title="Permalink to this definition">¶</a></dt>
 <dd><p>グリッド情報を扱うためのクラス</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -150,7 +155,7 @@
 <p><strong>lon</strong></p>
 <p><strong>lat</strong></p>
 <p><strong>lev</strong></p>
-<p><strong>tyme</strong></p>
+<p><strong>time</strong></p>
 <p><strong>dims</strong></p>
 <dl class="last docutils">
 <dt><strong>punit</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float, optional</span></dt>
@@ -165,8 +170,8 @@
 <dl class="docutils">
 <dt><strong>Examples</strong></dt>
 <dd><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">grid</span> <span class="o">=</span> <span class="n">pymet</span><span class="o">.</span><span class="n">McGrid</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;test_grid&#39;</span><span class="p">,</span> <span class="n">lon</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">360</span><span class="p">,</span><span class="mf">2.5</span><span class="p">),</span> <span class="n">lat</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mi">90</span><span class="p">,</span><span class="mf">90.1</span><span class="p">,</span><span class="mf">2.5</span><span class="p">)),</span>
-<span class="go">                        lev=[1000.,500.,200.], tyme=[datetime(2009,10,11),datetime(2009,10,12),</span>
-<span class="go">                        dims=[&#39;tyme&#39;,&#39;lev&#39;,&#39;lat&#39;,&#39;lon&#39;])</span>
+<span class="go">                        lev=[1000.,500.,200.], time=[datetime(2009,10,11),datetime(2009,10,12),</span>
+<span class="go">                        dims=[&#39;time&#39;,&#39;lev&#39;,&#39;lat&#39;,&#39;lon&#39;])</span>
 </pre></div>
 </div>
 </dd>
@@ -190,7 +195,7 @@
 <tr class="row-even"><td>lev</td>
 <td>&nbsp;</td>
 </tr>
-<tr class="row-odd"><td>tyme</td>
+<tr class="row-odd"><td>time</td>
 <td>&nbsp;</td>
 </tr>
 <tr class="row-even"><td>dims</td>
@@ -226,7 +231,7 @@
 <tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">gridmask</span></tt>(**kwargs)</td>
 <td>指定した範囲の値をインデキシングするためのbool型配列を求める。</td>
 </tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">__init__</span></tt>([name,&nbsp;lon,&nbsp;lat,&nbsp;lev,&nbsp;tyme,&nbsp;dims,&nbsp;...])</td>
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">__init__</span></tt>([name,&nbsp;lon,&nbsp;lat,&nbsp;lev,&nbsp;time,&nbsp;dims,&nbsp;...])</td>
 <td></td>
 </tr>
 <tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">__getattr__</span></tt>(name)</td>
@@ -252,7 +257,7 @@
 <dt><strong>lon, lat, lev</strong> <span class="classifier-delimiter">:</span> <span class="classifier">tuple or list of floats, or float, optional</span></dt>
 <dd><p class="first last">経度、緯度、鉛直次元の指定する領域。</p>
 </dd>
-<dt><strong>tyme</strong> <span class="classifier-delimiter">:</span> <span class="classifier">tuple or list of datetime object, or datetime object, optional</span></dt>
+<dt><strong>time</strong> <span class="classifier-delimiter">:</span> <span class="classifier">tuple or list of datetime object, or datetime object, optional</span></dt>
 <dd><p class="first last">時間次元の範囲。</p>
 </dd>
 </dl>
@@ -265,14 +270,37 @@
 </table>
 <dl class="docutils">
 <dt><strong>Examples</strong>    </dt>
-<dd><p class="first">範囲を指定する場合はタプルまたはリストで指定する。&gt;&gt;&gt; grid = pymet.McGrid(name=&#8217;test_grid&#8217;, lon=np.arange(0,360,2.5), lat=np.arange(-90,90.1,2.5)),</p>
-<blockquote>
-<div>lev=[1000.,500.,200.], tyme=[datetime(2009,10,11),datetime(2009,10,12),dims=[&#8216;tyme&#8217;,&#8217;lev&#8217;,&#8217;lat&#8217;,&#8217;lon&#8217;])</div></blockquote>
-<div class="last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mask</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">gridmask</span><span class="p">(</span><span class="n">lon</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">180.</span><span class="p">),</span> <span class="p">)</span>
+<dd><dl class="first last docutils">
+<dt>範囲を指定する場合はタプルまたはリストで指定する。</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">grid</span> <span class="o">=</span> <span class="n">pymet</span><span class="o">.</span><span class="n">McGrid</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;test_grid&#39;</span><span class="p">,</span> <span class="n">lon</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">360</span><span class="p">,</span><span class="mf">2.5</span><span class="p">),</span> <span class="n">lat</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mi">90</span><span class="p">,</span><span class="mf">90.1</span><span class="p">,</span><span class="mf">2.5</span><span class="p">)),</span>
+<span class="go">                        lev=[1000.,500.,200.], time=[datetime(2009,10,11),datetime(2009,10,12),</span>
+<span class="go">                        dims=[&#39;time&#39;,&#39;lev&#39;,&#39;lat&#39;,&#39;lon&#39;])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mask</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">gridmask</span><span class="p">(</span><span class="n">lon</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">180.</span><span class="p">),</span> <span class="p">)</span>
 </pre></div>
 </div>
 </dd>
 </dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pymet.field.McGrid.latlon">
+<tt class="descname">latlon</tt><big>(</big><big>)</big><a class="headerlink" href="#pymet.field.McGrid.latlon" title="Permalink to this definition">¶</a></dt>
+<dd><p>2次元プロットのための緯度・経度配列を返す。</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>lat, lon</strong> <span class="classifier-delimiter">:</span> <span class="classifier">2darray</span></dt>
+<dd><p class="first last">緯度,経度配列。</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -295,28 +323,181 @@
 </tr>
 </tbody>
 </table>
-<p><strong>Methods</strong></p>
+<dl class="docutils">
+<dt><strong>Attribure</strong></dt>
+<dd><table border="1" class="first docutils">
+<colgroup>
+<col width="15%" />
+<col width="13%" />
+<col width="71%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>grid</td>
+<td>McGrid</td>
+<td>座標に関するデータ</td>
+</tr>
+<tr class="row-even"><td>name</td>
+<td>str</td>
+<td>変数名</td>
+</tr>
+</tbody>
+</table>
+<p class="last">その他属性はnumpy.ma.MaskedArrayと共通。</p>
+</dd>
+<dt><strong>Methods</strong></dt>
+<dd><table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">McField.__new__</span></tt>(data,&nbsp;**kwargs)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">McField.__init__</span></tt>(data[,&nbsp;name,&nbsp;grid])</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">McField.__getitem__</span></tt>(keys)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#pymet.field.McField.copy" title="pymet.field.McField.copy"><tt class="xref py py-obj docutils literal"><span class="pre">McField.copy</span></tt></a>()</td>
+<td>コピーを返す。</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#pymet.field.McField.get" title="pymet.field.McField.get"><tt class="xref py py-obj docutils literal"><span class="pre">McField.get</span></tt></a>(**kwargs)</td>
+<td>指定した次元の範囲のスライスを返す。</td>
+</tr>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">McField.anom</span></tt>(*args,&nbsp;**kwargs)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">McField.cumprod</span></tt>(*args,&nbsp;**kwargs)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">McField.cumsum</span></tt>(*args,&nbsp;**kwargs)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">McField.mean</span></tt>(*args,&nbsp;**kwargs)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">McField.prod</span></tt>(*args,&nbsp;**kwargs)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">McField.std</span></tt>(*args,&nbsp;**kwargs)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">McField.sum</span></tt>(*args,&nbsp;**kwargs)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">McField.var</span></tt>(*args,&nbsp;**kwargs)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">McField.max</span></tt>(*args,&nbsp;**kwargs)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">McField.min</span></tt>(*args,&nbsp;**kwargs)</td>
+<td></td>
+</tr>
+</tbody>
+</table>
 <table border="1" class="longtable docutils">
 <colgroup>
 <col width="10%" />
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference external" href="http://docs.python.org/library/copy.html#copy" title="(in Python v2.7)"><tt class="xref py py-obj docutils literal"><span class="pre">copy</span></tt></a></td>
-<td>Generic (shallow and deep) copying operations.</td>
-</tr>
-<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">anom</span></tt></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">mean</span></tt></td>
-<td></td>
+<tr class="row-odd"><td><a class="reference internal" href="#pymet.field.McField.dmean" title="pymet.field.McField.dmean"><tt class="xref py py-obj docutils literal"><span class="pre">McField.dmean</span></tt></a>(**kwargs)</td>
+<td>指定した領域に対する平均を求める。</td>
 </tr>
 </tbody>
 </table>
+</dd>
+</dl>
 <dl class="method">
 <dt id="pymet.field.McField.copy">
 <tt class="descname">copy</tt><big>(</big><big>)</big><a class="headerlink" href="#pymet.field.McField.copy" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a copy of McField instance.</p>
+<dd><p>コピーを返す。</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pymet.field.McField.dmean">
+<tt class="descname">dmean</tt><big>(</big><em>**kwargs</em><big>)</big><a class="headerlink" href="#pymet.field.McField.dmean" title="Permalink to this definition">¶</a></dt>
+<dd><p>指定した領域に対する平均を求める。</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Arguments :</th><td class="field-body"><dl class="first docutils">
+<dt><strong>lon</strong> <span class="classifier-delimiter">:</span> <span class="classifier">tuple, optional</span></dt>
+<dd><p class="first last">経度次元の範囲。</p>
+</dd>
+<dt><strong>lat</strong> <span class="classifier-delimiter">:</span> <span class="classifier">tuple, optional</span></dt>
+<dd><p class="first last">緯度次元の範囲。</p>
+</dd>
+<dt><strong>lev</strong> <span class="classifier-delimiter">:</span> <span class="classifier">tuple, optional</span></dt>
+<dd><p class="first last">鉛直次元の範囲。</p>
+</dd>
+<dt><strong>time</strong> <span class="classifier-delimiter">:</span> <span class="classifier">tuple of datetime, optional</span></dt>
+<dd><p class="first last">時間次元の範囲。</p>
+</dd>
+<dt><strong>ens</strong> <span class="classifier-delimiter">:</span> <span class="classifier">tuple, optional</span></dt>
+<dd><p class="first last">アンサンブル次元の範囲。</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last"><strong>result</strong>: McField object</p>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt><strong>Exmaples</strong></dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="go">&gt;&gt;&gt;</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pymet.field.McField.get">
+<tt class="descname">get</tt><big>(</big><em>**kwargs</em><big>)</big><a class="headerlink" href="#pymet.field.McField.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>指定した次元の範囲のスライスを返す。</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Arguments :</th><td class="field-body"><dl class="first docutils">
+<dt><strong>lon</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float or tuple, optional</span></dt>
+<dd><p class="first last">経度次元の範囲。</p>
+</dd>
+<dt><strong>lat</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float or tuple, optional</span></dt>
+<dd><p class="first last">緯度次元の範囲。</p>
+</dd>
+<dt><strong>lev</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float or tuple, optional</span></dt>
+<dd><p class="first last">鉛直次元の範囲。</p>
+</dd>
+<dt><strong>time</strong> <span class="classifier-delimiter">:</span> <span class="classifier">datetime object or tuple, optional</span></dt>
+<dd><p class="first last">時間次元の範囲。</p>
+</dd>
+<dt><strong>ens</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float or tuple, optional</span></dt>
+<dd><p class="first last">アンサンブル次元の範囲。</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last"><strong>result</strong>: McField object</p>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt><strong>Examples</strong></dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">dims</span>
+<span class="gp">&gt;&gt;&gt; </span>
+</pre></div>
+</div>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -334,7 +515,7 @@
 <dd><p class="first last">結合するMcFieldオブジェクトのリストまたはタプル。結合する次元以外は同じ形状でなければならない。</p>
 </dd>
 <dt><strong>axis</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int ot str, optional</span></dt>
-<dd><p class="first last">結合する軸を指定する。次元名(&#8216;lon&#8217;,&#8217;lat&#8217;,&#8217;lev&#8217;,&#8217;tyme&#8217;)で指定することもできる。デフォルトは0で先頭。</p>
+<dd><p class="first last">結合する軸を指定する。次元名(&#8216;lon&#8217;,&#8217;lat&#8217;,&#8217;lev&#8217;,&#8217;time&#8217;)で指定することもできる。デフォルトは0で先頭。</p>
 </dd>
 </dl>
 </td>
@@ -347,20 +528,20 @@
 <dl class="docutils">
 <dt><strong>Examples</strong></dt>
 <dd><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">field1</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">dims</span>
-<span class="go">[&#39;tyme&#39;, &#39;lev&#39;, &#39;lat&#39;, &#39;lon&#39;]</span>
+<span class="go">[&#39;time&#39;, &#39;lev&#39;, &#39;lat&#39;, &#39;lon&#39;]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">field2</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">dims</span>
-<span class="go">[&#39;tyme&#39;, &#39;lev&#39;, &#39;lat&#39;, &#39;lon&#39;]</span>
+<span class="go">[&#39;time&#39;, &#39;lev&#39;, &#39;lat&#39;, &#39;lon&#39;]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">field1</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">field2</span><span class="o">.</span><span class="n">shape</span>
 <span class="go">((2, 3, 73, 144), (4, 3, 73, 144))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">field1</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">tyme</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">field1</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">time</span>
 <span class="go">array([2009-10-11 00:00:00, 2009-10-12 00:00:00], dtype=object)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">field2</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">tyme</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">field2</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">time</span>
 <span class="go">array([2009-10-13 00:00:00, 2009-10-14 00:00:00, 2009-10-15 00:00:00,</span>
 <span class="go">       2009-10-16 00:00:00], dtype=object)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">pymet</span><span class="o">.</span><span class="n">mcfield</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">field1</span><span class="p">,</span> <span class="n">field2</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="s">&#39;tyme&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">pymet</span><span class="o">.</span><span class="n">mcfield</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">field1</span><span class="p">,</span> <span class="n">field2</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="s">&#39;time&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="o">.</span><span class="n">shape</span>
 <span class="go">(6, 3, 73, 144)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">tyme</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">time</span>
 <span class="go">array([2009-10-11 00:00:00, 2009-10-12 00:00:00, 2009-10-13 00:00:00,</span>
 <span class="go">       2009-10-14 00:00:00, 2009-10-15 00:00:00, 2009-10-16 00:00:00], dtype=object)</span>
 </pre></div>
@@ -390,7 +571,225 @@
 </tr>
 </tbody>
 </table>
-<p><strong>See Also</strong></p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="pymet.grid.html#pymet.grid.dvardx" title="pymet.grid.dvardx"><tt class="xref py py-obj docutils literal"><span class="pre">pymet.grid.dvardx</span></tt></a></td>
+<td>経度方向の微分を中央差分で計算。</td>
+</tr>
+</tbody>
+</table>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pymet.field.dvardy">
+<tt class="descclassname">pymet.field.</tt><tt class="descname">dvardy</tt><big>(</big><em>field</em><big>)</big><a class="headerlink" href="#pymet.field.dvardy" title="Permalink to this definition">¶</a></dt>
+<dd><p>緯度方向の微分を中央差分で計算。</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Arguments :</th><td class="field-body"><strong>field</strong>: McField object</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><strong>result</strong>: McField object</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="pymet.grid.html#pymet.grid.dvardy" title="pymet.grid.dvardy"><tt class="xref py py-obj docutils literal"><span class="pre">pymet.grid.dvardy</span></tt></a></td>
+<td>緯度方向の微分を中央差分で計算。南北端は前方、後方差分</td>
+</tr>
+</tbody>
+</table>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pymet.field.dvardp">
+<tt class="descclassname">pymet.field.</tt><tt class="descname">dvardp</tt><big>(</big><em>field</em><big>)</big><a class="headerlink" href="#pymet.field.dvardp" title="Permalink to this definition">¶</a></dt>
+<dd><p>鉛直方向の微分をlog(p)の中央差分で計算。</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Arguments :</th><td class="field-body"><strong>field</strong>: McField object</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><strong>result</strong>: McField object</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="pymet.grid.html#pymet.grid.dvardp" title="pymet.grid.dvardp"><tt class="xref py py-obj docutils literal"><span class="pre">pymet.grid.dvardp</span></tt></a></td>
+<td>鉛直方向の微分をlog(p)の中央差分で計算。上下端は前方、後方差分</td>
+</tr>
+</tbody>
+</table>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pymet.field.div">
+<tt class="descclassname">pymet.field.</tt><tt class="descname">div</tt><big>(</big><em>ufield</em>, <em>vfield</em>, <em>cyclic=True</em><big>)</big><a class="headerlink" href="#pymet.field.div" title="Permalink to this definition">¶</a></dt>
+<dd><p>水平発散を計算する。</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Arguments :</th><td class="field-body"><dl class="first docutils">
+<dt><strong>ufield, vfield</strong> <span class="classifier-delimiter">:</span> <span class="classifier">McField object</span></dt>
+<dd><p class="first last">ベクトルの東西、南北成分。</p>
+</dd>
+<dt><strong>cyclic</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">東西の境界を周期境界として扱うかどうか。False の場合は周期境界を用いずに前方、後方差分で計算する。デフォルトは True。</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last"><strong>result</strong>: McField object</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="pymet.grid.html#pymet.grid.div" title="pymet.grid.div"><tt class="xref py py-obj docutils literal"><span class="pre">pymet.grid.div</span></tt></a></td>
+<td>水平発散を計算する。</td>
+</tr>
+</tbody>
+</table>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pymet.field.rot">
+<tt class="descclassname">pymet.field.</tt><tt class="descname">rot</tt><big>(</big><em>ufield</em>, <em>vfield</em>, <em>cyclic=True</em><big>)</big><a class="headerlink" href="#pymet.field.rot" title="Permalink to this definition">¶</a></dt>
+<dd><p>回転の鉛直成分を計算する。</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Arguments :</th><td class="field-body"><dl class="first docutils">
+<dt><strong>ufield, vfield</strong> <span class="classifier-delimiter">:</span> <span class="classifier">McField object</span></dt>
+<dd><p class="first last">ベクトルの東西、鉛直成分。</p>
+</dd>
+<dt><strong>cyclic</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">東西の境界を周期境界として扱うかどうか。False の場合は周期境界を用いずに前方、後方差分で計算する。デフォルトは True。</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last"><strong>result</strong>: McField object</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="pymet.grid.html#pymet.grid.rot" title="pymet.grid.rot"><tt class="xref py py-obj docutils literal"><span class="pre">pymet.grid.rot</span></tt></a></td>
+<td>回転を計算</td>
+</tr>
+</tbody>
+</table>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pymet.field.d2vardx2">
+<tt class="descclassname">pymet.field.</tt><tt class="descname">d2vardx2</tt><big>(</big><em>field</em>, <em>cyclic=True</em><big>)</big><a class="headerlink" href="#pymet.field.d2vardx2" title="Permalink to this definition">¶</a></dt>
+<dd><p>経度方向の2階微分を中央差分で計算。</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Arguments :</th><td class="field-body"><p class="first"><strong>field</strong>: McField object</p>
+<dl class="docutils">
+<dt><strong>cyclic</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">東西の境界を周期境界として扱うかどうか。False の場合は周期境界を用いずに前方、後方差分で計算する。デフォルトは True。</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last"><strong>result</strong>: McField object</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="pymet.grid.html#pymet.grid.d2vardx2" title="pymet.grid.d2vardx2"><tt class="xref py py-obj docutils literal"><span class="pre">pymet.grid.d2vardx2</span></tt></a></td>
+<td>経度方向の2階微分を中央差分で計算。</td>
+</tr>
+</tbody>
+</table>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pymet.field.d2vardy2">
+<tt class="descclassname">pymet.field.</tt><tt class="descname">d2vardy2</tt><big>(</big><em>field</em><big>)</big><a class="headerlink" href="#pymet.field.d2vardy2" title="Permalink to this definition">¶</a></dt>
+<dd><p>緯度方向の微分を中央差分で計算。</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Arguments :</th><td class="field-body"><strong>field</strong>: McField object</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><strong>result</strong>: McField object</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="pymet.grid.html#pymet.grid.d2vardy2" title="pymet.grid.d2vardy2"><tt class="xref py py-obj docutils literal"><span class="pre">pymet.grid.d2vardy2</span></tt></a></td>
+<td>緯度方向の2階微分を中央差分で計算。南北端はゼロとする。</td>
+</tr>
+</tbody>
+</table>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -429,6 +828,185 @@
 </div>
 </dd></dl>
 
+<dl class="function">
+<dt id="pymet.field.ertelpv">
+<tt class="descclassname">pymet.field.</tt><tt class="descname">ertelpv</tt><big>(</big><em>ufield</em>, <em>vfield</em>, <em>tfield</em>, <em>cyclic=True</em><big>)</big><a class="headerlink" href="#pymet.field.ertelpv" title="Permalink to this definition">¶</a></dt>
+<dd><p>エルテルのポテンシャル渦度を計算する。</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Arguments :</th><td class="field-body"><dl class="first docutils">
+<dt><strong>ufield, vfield</strong> <span class="classifier-delimiter">:</span> <span class="classifier">McField object</span></dt>
+<dd><p class="first last">東西風、南北風 [m/s]</p>
+</dd>
+<dt><strong>tfield</strong> <span class="classifier-delimiter">:</span> <span class="classifier">McField object</span></dt>
+<dd><p class="first last">気温 [K]</p>
+</dd>
+<dt><strong>cyclic</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">東西境界を周期境界で扱うか。デフォルトはTrue</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last"><strong>out</strong>: McField object</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="pymet.dynamics.html#pymet.dynamics.ertelpv" title="pymet.dynamics.ertelpv"><tt class="xref py py-obj docutils literal"><span class="pre">pymet.dynamics.ertelpv</span></tt></a></td>
+<td>エルテルのポテンシャル渦度を計算する。</td>
+</tr>
+</tbody>
+</table>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pymet.field.stability">
+<tt class="descclassname">pymet.field.</tt><tt class="descname">stability</tt><big>(</big><em>tfield</em><big>)</big><a class="headerlink" href="#pymet.field.stability" title="Permalink to this definition">¶</a></dt>
+<dd><p>p座標系での静的安定度(Brunt-Vaisala振動数)を計算する。</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Arguments :</th><td class="field-body"><dl class="first docutils">
+<dt><strong>tfield</strong> <span class="classifier-delimiter">:</span> <span class="classifier">McField object</span></dt>
+<dd><p class="first last">気温 [K]</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last"><strong>out</strong>: McField object</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="pymet.dynamics.html#pymet.dynamics.stability" title="pymet.dynamics.stability"><tt class="xref py py-obj docutils literal"><span class="pre">pymet.dynamics.stability</span></tt></a></td>
+<td>p座標系での静的安定度(Brunt-Vaisala振動数)を計算する。</td>
+</tr>
+</tbody>
+</table>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pymet.field.tnflux2d">
+<tt class="descclassname">pymet.field.</tt><tt class="descname">tnflux2d</tt><big>(</big><em>Ufield</em>, <em>Vfield</em>, <em>strmfield</em>, <em>cyclic=True</em>, <em>limit=100.0</em><big>)</big><a class="headerlink" href="#pymet.field.tnflux2d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takaya &amp; Nakamura (2001) の波活動度フラックスの水平成分をp面上で計算する。</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Arguments :</th><td class="field-body"><dl class="first docutils">
+<dt><strong>Ufield, Vfield</strong> <span class="classifier-delimiter">:</span> <span class="classifier">McField object</span></dt>
+<dd><p class="first last">気候値東西風、南北風 [m/s]</p>
+</dd>
+<dt><strong>strmfield</strong> <span class="classifier-delimiter">:</span> <span class="classifier">McField object</span></dt>
+<dd><p class="first last">流線関数偏差 [m^2/s]</p>
+</dd>
+<dt><strong>cyclic</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">東西境界を周期境界で扱うか。デフォルトはTrue。</p>
+</dd>
+<dt><strong>limit</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float, optional</span></dt>
+<dd><p class="first last">デフォルトは100.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>tnx, tny</strong> <span class="classifier-delimiter">:</span> <span class="classifier">McField object</span></dt>
+<dd><p class="first last">フラックスの東西、南北成分</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="pymet.dynamics.html#pymet.dynamics.tnflux2d" title="pymet.dynamics.tnflux2d"><tt class="xref py py-obj docutils literal"><span class="pre">pymet.dynamics.tnflux2d</span></tt></a></td>
+<td>Takaya &amp; Nakamura (2001) の波活動度フラックスの水平成分をp面上で計算する。</td>
+</tr>
+</tbody>
+</table>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pymet.field.tnflux3d">
+<tt class="descclassname">pymet.field.</tt><tt class="descname">tnflux3d</tt><big>(</big><em>Ufield</em>, <em>Vfield</em>, <em>Tfield</em>, <em>strmfield</em>, <em>cyclic=True</em>, <em>limit=100.0</em><big>)</big><a class="headerlink" href="#pymet.field.tnflux3d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takaya &amp; Nakamura (2001) の波活動度フラックスをp面上で計算する。</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Arguments :</th><td class="field-body"><dl class="first docutils">
+<dt><strong>Ufield, Vfield</strong> <span class="classifier-delimiter">:</span> <span class="classifier">McField object</span></dt>
+<dd><p class="first last">気候値東西風、南北風 [m/s]</p>
+</dd>
+<dt><strong>Tfield</strong> <span class="classifier-delimiter">:</span> <span class="classifier">McField object</span></dt>
+<dd><p class="first last">気候値気温 [K]</p>
+</dd>
+<dt><strong>strmfield</strong> <span class="classifier-delimiter">:</span> <span class="classifier">McField object</span></dt>
+<dd><p class="first last">流線関数偏差 [m^2/s]</p>
+</dd>
+<dt><strong>cyclic</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">東西境界を周期境界で扱うか。デフォルトはTrue。</p>
+</dd>
+<dt><strong>limit</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float, optional</span></dt>
+<dd><p class="first last">デフォルトは100.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>tnx, tny, tnz</strong> <span class="classifier-delimiter">:</span> <span class="classifier">McField object</span></dt>
+<dd><p class="first last">フラックスの東西、南北、鉛直成分</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="pymet.dynamics.html#pymet.dynamics.tnflux3d" title="pymet.dynamics.tnflux3d"><tt class="xref py py-obj docutils literal"><span class="pre">pymet.dynamics.tnflux3d</span></tt></a></td>
+<td>Takaya &amp; Nakamura (2001) の波活動度フラックスをp面上で計算する。</td>
+</tr>
+</tbody>
+</table>
+</div>
+</dd></dl>
+
 </div>
 </div>
 
@@ -443,9 +1021,7 @@
 <li><a class="reference internal" href="#">格子点データを扱うためのモジュール (<tt class="docutils literal"><span class="pre">pymet.field</span></tt>)</a><ul>
 <li><a class="reference internal" href="#id1">格子点データを扱うクラス</a></li>
 <li><a class="reference internal" href="#pymet-grid">pymet.gridへのラッパー</a></li>
-<li><a class="reference internal" href="#pymet-dynamics">pymet.dynamicsへのラッパー</a><ul>
-</ul>
-</li>
+<li><a class="reference internal" href="#pymet-dynamics">pymet.dynamicsへのラッパー</a></li>
 </ul>
 </li>
 </ul>
@@ -453,6 +1029,9 @@
   <h4>Previous topic</h4>
   <p class="topless"><a href="pymet.io.html"
                         title="previous chapter">IOモジュール (<tt class="docutils literal"><span class="pre">pymet.io</span></tt>)</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="pymet.metplt.html"
+                        title="next chapter">気象でよく使うプロットのためのモジュール (<tt class="docutils literal"><span class="pre">pymet.metplt</span></tt>)</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/pymet.field.txt"
@@ -484,6 +1063,9 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="pymet.metplt.html" title="気象でよく使うプロットのためのモジュール (pymet.metplt)"
+             >next</a> |</li>
         <li class="right" >
           <a href="pymet.io.html" title="IOモジュール (pymet.io)"
              >previous</a> |</li>
