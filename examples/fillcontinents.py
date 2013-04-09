@@ -5,7 +5,7 @@ from pymet.metplt import MyBasemap
 from netCDF4 import Dataset
 
 # read 500hPa Geopotential
-nc = Dataset('../../examples/z500_data.nc')
+nc = Dataset('./examples/z500_data.nc')
 z500 = nc.variables['z'][0,:,:]/9.8
 lon = nc.variables['longitude'][:]
 lat = nc.variables['latitude'][:]

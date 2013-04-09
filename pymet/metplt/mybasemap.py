@@ -143,7 +143,7 @@ class MyBasemap(Basemap):
           >>> m.contourf(lon, lat, data, zorder=0)
           >>> m.fillcontinents(zorder=1)
         
-         .. plot:: _figure/fillcontinents.py
+         .. plot:: ../examples/fillcontinents.py
         """
         Basemap.fillcontinents(self,color=color,zorder=zorder,**keys)
 
@@ -210,7 +210,7 @@ class MyBasemap(Basemap):
          ========== ======= ======================================================
 
         **Examples**
-         .. plot:: _figure/contour.py
+         .. plot:: ../examples/contour.py
         """
         if (lon.ndim<2 and lat.ndim<2): lon, lat = np.meshgrid(lon, lat)
         ax = self.ax or self._check_ax()
@@ -263,7 +263,7 @@ class MyBasemap(Basemap):
          ========== ======= ======================================================
                   
         **Examples**
-         .. plot:: _figure/contourf.py
+         .. plot:: ../examples/contourf.py
         
         """
         if (lon.ndim<2 and lat.ndim<2): lon, lat = np.meshgrid(lon, lat)
@@ -311,7 +311,7 @@ class MyBasemap(Basemap):
          =============== ======= ======================================================
          
         **Examples**
-         .. plot:: _figure/quiver.py
+         .. plot:: ../examples/quiver.py
          
         """
         if (lon.ndim<2 and lat.ndim<2): lon, lat = np.meshgrid(lon, lat)
