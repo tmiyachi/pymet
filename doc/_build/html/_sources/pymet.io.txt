@@ -1,4 +1,0 @@
-.. automodule:: pymet.io
-   :members:
-
-

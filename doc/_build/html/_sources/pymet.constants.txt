@@ -1,3 +1,0 @@
-.. automodule:: pymet.constants
-   :members:
-   
