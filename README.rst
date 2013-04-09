@@ -1,5 +1,6 @@
 How to Build Documentation
 ==========================
+pymet is Python based Meteorological Analysis and Graphics module.
 
 To make the html documentation, install python document builder, **Sphinx**
 
