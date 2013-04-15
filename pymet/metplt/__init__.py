@@ -7,7 +7,7 @@ import ticker
 from mybasemap import *
 from crossplt import *
 from hovmollerplt import *
-from ticker improt *
+from ticker import *
 
 __all__ = []
 __all__ += mybasemap.__all__
