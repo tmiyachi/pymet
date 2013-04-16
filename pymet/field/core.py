@@ -10,9 +10,9 @@ def testgrid():
     lon = np.arange(0,360,2.5)
     lat = np.arange(-90,90.1,2.5)
     lev = [1000,500,200]
-    tyme = [datetime(2009,10,11), datetime(2009,10,12)]
-    dims = ['tyme', 'lev', 'lat', 'lon']
-    return McGrid(name=name,lon=lon,lat=lat,lev=lev,tyme=tyme,dims=dims)
+    time = [datetime(2009,10,11), datetime(2009,10,12)]
+    dims = ['time', 'lev', 'lat', 'lon']
+    return McGrid(name=name,lon=lon,lat=lat,lev=lev,time=time,dims=dims)
 
 def testfield():
     grid = testgrid()
@@ -33,7 +33,7 @@ class McGrid:
 
      **lev**
 
-     **tyme**
+     **time**
 
      **dims**
 
@@ -45,8 +45,8 @@ class McGrid:
 
     **Examples**
      >>> grid = pymet.McGrid(name='test_grid', lon=np.arange(0,360,2.5), lat=np.arange(-90,90.1,2.5)),
-                             lev=[1000.,500.,200.], tyme=[datetime(2009,10,11),datetime(2009,10,12),
-                             dims=['tyme','lev','lat','lon'])
+                             lev=[1000.,500.,200.], time=[datetime(2009,10,11),datetime(2009,10,12),
+                             dims=['time','lev','lat','lon'])
 
     **Attributes**
     
@@ -55,7 +55,7 @@ class McGrid:
     lon
     lat
     lev
-    tyme
+    time
     dims
     punit
     xdim
@@ -76,7 +76,7 @@ class McGrid:
         __getattr__
     
     """
-    def __init__(self,name=None,lon=None,lat=None,lev=None,tyme=None,dims=None,punit=100.):
+    def __init__(self,name=None,lon=None,lat=None,lev=None,time=None,dims=None,punit=100.):
         self.name = name
         if hasattr(lon, '__iter__'):
             lon = np.asarray(lon)
@@ -90,10 +90,10 @@ class McGrid:
             lev = np.asarray(lev)
             if len(lev)==1: lev=lev[0]
         self.lev = lev
-        if hasattr(tyme, '__iter__'):
-            tyme = np.asarray(tyme)
-            if len(tyme)==1: tyme=tyme[0]
-        self.tyme = tyme
+        if hasattr(time, '__iter__'):
+            time = np.asarray(time)
+            if len(time)==1: time=time[0]
+        self.time = time
         self.dims = dims
         self.punit = 100.
     def __getattr__(self,name):
@@ -112,8 +112,8 @@ class McGrid:
                 dname = 'lev'
                 return self.dims.index('lev')
             elif name == 'tdim':
-                dname = 'tyme'
-                return self.dims.index('tyme')
+                dname = 'time'
+                return self.dims.index('time')
             elif name == 'edim':
                 dname = 'ens'
                 return self.dims.index('ens')
@@ -130,6 +130,16 @@ class McGrid:
             if v is not None:
                 grid.__dict__[a] = copy.deepcopy(v)
         return grid
+    def latlon(self):
+        u"""
+        2次元プロットのための緯度・経度配列を返す。
+
+        :Returns:
+         **lat, lon** : 2darray
+          緯度,経度配列。
+        """
+        return np.meshgrid(self.lon, self.lat)
+    
     def gridmask(self, **kwargs):
         u"""
         指定した範囲の値をインデキシングするためのbool型配列を求める。
@@ -137,7 +147,7 @@ class McGrid:
         :Arguments:
          **lon, lat, lev** : tuple or list of floats, or float, optional
            経度、緯度、鉛直次元の指定する領域。
-         **tyme** : tuple or list of datetime object, or datetime object, optional
+         **time** : tuple or list of datetime object, or datetime object, optional
            時間次元の範囲。
 
         :Returns:
@@ -145,10 +155,10 @@ class McGrid:
 
         **Examples**    
          範囲を指定する場合はタプルまたはリストで指定する。
-         >>> grid = pymet.McGrid(name='test_grid', lon=np.arange(0,360,2.5), lat=np.arange(-90,90.1,2.5)),
-                                  lev=[1000.,500.,200.], tyme=[datetime(2009,10,11),datetime(2009,10,12),
-                                  dims=['tyme','lev','lat','lon'])
-         >>> mask = grid.gridmask(lon=(0., 180.), )
+          >>> grid = pymet.McGrid(name='test_grid', lon=np.arange(0,360,2.5), lat=np.arange(-90,90.1,2.5)),
+                                  lev=[1000.,500.,200.], time=[datetime(2009,10,11),datetime(2009,10,12),
+                                  dims=['time','lev','lat','lon'])
+          >>> mask = grid.gridmask(lon=(0., 180.), )
         """
         for kwd in kwargs:
             if not kwd in self.dims:
@@ -158,15 +168,16 @@ class McGrid:
             dimvalue = self.__dict__[dim]
             kwdvalue = kwargs.get(dim, None)
             if kwdvalue == None:
-                mask.append(slice(None,None,None))
+#                mask.append(slice(None,None,None))
+                mask.append(dimvalue==dimvalue)
             elif isinstance(kwdvalue, list) or isinstance(kwdvalue, tuple):
                 kwdmin, kwdmax = min(kwdvalue), max(kwdvalue)
-                mask.append((kwdmin<=dimvalue) & (kwdmax>=dimvalue))
+                mask.append((dimvalue>=kwdmin) & (dimvalue<=kwdmax))
             else:
                 if kwdvalue<dimvalue.min() or kwdvalue>dimvalue.max():
                     raise ValueError, "{0}={1} is out of domain".format(dim, kwdvalue)
-                mask.append(np.argmin(np.abs(dimvalue-kwdvalue)))
-        return mask
+                mask.append(np.arange(len(dimvalue))==np.argmin(np.abs(dimvalue-kwdvalue)))
+        return np.ix_(*mask)
     
 class McField(np.ma.MaskedArray):
     u"""
@@ -177,28 +188,44 @@ class McField(np.ma.MaskedArray):
       格子点データ
      **name**
 
+    **Attribure**
+     ======== ======= =====================================
+     grid     McGrid  座標に関するデータ
+     name     str     変数名
+     ======== ======= =====================================
+     
+     その他属性はnumpy.ma.MaskedArrayと共通。
 
     **Methods**
+     .. currentmodule:: pymet.field
 
-    .. currentmodule:: pymet.mcfield.core.McField
-    
-    .. autosummary::
-       :toctree: generated/
-
-       copy
-       anom
-       mean
+     .. autosummary::
         
+        McField.__new__
+        McField.__init__
+        McField.__getitem__
+        McField.copy
+        McField.get
+        McField.anom    
+        McField.cumprod 
+        McField.cumsum  
+        McField.mean    
+        McField.prod    
+        McField.std     
+        McField.sum     
+        McField.var     
+        McField.max 
+        McField.min
 
+     .. autosummary::
+        McField.dmean
     """
     def __new__(cls, data, **kwargs):
-        print 'called  __new__'
         cls.name = None
         cls.grid = McGrid()
         return super(McField, cls).__new__(cls, data, **kwargs)
     
     def __init__(self, data, name=None, grid=None, **kwargs):
-        print 'called __init__'
         super(McField,self).__init__(self, data, **kwargs)
         self.name = name
         if grid == None:
@@ -211,31 +238,100 @@ class McField(np.ma.MaskedArray):
 
     def copy(self):
         """
-        Returns a copy of McField instance.
+        コピーを返す。
         """
         return McField(self.data.copy(), name=self.name,
                        grid=self.grid.copy(), mask=self.mask.copy())
-                       
-        
-    def __getitem__(self,keys):
-        print keys
-        data = super(np.ma.MaskedArray,self).__getitem__(keys)
+                                  
+    def __getitem__(self, keys):
+        data = super(np.ma.MaskedArray, self).__getitem__(keys)
         if not isinstance(data, np.ma.MaskedArray):
             return data
+        elif data.size==0:
+            return None
         grid = self.grid.copy()
-        for i, key in enumerate(keys):
-            print i
-            dimname = self.grid.dims[i]
-            print dimname, grid.__dict__[dimname][key]
-            grid.__dict__[dimname] = grid.__dict__[dimname][key]
+        ## ここからかなり変則。検討課題。
+        #1. np.indiceで各軸でのインデックスの配列をつくる。
+        ind = np.indices(self.shape)
+        dimidx = [np.unique(ind[i][keys]) for i in range(self.ndim)]
+        for dimname, idx in zip(self.grid.dims, dimidx):
+            value = grid.__dict__[dimname][idx]
             # スライスの結果、次元が1要素になったらその次元を削除
-            if not hasattr(grid.__dict__[dimname], '__iter__'):
+            if value.size==0:
                 grid.dims.remove(dimname)
-            elif len(grid.__dict__[dimname])==1:
+                grid.__dict__[dimname] = None
+            elif value.size==1:
                 grid.dims.remove(dimname)
-                grid.__dict__[dimname] = grid.__dict__[dimname][0]
+                grid.__dict__[dimname] = value[0]
+            else:
+                grid.__dict__[dimname] = value
+        data = np.ma.squeeze(data)
         return McField(data, name=self.name, grid=grid, mask=data.mask)
 
+    def get(self, **kwargs):
+        u"""
+        指定した次元の範囲のスライスを返す。
+
+        :Arguments:
+         **lon** : float or tuple, optional
+          経度次元の範囲。
+         **lat** : float or tuple, optional
+          緯度次元の範囲。
+         **lev** : float or tuple, optional
+          鉛直次元の範囲。
+         **time** : datetime object or tuple, optional
+          時間次元の範囲。
+         **ens** : float or tuple, optional
+          アンサンブル次元の範囲。
+        :Returns:
+         **result** : McField object
+
+        **Examples**
+         >>> data.grid.dims
+         >>> 
+        """
+        mask = self.grid.gridmask(**kwargs)
+        return self[mask]
+
+    #--------------------------------------------------------------
+    #-- 領域を指定して計算するメソッド
+    #--------------------------------------------------------------
+    def dmean(self, **kwargs):
+        u"""
+        指定した領域に対する平均を求める。
+
+        :Arguments:
+         **lon** : tuple, optional
+          経度次元の範囲。
+         **lat** : tuple, optional
+          緯度次元の範囲。
+         **lev** : tuple, optional
+          鉛直次元の範囲。
+         **time** : tuple of datetime, optional
+          時間次元の範囲。
+         **ens** : tuple, optional
+          アンサンブル次元の範囲。
+
+        :Returns:
+         **result** : McField object
+
+        **Exmaples**
+         >>>
+        """
+        mask = self.grid.gridmask(**kwargs)
+        result = self[mask]
+        axes = []
+        for dimname in kwargs.keys():
+            try:
+                axis = result.grid.dims.index(dimname)
+            except ValueError:
+                raise ValueError, "input field does not have dimension {0}".format(dimname)
+            result = result.mean(axis=axis)
+        return result
+
+    #--------------------------------------------------------------
+    #-- MaskedArrayのメソッドに対するラッパー
+    #--------------------------------------------------------------
     # axisを引数にもつMaskedArrayのメソッドに対するラッパー
     def _axis_oper_wrapper(oper):
         def wrapper(self, *args, **kwargs):
@@ -263,15 +359,14 @@ class McField(np.ma.MaskedArray):
 
     #Minimum/maximum
     max = _axis_oper_wrapper(np.ma.MaskedArray.max)
-    min = _axis_oper_wrapper(np.ma.MaskedArray.max)
-    
+    min = _axis_oper_wrapper(np.ma.MaskedArray.min)
 
-    
     # ラッパーのためのクロージャー
     def _oper_wrapper(oper):
         def wrapper(self, *args, **kwargs):
+            print 'YESYES'
             return McField(oper(self, *args, **kwargs),
-                           name=self.name, grid=self.grid.copy())
+                           name='', grid=self.grid.copy())
         return wrapper
 
     __lt__        = _oper_wrapper(np.ma.MaskedArray.__lt__)
@@ -283,7 +378,7 @@ class McField(np.ma.MaskedArray):
     
     __add__       = _oper_wrapper(np.ma.MaskedArray.__add__)           # +
     __sub__       = _oper_wrapper(np.ma.MaskedArray.__sub__)           # -
-    __mul__       = _oper_wrapper(np.ma.MaskedArray.__sub__)           # *
+    __mul__       = _oper_wrapper(np.ma.MaskedArray.__mul__)           # *
     __floordiv__  = _oper_wrapper(np.ma.MaskedArray.__floordiv__)
     __mod__       = _oper_wrapper(np.ma.MaskedArray.__mod__)           #
     __divmod__    = _oper_wrapper(np.ma.MaskedArray.__divmod__)
@@ -341,7 +436,7 @@ def join(args, axis=0):
      **args** : tuple or list of McField objects
       結合するMcFieldオブジェクトのリストまたはタプル。結合する次元以外は同じ形状でなければならない。
      **axis** : int ot str, optional
-      結合する軸を指定する。次元名('lon','lat','lev','tyme')で指定することもできる。デフォルトは0で先頭。
+      結合する軸を指定する。次元名('lon','lat','lev','time')で指定することもできる。デフォルトは0で先頭。
 
     :Returns:
      **out** : McField instance
@@ -349,20 +444,20 @@ def join(args, axis=0):
 
     **Examples**
      >>> field1.grid.dims
-     ['tyme', 'lev', 'lat', 'lon']
+     ['time', 'lev', 'lat', 'lon']
      >>> field2.grid.dims
-     ['tyme', 'lev', 'lat', 'lon']
+     ['time', 'lev', 'lat', 'lon']
      >>> field1.shape, field2.shape
      ((2, 3, 73, 144), (4, 3, 73, 144))
-     >>> field1.grid.tyme
+     >>> field1.grid.time
      array([2009-10-11 00:00:00, 2009-10-12 00:00:00], dtype=object)
-     >>> field2.grid.tyme
+     >>> field2.grid.time
      array([2009-10-13 00:00:00, 2009-10-14 00:00:00, 2009-10-15 00:00:00,
             2009-10-16 00:00:00], dtype=object)
-     >>> result = pymet.mcfield.join((field1, field2), axis='tyme')
+     >>> result = pymet.mcfield.join((field1, field2), axis='time')
      >>> result.shape
      (6, 3, 73, 144)
-     >>> result.grid.tyme
+     >>> result.grid.time
      array([2009-10-11 00:00:00, 2009-10-12 00:00:00, 2009-10-13 00:00:00,
             2009-10-14 00:00:00, 2009-10-15 00:00:00, 2009-10-16 00:00:00], dtype=object)
             
