@@ -364,7 +364,6 @@ class McField(np.ma.MaskedArray):
     # ラッパーのためのクロージャー
     def _oper_wrapper(oper):
         def wrapper(self, *args, **kwargs):
-            print 'YESYES'
             return McField(oper(self, *args, **kwargs),
                            name='', grid=self.grid.copy())
         return wrapper
