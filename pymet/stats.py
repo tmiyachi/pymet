@@ -7,6 +7,8 @@
 
    runave
    regression
+   rmse
+   acc
    eof
 
 ---------------   
@@ -19,7 +21,9 @@ import scipy.stats as stats
 PI = constants.pi
 NA = np.newaxis
 
-__all__ = ['runave', 'regression', 'eof']
+__all__ = ['runave', 'regression',
+           'rmse', 'acc',
+           'eof']
 
 def runave(a, length, axis=0, bound='mask'):
     u"""
@@ -223,6 +227,56 @@ def regression(x, y, axis=0, dof=None):
         prob = np.rollaxis(prob, 0, axis+1)
         
     return a, b, prob
+
+def rmse(var, basis, exaxes=None):
+    u"""
+    二乗平均誤差(Root Mean Square Error)を計算する。
+
+    :Arguments:
+     **var** : ndarray
+      予報値
+     **basis** : ndarray
+      基準となる値
+    :Returns:
+     **out** : float
+      二乗平均誤差
+    """
+    ## if not exaxes==None:
+    ##     for axis in list(exaxes).sort():
+    ##         basis = np.expand_dims(basis, axis=axis)
+    if var.ndim!=basis.ndim:
+        raise ValueError, "input array size is incorrect"
+    return np.sqrt(np.mean((var - basis)**2))
+
+def acc(fcst, anal, clim):
+    u"""
+    アノマリー相関を計算する。
+
+    :Arguments:
+     **fcst** : ndarray
+      予報値
+     **anal** : ndarray
+      解析値
+     **clim** : ndarray
+      気候値
+    :Returns:
+     **out**  : ndarray
+      アノマリー相関
+    """
+    if not fcst.ndim==anal.ndim==clim.ndim:
+        raise ValueError, "input array size is incorrect"
+    return np.corrcoef((fcst-clim),(anal-clim))[0,1]
+
+
+
+
+
+
+
+
+
+
+
 
 def eofold(data,lat=None,ano=True):
     """ 
