@@ -34,7 +34,7 @@ def dvardx(field, cyclic=True):
     mask = np.ma.getmask(field)
 
     result = pymet.grid.dvardx(data, grid.lon, grid.xdim, cyclic=True)
-    if not result.ndim:
+    if np.size(result)<2:
         return result
     return McField(result, name=field.name, grid=grid, mask=mask)
 
@@ -62,7 +62,7 @@ def dvardy(field):
     mask = np.ma.getmask(field)
 
     result = pymet.grid.dvardy(data, grid.lat, grid.ydim)
-    if not result.ndim:
+    if np.size(result)<2:
         return result
     return McField(result, name=field.name, grid=grid, mask=mask)
 
@@ -90,7 +90,7 @@ def dvardp(field):
     mask = np.ma.getmask(field)
 
     result = pymet.grid.dvardp(data, grid.lev, grid.zdim, grid.punit)
-    if not result.ndim:
+    if np.size(result) < 2:
         return result
     return McField(result, name=field.name, grid=grid, mask=mask)
 
@@ -122,7 +122,7 @@ def d2vardx2(field, cyclic=True):
     mask = np.ma.getmask(field)
 
     result = pymet.grid.d2vardx2(data, grid.lon, grid.xdim, cyclic=True)
-    if not result.ndim:
+    if np.size(result) < 2:
         return result
     return McField(result, name=field.name, grid=grid, mask=mask)
 
@@ -150,7 +150,7 @@ def d2vardy2(field):
     mask = np.ma.getmask(field)
 
     result = grid.d2vardy2(data, grid.lat, grid.ydim)
-    if not result.ndim:
+    if np.size(result) < 2:
         return result
     return McField(result, name=field.name, grid=grid, mask=mask)
 
@@ -184,7 +184,7 @@ def div(ufield, vfield, cyclic=True):
     mask = np.ma.getmask(ufield) | np.ma.getmask(vfield)
 
     result = pymet.grid.div(u, v, grid.lon, grid.lat, grid.xdim, grid.ydim, cyclic=True)
-    if not result.ndim:
+    if np.size(result) < 2:
         return result
     return McField(result, name='div', grid=grid, mask=mask)
 
@@ -217,7 +217,7 @@ def rot(ufield, vfield, cyclic=True):
     mask = np.ma.getmask(ufield) | np.ma.getmask(vfield)
 
     result = pymet.grid.rot(u, v, grid.lon, grid.lat, grid.xdim, grid.ydim, cyclic=True)
-    if not result.ndim:
+    if np.size(result) < 2:
         return result
     return McField(result, name='rot', grid=grid, mask=mask)
 
@@ -245,10 +245,9 @@ def vint(field, bottom, top):
 
     result = pymet.grid.vint(var, bottom, top, lev=grid.lev, zdim=grid.zdim, punit=grid.punit)
 
-    if not result.ndim:
+    if np.size(result) < 2:
         return result
     grid.name = field.name + '_vint'
     grid.lev = None
-    grid.dims.remove('lev')
     return McField(result, name=grid.name, grid=grid)
     

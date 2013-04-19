@@ -11,8 +11,7 @@ def testgrid():
     lat = np.arange(-90,90.1,2.5)
     lev = [1000,500,200]
     time = [datetime(2009,10,11), datetime(2009,10,12)]
-    dims = ['time', 'lev', 'lat', 'lon']
-    return McGrid(name=name,lon=lon,lat=lat,lev=lev,time=time,dims=dims)
+    return McGrid(name=name,lon=lon,lat=lat,lev=lev,time=time)
 
 def testfield():
     grid = testgrid()
@@ -35,6 +34,8 @@ class McGrid:
 
      **time**
 
+     **ens**
+     
      **dims**
 
      **punit** : float, optional
@@ -56,6 +57,7 @@ class McGrid:
     lat
     lev
     time
+    ens
     dims
     punit
     xdim
@@ -76,27 +78,59 @@ class McGrid:
         __getattr__
     
     """
-    def __init__(self,name=None,lon=None,lat=None,lev=None,time=None,dims=None,punit=100.):
+    def __init__(self,name=None,lon=None,lat=None,lev=None,time=None,ens=None,punit=100.):
+        # インスタンス作成時にのみ次元の順序をGrADS形式の順序で設定し、
+        # その後は、lon,lat,lev,time,ensが変更される度にその長さに応じて変更する
+        self.__dict__['dims'] = ['ens','time','lev','lat','lon']
+        #
         self.name = name
-        if hasattr(lon, '__iter__'):
-            lon = np.asarray(lon)
-            if len(lon)==1: lon=lon[0]
-        self.lon = lon
-        if hasattr(lat, '__iter__'):
-            lat = np.asarray(lat)
-            if len(lat)==1: lat=lat[0]
-        self.lat = lat
-        if hasattr(lev, '__iter__'):
-            lev = np.asarray(lev)
-            if len(lev)==1: lev=lev[0]
-        self.lev = lev
-        if hasattr(time, '__iter__'):
-            time = np.asarray(time)
-            if len(time)==1: time=time[0]
+        self.lon  = lon
+        self.lat  = lat
+        self.lev  = lev
         self.time = time
-        self.dims = dims
+        self.ens  = ens
         self.punit = 100.
-    def __getattr__(self,name):
+    def _setdimsattr(self, name, which):
+        u"""
+        dims属性を設定するための内部ルーチン
+        """
+        dimsattr = self.__dict__['dims']
+        correct_order = ['ens','time','lev','lat','lon']
+        if which == 'remove':
+            if name in dimsattr: dimsattr.remove(name)
+        elif which == 'add':
+            if not name in dimsattr:
+                dimsattr.append(name)
+                dimsattr.sort(key=lambda l: correct_order.index(l))
+        else:
+            raise ValueError, "internal Error in pymet.field.core.McGrid._setdimsattr"
+        
+    def __setattr__(self, name, value):
+        u"""
+        lon, lat, lev, time, ensの属性がセットされたときに、その長さに応じてNumpy Arrayに変換する。
+        """
+        # dims属性は、lon,lat,lev,time,ensの長さに応じた自動設定に限定
+        if name == 'dims':
+            raise AttributeError, "Cannot set 'dims' attribute"
+        try:
+            if name in ['lon', 'lat', 'lev', 'time', 'ens'] :
+                if np.size(value)==0:
+                    self.__dict__[name] = None
+                    self._setdimsattr(name, 'remove')
+                elif np.size(value)==1:
+                    try:
+                        self.__dict__[name] = value[0]
+                    except TypeError:
+                        self.__dict__[name] = value
+                    self._setdimsattr(name, 'remove')                    
+                else:
+                    self.__dict__[name] = np.asarray(value)
+                    self._setdimsattr(name, 'add')                    
+            else:
+                self.__dict__[name] = value
+        except:
+            raise 
+    def __getattr__(self, name):
         u"""
         xdim, ydim, zdim, tdim, edim を属性で呼び出したときに、dims属性に対応する
         次元が登録されていればその次元を返す。
@@ -154,11 +188,13 @@ class McGrid:
          **mask** : bool type ndarray
 
         **Examples**    
-         範囲を指定する場合はタプルまたはリストで指定する。
+         範囲を指定する場合はタプルで指定する。
           >>> grid = pymet.McGrid(name='test_grid', lon=np.arange(0,360,2.5), lat=np.arange(-90,90.1,2.5)),
-                                  lev=[1000.,500.,200.], time=[datetime(2009,10,11),datetime(2009,10,12),
+                                  lev=[1000.,500.,200.,100.], time=[datetime(2009,10,11),datetime(2009,10,12),
                                   dims=['time','lev','lat','lon'])
-          >>> mask = grid.gridmask(lon=(0., 180.), )
+          >>> mask = grid.gridmask(lon=(0., 180.))
+         2つ以上の値で指定する場合はリストで指定する。
+          >>> mask = grid.gridmask(lev=[500,100])
         """
         for kwd in kwargs:
             if not kwd in self.dims:
@@ -170,9 +206,11 @@ class McGrid:
             if kwdvalue == None:
 #                mask.append(slice(None,None,None))
                 mask.append(dimvalue==dimvalue)
-            elif isinstance(kwdvalue, list) or isinstance(kwdvalue, tuple):
+            elif isinstance(kwdvalue, tuple):
                 kwdmin, kwdmax = min(kwdvalue), max(kwdvalue)
                 mask.append((dimvalue>=kwdmin) & (dimvalue<=kwdmax))
+            elif isinstance(kwdvalue, list):
+                mask.append(map((lambda x: x in dimvalue), kwdvalue))
             else:
                 if kwdvalue<dimvalue.min() or kwdvalue>dimvalue.max():
                     raise ValueError, "{0}={1} is out of domain".format(dim, kwdvalue)
@@ -244,28 +282,27 @@ class McField(np.ma.MaskedArray):
                        grid=self.grid.copy(), mask=self.mask.copy())
                                   
     def __getitem__(self, keys):
+        ## まずデータ部分について、keysでスライスする
         data = super(np.ma.MaskedArray, self).__getitem__(keys)
-        if not isinstance(data, np.ma.MaskedArray):
+        ## ゼロ要素は次元を削除
+        data = np.ma.squeeze(data)
+
+        ## スライスの結果が、arrayにならなければMcFieldにしないで値を返す
+        if np.size(data)<2:
             return data
-        elif data.size==0:
-            return None
+
+        ## スライスの結果が、arrayになっていればMcFieldにする
         grid = self.grid.copy()
+        
         ## ここからかなり変則。検討課題。
-        #1. np.indiceで各軸でのインデックスの配列をつくる。
+        # np.indiceで各軸でのインデックスの配列をつくり、
+        # keysでスライスして各次元でのスライスインデックス(1次元)をつくる
         ind = np.indices(self.shape)
         dimidx = [np.unique(ind[i][keys]) for i in range(self.ndim)]
+        # 各次元の値のスライスを求めて、変更する。
         for dimname, idx in zip(self.grid.dims, dimidx):
-            value = grid.__dict__[dimname][idx]
-            # スライスの結果、次元が1要素になったらその次元を削除
-            if value.size==0:
-                grid.dims.remove(dimname)
-                grid.__dict__[dimname] = None
-            elif value.size==1:
-                grid.dims.remove(dimname)
-                grid.__dict__[dimname] = value[0]
-            else:
-                grid.__dict__[dimname] = value
-        data = np.ma.squeeze(data)
+            setattr(grid, dimname, getattr(grid, dimname)[idx])
+
         return McField(data, name=self.name, grid=grid, mask=data.mask)
 
     def get(self, **kwargs):
@@ -337,11 +374,12 @@ class McField(np.ma.MaskedArray):
         def wrapper(self, *args, **kwargs):
             axis = kwargs.get('axis', None)
             grid = self.grid.copy()
+            # 縮約される次元の値をNoneにする            
             if axis!=None:
-                grid.__dict__[grid.dims[axis]] = None
-                grid.dims.remove(grid.dims[axis])
+                setattr(grid, grid.dims[axis], None)
             result = oper(self, *args, **kwargs)
-            if hasattr(result, '__iter__'):
+            # 大きさが2以上あれば(arrayなら)McFieldとして返す
+            if np.size(result)>=2:
                 return McField(result, name=self.name, grid=grid, **kwargs)
             else:
                 return result
@@ -475,13 +513,13 @@ def join(args, axis=0):
         
     grid = args[0].grid.copy()
     if isinstance(axis, str):
-        dim = axis
+        dimname = axis
         axis = grid.dims.index(axis)
     else:
-        dim = grid.dims[axis]
+        dimname = grid.dims[axis]
 
     data = np.ma.concatenate(args, axis=axis)
-    value = np.hstack([arg.grid.__dict__[dim].copy() for arg in args])
-    grid.__dict__[dim] = value
+    value = np.hstack([getattr(arg.grid,dimname).copy() for arg in args])
+    setattr(grid, dimname, value)
     
     return McField(data, name=grid.name, grid=grid, mask=data.mask)
