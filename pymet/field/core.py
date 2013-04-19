@@ -239,26 +239,28 @@ class McField(np.ma.MaskedArray):
 
      .. autosummary::
         
-        McField.__new__
-        McField.__init__
-        McField.__getitem__
         McField.copy
         McField.get
-        McField.anom    
-        McField.cumprod 
-        McField.cumsum  
+
+        McField.anom
+        McField.conjugate
+        McField.cumsum
+        McField.cumprod  
         McField.mean    
         McField.prod    
         McField.std     
         McField.sum     
-        McField.var     
+        McField.var
+        
         McField.max 
         McField.min
-
+        McField.ptp
+        
      .. autosummary::
         McField.dmean
     """
     def __new__(cls, data, **kwargs):
+        print 'call __new__ in McField'
         cls.name = None
         cls.grid = McGrid()
         return super(McField, cls).__new__(cls, data, **kwargs)
@@ -367,45 +369,215 @@ class McField(np.ma.MaskedArray):
         return result
 
     #--------------------------------------------------------------
-    #-- MaskedArrayのメソッドに対するラッパー
+    #-- MaskedArrayのMarithmeticsメソッドに対するラッパー
     #--------------------------------------------------------------
-    # axisを引数にもつMaskedArrayのメソッドに対するラッパー
-    def _axis_oper_wrapper(oper):
-        def wrapper(self, *args, **kwargs):
-            axis = kwargs.get('axis', None)
-            grid = self.grid.copy()
-            # 縮約される次元の値をNoneにする            
-            if axis!=None:
-                setattr(grid, grid.dims[axis], None)
-            result = oper(self, *args, **kwargs)
-            # 大きさが2以上あれば(arrayなら)McFieldとして返す
-            if np.size(result)>=2:
-                return McField(result, name=self.name, grid=grid, **kwargs)
-            else:
-                return result
-        return wrapper
+    ## def docstring(docstr, sep='\n'):
+    ##     def _decorator(func):
+    ##         super_func = np.ma.MaskedArray
+    ##         if func.__doc__ == None:
+    ##             func.__doc__ = docstr
+    ##         else:
+    ##             func.__doc__ = sep.join([func.__doc__, docstr])
+    ##         return func
+##        return _decorator
 
-    # Arithmetics
-    anom    = _axis_oper_wrapper(np.ma.MaskedArray.anom)
-    cumprod = _axis_oper_wrapper(np.ma.MaskedArray.cumprod)
-    cumsum  = _axis_oper_wrapper(np.ma.MaskedArray.cumsum)
-    mean    = _axis_oper_wrapper(np.ma.MaskedArray.mean)
-    prod    = _axis_oper_wrapper(np.ma.MaskedArray.prod)
-    std     = _axis_oper_wrapper(np.ma.MaskedArray.std)
-    sum     = _axis_oper_wrapper(np.ma.MaskedArray.sum)
-    var     = _axis_oper_wrapper(np.ma.MaskedArray.var)
+    ## Arithmetics
+    ## axis, dtype, out 型: outオプションには対応せず互換性のために残しておく
+    def cumsum(self, axis=None, dtype=None, out=None):
+        u"""
+        """
+        marray = np.ma.asarray(self)
+        result = marray.cumsum(axis=axis, dtype=dtype, out=out)
+        rndim = getattr(result, 'ndim', 0)
 
-    #Minimum/maximum
-    max = _axis_oper_wrapper(np.ma.MaskedArray.max)
-    min = _axis_oper_wrapper(np.ma.MaskedArray.min)
+        # 返り値が無次元の場合、gridを持たない場合はMcFieldにしない
+        if not rndim or not hasattr(self, 'grid') or out!=None:
+            return result        
+        # 縮約される次元の値をNoneにする            
+        grid = self.grid.copy()        
+        if axis != None:
+            setattr(grid, grid.dims[axis], None)
+        result = McField(result, name=self.name, gird=grid, mask=result.mask)
 
+        return result
+
+    def cumprod(self, axis=None, dtype=None, out=None):
+        u"""
+        """
+        marray = np.ma.asarray(self)
+        result = marray.cumprod(axis=axis, dtype=dtype, out=out)
+        rndim = getattr(result, 'ndim', 0)
+
+        # 返り値が無次元の場合、gridを持たない場合はMcFieldにしない
+        if not rndim or not hasattr(self, 'grid') or out!=None:
+            return result        
+        # 縮約される次元の値をNoneにする            
+        grid = self.grid.copy()        
+        if axis != None:
+            setattr(grid, grid.dims[axis], None)
+        result = McField(result, name=self.name, gird=grid, mask=result.mask)
+        
+        return result
+
+    def mean(self, axis=None, dtype=None, out=None):
+        u"""
+        """
+        marray = np.ma.asarray(self)
+        result = marray.mean(axis=axis, dtype=dtype, out=out)
+        rndim = getattr(result, 'ndim', 0)
+
+        # 返り値が無次元の場合、gridを持たない場合はMcFieldにしない
+        if not rndim or not hasattr(self, 'grid') or out!=None:
+            return result        
+        # 縮約される次元の値をNoneにする
+        grid = self.grid.copy()        
+        if axis != None:
+            setattr(grid, grid.dims[axis], None)
+        result = McField(result, name=self.name, gird=grid, mask=result.mask)
+
+        return result
+
+    def prod(self, axis=None, dtype=None, out=None):
+        u"""
+        """
+        marray = np.ma.asarray(self)
+        result = marray.prod(axis=axis, dtype=dtype, out=out)
+        rndim = getattr(result, 'ndim', 0)
+
+        # 返り値が無次元の場合、gridを持たない場合はMcFieldにしない
+        if not rndim or not hasattr(self, 'grid') or out!=None:
+            return result        
+        # 縮約される次元の値をNoneにする            
+        grid = self.grid.copy()        
+        if axis != None:
+            setattr(grid, grid.dims[axis], None)
+        result = McField(result, name=self.name, gird=grid, mask=result.mask)
+
+        return result
+
+    def sum(self, axis=None, dtype=None, out=None):
+        u"""
+        """
+        marray = np.ma.asarray(self)
+        result = marray.sum(axis=axis, dtype=dtype, out=out)
+        rndim = getattr(result, 'ndim', 0)
+
+        # 返り値が無次元の場合、gridを持たない場合はMcFieldにしない
+        if not rndim or not hasattr(self, 'grid') or out!=None:
+            return result        
+        # 縮約される次元の値をNoneにする            
+        grid = self.grid.copy()        
+        if axis != None:
+            setattr(grid, grid.dims[axis], None)
+        result = McField(result, name=self.name, gird=grid, mask=result.mask)
+
+        return result
+
+    ## axis, dtype, out, ddof 型: outオプションには対応せず互換性のために残しておく
+    def std(self, axis=None, dtype=None, out=None, ddof=None):
+        u"""
+        """
+        marray = np.ma.asarray(self)
+        result = marray.std(axis=axis, dtype=dtype, out=out, ddof=ddof)
+        rndim = getattr(result, 'ndim', 0)
+
+        # 返り値が無次元の場合、gridを持たない場合はMcFieldにしない
+        if not rndim or not hasattr(self, 'grid') or out!=None:
+            return result        
+        # 縮約される次元の値をNoneにする            
+        grid = self.grid.copy()        
+        if axis != None:
+            setattr(grid, grid.dims[axis], None)
+        result = McField(result, name=self.name, gird=grid, mask=result.mask)
+
+        return result
+
+    def var(self, axis=None, dtype=None, out=None, ddof=None):
+        u"""
+        """
+        marray = np.ma.asarray(self)
+        result = marray.std(axis=axis, dtype=dtype, out=out, ddof=ddof)
+        rndim = getattr(result, 'ndim', 0)
+
+        # 返り値が無次元の場合、gridを持たない場合はMcFieldにしない
+        if not rndim or not hasattr(self, 'grid') or out!=None:
+            return result        
+        # 縮約される次元の値をNoneにする            
+        grid = self.grid.copy()        
+        if axis != None:
+            setattr(grid, grid.dims[axis], None)
+        result = McField(result, name=self.name, gird=grid, mask=result.mask)
+
+        return result
+
+    ## Minimum/Maximum---------------------------------------------------------------------------
+    ## axis, out, fill_value型    
+    def max(self, axis=None, out=None, fill_value=None):
+        u"""
+        """
+        marray = np.ma.asarray(self)
+        result = marray.max(axis=axis, out=out, fill_value=fill_value)
+        rndim = getattr(result, 'ndim', 0)
+
+        # 返り値が無次元の場合、gridを持たない場合はMcFieldにしない
+        if not rndim or not hasattr(self, 'grid') or out!=None:
+            return result        
+        # 縮約される次元の値をNoneにする            
+        grid = self.grid.copy()        
+        if axis != None:
+            setattr(grid, grid.dims[axis], None)
+        result = McField(result, name=self.name, gird=grid, mask=result.mask)
+
+        return result
+
+    def min(self, axis=None, out=None, fill_value=None):
+        u"""
+        """
+        marray = np.ma.asarray(self)
+        result = marray.min(axis=axis, out=out, fill_value=fill_value)
+        rndim = getattr(result, 'ndim', 0)
+
+        # 返り値が無次元の場合、gridを持たない場合はMcFieldにしない
+        if not rndim or not hasattr(self, 'grid') or out!=None:
+            return result        
+        # 縮約される次元の値をNoneにする            
+        grid = self.grid.copy()        
+        if axis != None:
+            setattr(grid, grid.dims[axis], None)
+        result = McField(result, name=self.name, gird=grid, mask=result.mask)
+
+        return result
+
+    def ptp(self, axis=None, out=None, fill_value=None):
+        u"""
+        """
+        marray = np.ma.asarray(self)
+        result = marray.ptp(axis=axis, out=out, fill_value=fill_value)
+        rndim = getattr(result, 'ndim', 0)
+
+        # 返り値が無次元の場合、gridを持たない場合はMcFieldにしない
+        if not rndim or not hasattr(self, 'grid') or out!=None:
+            return result        
+        # 縮約される次元の値をNoneにする            
+        grid = self.grid.copy()        
+        if axis != None:
+            setattr(grid, grid.dims[axis], None)
+        result = McField(result, name=self.name, gird=grid, mask=result.mask)
+        
+        return result
+
+    #---------------------------------------------------------------------------------------
+    
     # ラッパーのためのクロージャー
     def _oper_wrapper(oper):
         def wrapper(self, *args, **kwargs):
-            result = oper(self, *args, **kwargs)
-            if hasattr(result, '__iter__'):
-                return McField(result,name='', grid=self.grid.copy())
+            marray = np.ma.asarray(self)
+            result = oper(marray, *args, **kwargs)
+            rndim = getattr(result, 'ndim', 0)            
+            if not rndim or not hasattr(self, 'grid'):
+                return result
             else:
+                result = McField(result, name=self.name, grid=self.grid.copy(), mask=result.mask)
                 return result
         return wrapper
 
@@ -467,7 +639,15 @@ class McField(np.ma.MaskedArray):
     __long__      = _oper_wrapper(np.ma.MaskedArray.__long__)
     __float__     = _oper_wrapper(np.ma.MaskedArray.__float__)
 
-
+    # numpy ufunc
+    exp = _oper_wrapper(np.ma.exp)
+    abs = absolute = _oper_wrapper(np.ma.abs)
+    conjugate = _oper_wrapper(np.ma.conjugate)
+    sqrt = _oper_wrapper(np.ma.sqrt)
+    sin = _oper_wrapper(np.ma.sin)
+    cos = _oper_wrapper(np.ma.cos)
+    tan = _oper_wrapper(np.ma.tan)
+    
 def join(args, axis=0):
     u"""
     McFieldオブジェクトを指定した次元方向に結合する。
@@ -523,3 +703,4 @@ def join(args, axis=0):
     setattr(grid, dimname, value)
     
     return McField(data, name=grid.name, grid=grid, mask=data.mask)
+
