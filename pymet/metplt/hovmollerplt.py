@@ -7,8 +7,6 @@ import matplotlib.dates
 import matplotlib.ticker
 from datetime import datetime
 import numpy as np
-import locale
-
 import ticker
 
 __all__ = ['hovplot','hovcontour','hovcontourf']
@@ -22,7 +20,7 @@ def hovplot(xy,time,**kwargs):
       x or y or 緯度経度座標。
      **time** : array_like of datetime objects
       時間軸。datetimeオブジェクトのarray。
-     **xlabel** : {'lon', 'lat'}, optional
+     **xylabel** : {'lon', 'lat'}, optional
       横軸を経度表示にする場合はlon,緯度表示にする場合はlatを指定する
      **fmt** : str, optional
       時間軸ラベルの表示形式。デフォルトは%Hz%d%b%Y。
@@ -32,19 +30,19 @@ def hovplot(xy,time,**kwargs):
 
     **Examples**      
     """
-    locale.setlocale(locale.LC_ALL,'en_US')
     ax = kwargs.get('ax',plt.gca())
-    xlabel = kwargs.pop('xlabel',None)
+    xylabel = kwargs.pop('xylabel',None)
     ax.set_ylim(time.max(),time.min())
-    fmt = kwargs.pop('fmt','%Hz%d%b%Y')
-    if isinstance(time[0],datetime) :
+    fmt = kwargs.pop('fmt','%HZ%d%b\n%Y')
+    
+    if isinstance(time[0], datetime) :
         if fmt==None:
             ax.yaxis.set_major_formatter(matplotlib.ticker.NullFormatter())
         else:
-            ax.yaxis.set_major_formatter(matplotlib.dates.DateFormatter(fmt))
-    if xlabel=='lon':
+            ax.yaxis.set_major_formatter(ticker.DateFormatter(fmt=fmt))
+    if xylabel=='lon':
         ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(ticker.lon2txt))
-    elif xlabel=='lat':
+    elif xylabel=='lat':
         ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(ticker.lat2txt))
     return ax.plot(xy,time,*args,**kwargs)
 
@@ -60,7 +58,7 @@ def hovcontour(xy,time,data,*args,**kwargs):
       時間軸。datetimeオブジェクトのarray。
      **data** : 2darray
       プロットするデータ。
-     **xlabel** : {'lon', 'lat'}, optional
+     **xylabel** : {'lon', 'lat'}, optional
       横軸を経度表示にする場合はlon,緯度表示にする場合はlatを指定する
      **fmt** : str, optional
       時間軸ラベルの表示形式。デフォルトは%Hz%d%b%Y。
@@ -73,18 +71,17 @@ def hovcontour(xy,time,data,*args,**kwargs):
     **Examples**
       
     """
-    locale.setlocale(locale.LC_ALL,'en_US')
     ax = kwargs.get('ax',plt.gca())
-    xlabel = kwargs.pop('xlabel',None)
+    xylabel = kwargs.pop('xlabel',None)
     cint =  kwargs.pop('cint',None)
     kwargs.setdefault('colors','k')
     ax.set_ylim(time.max(),time.min())
-    fmt = kwargs.pop('fmt','%Hz%d%b%Y')
+    fmt = kwargs.pop('fmt','%HZ%d%b\n%Y')
     if isinstance(time[0],datetime):
-        ax.yaxis.set_major_formatter(matplotlib.dates.DateFormatter(fmt))
-    if xlabel=='lon':
+        ax.yaxis.set_major_formatter(ticker.DateFormatter(fmt=fmt))
+    if xylabel=='lon':
         ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(ticker.lon2txt))
-    elif xlabel=='lat':
+    elif xylabel=='lat':
         ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(ticker.lat2txt))
     if cint != None:
         kwargs.setdefault('locator',matplotlib.ticker.MultipleLocator(cint))
@@ -103,7 +100,7 @@ def hovcontourf(xy,time,data,*args,**kwargs):
       時間軸。datetimeオブジェクトのarray。
      **data** : 2darray
       プロットするデータ。
-     **xlabel** : {'lon', 'lat'}, optional
+     **xylabel** : {'lon', 'lat'}, optional
       横軸を経度表示にする場合はlon,緯度表示にする場合はlatを指定する
      **fmt** : str, optional
       時間軸ラベルの表示形式。デフォルトは%Hz%d%b%Y。
@@ -114,18 +111,18 @@ def hovcontourf(xy,time,data,*args,**kwargs):
      **CF**
 
     **Examples**
-      
+     .. plot:: ../examples/hovcontourf.py      
     """
     ax = kwargs.get('ax',plt.gca())
-    xlabel = kwargs.pop('xlabel',None)
+    xylabel = kwargs.pop('xylabel',None)
     ax.set_ylim(time.max(),time.min())
-    fmt = kwargs.pop('fmt','%Hz%d%b%Y')
+    fmt = kwargs.pop('fmt','%HZ%d%b\n%Y')
     xlint = kwargs.pop('xlint',None)
     if isinstance(time[0],datetime):
-        ax.yaxis.set_major_formatter(matplotlib.dates.DateFormatter(fmt))
-    if xlabel=='lon':
+        ax.yaxis.set_major_formatter(ticker.DateFormatter(fmt=fmt))
+    if xylabel=='lon':
         ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(ticker.lon2txt))
-    elif xlabel=='lat':
+    elif xylabel=='lat':
         ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(ticker.lat2txt))
     if xlint!=None:
         ax.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(xlint))

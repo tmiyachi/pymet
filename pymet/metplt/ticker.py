@@ -4,10 +4,13 @@
 #------------------------------------------------------------------------------
 from mpl_toolkits.basemap import Basemap
 import matplotlib.ticker
+import matplotlib.dates
 import numpy as np
+import pymet.tools
 
 __all__ = ['BasemapXaxisFormatter','BasemapYaxisFormatter',
            'BasemapXaxisLocator','BasemapYaxisLocator',
+           'DateFormatter', 
            'lon2txt','lat2txt']
 
 
@@ -125,3 +128,18 @@ def lat2txt(lat, pos=None):
         latlabstr = u'%s\N{DEGREE SIGN}'%fmt
         latlab = latlabstr%lat
     return latlab
+
+class DateFormatter(matplotlib.ticker.Formatter):
+    u"""
+    時間軸ラベルのためのFormatter。localeの設定に関係なく%bは英語大文字の略称になる。
+
+    :Arguments:
+     **fmt** : str, optional
+      デフォルトは、'%HZ%d%b%Y'
+    """
+    def __init__(self, fmt='%HZ%d%b%Y', tz=None):
+        self.fmt = fmt
+        self.tz  = tz
+    def __call__(self, t, pos=1):
+        d = matplotlib.dates.num2date(t, self.tz) 
+        return pymet.tools.d2s(d, fmt=self.fmt)

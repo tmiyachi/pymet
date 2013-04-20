@@ -3,6 +3,7 @@
 """
 from grads import GaCore
 from pymet.field import McField, McGrid
+from pymet.tools import d2s, s2d
 import numpy as np
 from datetime import datetime
 import os, os.path
@@ -113,7 +114,7 @@ class GradsIO:
         """
         self.ga.cmd(command_string)
         
-    def setdim(self, lon=None, lat=None, lev=None, time=None, ens=None):
+    def setdim(self, lon=None, lat=None, lev=None, time=None, ens=None, x=None, y=None, z=None, t=None):
         u"""
         GrADSの次元を設定する
 
@@ -128,30 +129,48 @@ class GradsIO:
           時間次元。
          **ens** : tuple or int or str
           アンサンブル次元。'all'を指定すると全てのアンサンブルメンバーを指定。
+         **x, y, z, t**  : tuple or int
+          x,y,z,t次元で指定する場合。lon,lat,lev,timeが指定してあれば、そちらが優先される。
         """
         if isinstance(lon, tuple):
             self.ga.cmd('set lon %f %f' % lon)
-        elif lon==None:
+        elif lon != None:
+            self.ga.cmd('set lon %f' % lon)
+        elif isinstance(x, tuple):
+            self.ga('set x %d %d' % x)
+        elif x != None:
+            self.ga('set x %d' % x)
+        else:
             coords = self.ga.coords()
             if coords.lon[-1] - coords.lon[0] == 360.:            
                 self.ga.cmd('set lon %f %f' % (coords.lon[0], coords.lon[-2]))
-        else:
-            self.ga.cmd('set lon %f' % lon)
             
         if isinstance(lat, tuple):
             self.ga.cmd('set lat %f %f' % lat)
         elif lat!=None:
             self.ga.cmd('set lat %f' % lat)
+        elif isinstance(y, tuple):
+            self.ga('set y %d %d' % y)
+        elif y != None:
+            self.ga('set y %d' % y)
             
         if isinstance(lev, tuple):
             self.ga('set lev %f %f' % lev)
         elif lev!=None:
             self.ga('set lev %f' % lev)
+        elif isinstance(t, tuple):
+            self.ga('set z %d %d' % z)
+        elif z != None:
+            self.ga('set z %d' % z)
             
         if isinstance(time, tuple):
-            self.ga('set time %s %s' % (_d2s(time[0]), _d2s(time[1])))
+            self.ga('set time %s %s' % (d2s(time[0]), d2s(time[1])))
         elif time != None:
-            self.ga('set time %s' % _d2s(time))
+            self.ga('set time %s' % d2s(time))
+        elif isinstance(t, tuple):
+            self.ga('set t %d %d' % t)
+        elif t != None:
+            self.ga('set t %d' % t)
             
         if isinstance(ens, tuple):
             self.ga('set e %d %d' % ens)
@@ -166,7 +185,7 @@ class GradsIO:
 
         :Arguments:
          **var** : str
-          変数名。
+          変数名または、ave(変数名, dim=, dim=)。
          **fid** : int, optional
           ファイルを複数開いている場合にファイルidを指定する。指定しない場合は先頭から探して、
           指定した変数を含む最もファイルidの小さいファイルから読み込む。
@@ -174,13 +193,17 @@ class GradsIO:
          **field** : McField object
         """
         # 開かれているファイルの変数リストから探す
+        if 'ave(' in var:
+            gavar = var[4:].split(',')[0]
+        else:
+            gavar = var
         if fid==None:
             for i, fvars in enumerate(self.vars):
-                if var in fvars:
+                if gavar in fvars:
                     fid = i+1
                     break
         if fid==None:
-            raise ValueError, "Cannot find variable {0} in sill opened files".format(var)
+            raise ValueError, "Cannot find variable {0} in sill opened files".format(gavar)
 
         # デフォルトファイルを変更
         self.ga('set dfile '+str(fid))
@@ -192,18 +215,19 @@ class GradsIO:
         e1, e2 = dh.ei
         t1, t2 = dh.ti
         z1, z2 = dh.zi
-        
+
         # 次元の値を取得する
         lon  = np.asarray(info.lon, dtype=np.float32)
         lat  = np.asarray(info.lat, dtype=np.float32)
         lev  = np.asarray(info.lev, dtype=np.float32)
-        time = np.asarray([_s2d(d) for d in info.time])
+        time = np.asarray([s2d(d) for d in info.time])
         ens  = np.asarray(info.ens)
 
         # データを取得
         out = np.zeros((ne,nt,nz,ny,nx))
         ## 4次元以上はgradsでは同時に扱えないのでループする
         ## 少ない次元を優先的にループ
+        
         if nz == max(ne, nt, nz):
             try:
                 for i, e in enumerate(range(e1,e2+1)):
@@ -242,38 +266,12 @@ class GradsIO:
                 raise
         out  = np.squeeze(out)
         out  = np.ma.array(out, mask=(out==info.undef))
-
         self.ga.flush()
         self.ga.setdim(dh)
 
         # McFieldオブジェクトを作成
         grid = McGrid(name=var, lon=lon, lat=lat, lev=lev, time=time, ens=ens)
         field = McField(out, name=var, grid=grid, mask=out.mask)
-        
+
         return field
 
-##------------------------------------------------------------------------------------------------
-#--- 内部ルーチン
-##------------------------------------------------------------------------------------------------
-
-__months__ = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']    
-def _d2s(d):
-    u"""
-    datetimeオブジェクトをGrADS形式の日付文字列'hh:mmZddmmmyyyy'に変換する
-    """
-    return "{hh:02d}:{mm:02d}Z{dd:02d}{mmm}{yyyy:04d}".format(hh=d.hour,mm=d.minute,dd=d.day,mmm=__months__[d.month-1],yyyy=d.year)
-
-def _s2d(datestring):
-    u"""
-    GrADS形式の日付文字列をdatetimeオブジェクトに変換する
-    """
-    time, date = datestring.upper().split('Z')
-    if time.count(':')>0:
-        hh, mm = time.split(':')
-    else:
-        hh = time
-        mm = 0
-    dd  = date[:-7]
-    mm = __months__.index(date[-7:-4])+1
-    yyyy = date[-4:]
-    return datetime(int(yyyy), int(mm), int(dd), int(hh), int(mm))

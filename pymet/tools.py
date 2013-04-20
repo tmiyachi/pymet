@@ -9,12 +9,15 @@ u"""
     unshape
     deunshape
     expand
+    d2s
+    s2d
 
 --------------    
 """
 import numpy as np
+from datetime import datetime
 
-__all__ = ['unshape', 'deunshape', 'expand']
+__all__ = ['unshape', 'deunshape', 'expand', 'd2s', 's2d']
 
 def unshape(a):
     u"""
@@ -120,72 +123,38 @@ def expand(a, ndim, axis=0):
         res = np.expand_dims(res, axis=i)
     return res
 
-## class Timemask():
-##     #mask array for sequential time series manipuration
-##     def __init__(self, start, end):
-##         '''
-##         time sampling is days only!!
-        
-##         Arguments:
 
-##             start -- start date string  ex. 1979-6-3
+__months__ = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']    
+def d2s(d, fmt='%H:%MZ%d%b%Y'):
+    u"""
+    datetimeオブジェクトを文字列に変換する。
 
-##             end   -- end date string
-##         '''
-##         startdate = parser.parse(start)
-##         enddate = parser.parse(end)
-##         deltadate = timedelta(days=1)
-##         tnum = (enddate-startdate).days+1
+    :Arguments:
+     **d** : datetime object
+      変換するdatetimeオブジェクト
+     **fmt** : str
+      変換する文字列のフォーマット。書式はdatetime.strftimeに従う。localeに関わらず、%bは英語大文字の月名に変換される。
+      デフォルトはGrADS形式の日付文字列'hh:mmZddmmmyyyy'
+    """
+    fmt = fmt.replace('%b', __months__[d.month-1])
+    return d.strftime(fmt)
 
-##         self.timeint = numpy.array([int((startdate + deltadate*i).strftime('%Y%m%j')) for i in range(tnum)])
-##         self.year = self.timeint/100000
-##         self.month = self.timeint%100000/1000
-##         self.days = self.timeint%1000
 
-## class Time():
-##     #mask array for sequential time series manipuration
-##     def __init__(self, start, end, delta):
-##         '''
-##         time sampling is days only!!
-        
-##         Arguments:
+def s2d(datestring):
+    u"""
+    GrADS形式の日付文字列'hh:mmZddmmmyyyy'をdatetimeオブジェクトに変換する。
 
-##             start -- start date string  ex. 1979-6-3
-
-##             end   -- end date string
-##         '''
-##         years, months, days, hours = 0, 0, 0, 0
-##         string = ''
-##         for i in delta:
-##             if i == 'y' or i == 'Y':
-##                 years = int(string)
-##                 string = ''
-##             elif i == 'm' or i == 'M':
-##                 months = int(string)
-##                 string = ''
-##             elif i == 'd' or i == 'D':
-##                 days = int(string)
-##                 string = ''
-##             elif i == 'h' or i == 'H':
-##                 hours = int(string)
-##                 string = ''
-##             else:
-##                 string = string + i
-            
-##         startdate = parser.parse(start)
-##         enddate = parser.parse(end)
-##         deltadate = relativedelta(years=years,months=months,days=days,hours=hours)
-
-##         time = []
-##         timeint = []
-##         date = startdate
-##         while(date <= enddate):
-##             time.append(date)
-##             timeint.append(int(date.strftime('%Y%m%j')))
-##             date += deltadate
-
-##         self.time = numpy.array(time)
-##         self.timeint = numpy.array(timeint)
-##         self.year = self.timeint/100000
-##         self.month = self.timeint%100000/1000
-##         self.days = self.timeint%1000
+    :Arguments:
+     **datestring** : str
+     
+    """
+    time, date = datestring.upper().split('Z')
+    if time.count(':')>0:
+        hh, mm = time.split(':')
+    else:
+        hh = time
+        mm = 0
+    dd  = date[:-7]
+    mm = __months__.index(date[-7:-4])+1
+    yyyy = date[-4:]
+    return datetime(int(yyyy), int(mm), int(dd), int(hh), int(mm))
