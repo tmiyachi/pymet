@@ -212,7 +212,6 @@ class MyBasemap(Basemap):
         **Examples**
          .. plot:: ../examples/contour.py
         """
-        if (lon.ndim<2 and lat.ndim<2): lon, lat = np.meshgrid(lon, lat)
         ax = self.ax or self._check_ax()
         kwargs.setdefault('colors','k')
         kwargs.setdefault('latlon',True)
@@ -226,8 +225,18 @@ class MyBasemap(Basemap):
             if cinttext:
                 ax.text(textpos[0],textpos[1],'contour interval = %g %s' % (cint, unit), 
                         transform=ax.transAxes,ha='right')
+
+        if (lon.ndim<2 and lat.ndim<2): 
+            lon, lat = np.meshgrid(lon, lat)
+            
+        # 境界に応じてサイクリックにする
+        if self.urcrnrlon%360. == self.llcrnrlon%360.:
+            lon = np.c_[lon, lon[:,0]+360.]
+            lat = np.c_[lat, lat[:,0]]
+            data = np.c_[data, data[:,0]]        
+
         return Basemap.contour(self, lon[::skip,::skip], lat[::skip,::skip],
-                               data[::skip,::skip], *args, **kwargs)
+                                data[::skip,::skip], *args, **kwargs)
 
     def contourf(self, lon, lat, data, *args, **kwargs):
         u"""
@@ -251,7 +260,7 @@ class MyBasemap(Basemap):
          Value      Default Description
          ========== ======= ======================================================
          skip       1       データの表示間隔。data[::skip,::skip]が使われる。
-         zorder         
+         cint       None    コンター間隔。指定しない場合は自動で決定される。         
          ========== ======= ======================================================
 
          basemapと共通のキーワード(デフォルトを独自に設定しているもの)
@@ -266,11 +275,23 @@ class MyBasemap(Basemap):
          .. plot:: ../examples/contourf.py
         
         """
-        if (lon.ndim<2 and lat.ndim<2): lon, lat = np.meshgrid(lon, lat)
         skip = kwargs.pop('skip',1)
         kwargs.setdefault('latlon',True)
         kwargs.setdefault('extend', 'both')
-        return Basemap.contourf(self,lon[::skip,::skip], lat[::skip,::skip],
+        cint = kwargs.pop('cint', None)
+        if cint != None:
+            kwargs.setdefault('locator',matplotlib.ticker.MultipleLocator(cint))
+
+        if (lon.ndim<2 and lat.ndim<2): 
+            lon, lat = np.meshgrid(lon, lat)
+
+        # 境界に応じてサイクリックにする
+        if self.urcrnrlon%360. == self.llcrnrlon%360.:
+            lon = np.c_[lon, lon[:,0]+360.]
+            lat = np.c_[lat, lat[:,0]]
+            data = np.c_[data, data[:,0]]        
+
+        return Basemap.contourf(self, lon[::skip,::skip], lat[::skip,::skip],
                                 data[::skip,::skip], *args,**kwargs)
 
     def quiver(self,lon,lat,u,v,*args,**kwargs):
@@ -314,7 +335,16 @@ class MyBasemap(Basemap):
          .. plot:: ../examples/quiver.py
          
         """
-        if (lon.ndim<2 and lat.ndim<2): lon, lat = np.meshgrid(lon, lat)
+        if (lon.ndim<2 and lat.ndim<2): 
+            lon, lat = np.meshgrid(lon, lat)
+
+        # 境界に応じてサイクリックにする
+        if self.urcrnrlon%360. == self.llcrnrlon%360.:
+            lon = np.c_[lon, lon[:,0]+360.]
+            lat = np.c_[lat, lat[:,0]]
+            u = np.c_[u, u[:,0]]
+            v = np.c_[v, v[:,0]]
+
         ax = self.ax or self._check_ax()
         skip = kwargs.pop('skip',1)
         #kwargs.setdefault('latlon',True)
@@ -364,6 +394,24 @@ class MyBasemap(Basemap):
         reflen = np.around(reflen,decimals=-int(np.log10(reflen)))
         ax.quiverkey(QV,loc[0],loc[1],reflen,'%g %s'%(reflen,unit),labelpos='W')
 
+    def drawbox(self,lon1,lat1,lon2,lat2,**kwargs):
+        u"""
+        地図上にボックスを描く。
+
+        :Arguments:
+         **lon1, lat1** : float
+          ボックスの左下の座標(degree)。
+         **lon2, lat2** : float
+          ボックスの右上の座標(degree)。
+        :Returns:
+
+        **Examples**
+         >>>
+        """
+        kwargs.setdefault('color','k')
+        kwargs.setdefault('lw', 2)
+        self.plot([lon1,lon2,lon2,lon1,lon1],[lat1,lat1,lat2,lat2,lat1],**kwargs)
+        
 def mapinterp(datain, lonin, latin, lonout, latout):
     if lonin.ndim == 2:
         lonin = lonin[0,:]
