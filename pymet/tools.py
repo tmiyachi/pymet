@@ -16,6 +16,7 @@ u"""
 """
 import numpy as np
 from datetime import datetime
+from dateutil.relativedelta import relativedelta
 
 __all__ = ['unshape', 'deunshape', 'expand', 'd2s', 's2d']
 
@@ -137,6 +138,9 @@ def d2s(d, fmt='%H:%MZ%d%b%Y'):
       デフォルトはGrADS形式の日付文字列'hh:mmZddmmmyyyy'
     """
     fmt = fmt.replace('%b', __months__[d.month-1])
+    if d.year < 1900:
+        fmt = fmt.replace('%Y', '{:04d}'.format(d.year))
+        d = d + relativedelta(year=1900)
     return d.strftime(fmt)
 
 
