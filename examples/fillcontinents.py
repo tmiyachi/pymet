@@ -1,25 +1,27 @@
 # coding:utf-8
-from matplotlib.ticker import MultipleLocator
+import matplotlib.pyplot as plt
 from pymet.metplt import MyBasemap
-# requires netcdf4-python (netcdf4-python.googlecode.com)
-from netCDF4 import Dataset
+from pymet.io import GradsIO
+from datetime import datetime
+
+# read data from OpenDAP
+io = GradsIO(Echo=False)
+io.open('http://db-dods.rish.kyoto-u.ac.jp/cgi-bin/nph-dods/ncep/ncep.reanalysis.dailyavgs/pressure/hgt.2010.nc')
+io.setdim(lon=(0,357.5),lat=(-90,90),lev=500,time=datetime(2010,8,1))
 
 # read 500hPa Geopotential
-nc = Dataset('./examples/z500_data.nc')
-z500 = nc.variables['z'][0,:,:]/9.8
-lon = nc.variables['longitude'][:]
-lat = nc.variables['latitude'][:]
+z500 = io.get('hgt')
+lon, lat = z500.grid.latlon()
 
-plt.subplot(2,1,1)
-m = MyBasemap(lon=(0,360.01), lat=(0,90), xlint=60, ylint=30)
-m.contour(lon, lat, z500, locator=MultipleLocator(100))
+plt.subplot(1,1,1)
+m = MyBasemap(lon=(0,360.01), lat=(0,90), xlint=60, ylint=30)#, fix_aspect=False)
+m.contour(lon, lat, z500, cint=100)
 m.fillcontinents()
-
 plt.title('zorder=0 (default)')
 
 plt.subplot(2,1,2)
-m = MyBasemap(lon=(0,360.01), lat=(0,90), xlint=60, ylint=30)
-m.contour(lon, lat, z500, locator=MultipleLocator(100), zorder=0)
+m = MyBasemap(lon=(0,360.01), lat=(0,40), xlint=60, ylint=30)
+m.contour(lon, lat, z500, cint=100, zorder=0)
 m.fillcontinents(zorder=1)
 plt.title('zorder=1')
 

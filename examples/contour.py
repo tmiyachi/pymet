@@ -1,17 +1,24 @@
 # coding:utf-8
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 from pymet.metplt import MyBasemap
-# requires netcdf4-python (netcdf4-python.googlecode.com)
-from netCDF4 import Dataset
+from pymet.io import GradsIO
+from datetime import datetime
 
-# read 500hPa Geopotential
-nc = Dataset('./examples/z500_data.nc')
-z500 = nc.variables['z'][0,:,:]/9.8
-lon = nc.variables['longitude'][:]
-lat = nc.variables['latitude'][:]
+# read data from OpenDAP
+io = GradsIO(Echo=False)
+io.open('http://www.esrl.noaa.gov/psd/thredds/dodsC/Datasets/ncep.reanalysis.derived/pressure/hgt.mon.mean.nc')
+io.setdim(lon=(0,357.5),lat=(-90,90),lev=500, time=datetime(2010,8,1))
 
+# read data
+data = io.get('hgt')
+lon, lat = data.grid.latlon()
+
+# close OpenDAP
+io.close()
+
+# plot
 m = MyBasemap(lon=(0,360), lat=(-90,90), xlint=60, ylint=30)
-m.contour(lon, lat, z500, cint=100, unit='m')
-plt.title('500hPa Geopotential height')
+m.contour(lon, lat, data, cint=100)
+plt.title('NCEP-NCAR Reanalysis Z500 Aug2010')
 
 plt.show()
