@@ -20,10 +20,17 @@ def hovplot(xy,time,**kwargs):
       x or y or 緯度経度座標。
      **time** : array_like of datetime objects
       時間軸。datetimeオブジェクトのarray。
-     **xylabel** : {'lon', 'lat'}, optional
-      横軸を経度表示にする場合はlon,緯度表示にする場合はlatを指定する
-     **fmt** : str, optional
-      時間軸ラベルの表示形式。デフォルトは%Hz%d%b%Y。
+    :Returns*
+     **CR**
+
+    **Keyword**
+     =========== =========== ======================================================
+     Value       Default     Description
+     =========== =========== ======================================================
+     xylab       None        横軸を経度表示にする場合は'lon',
+                             緯度表示にする場合は'lat'を指定する
+     fmt         %Hz%d%b\n%Y 時間軸ラベルの表示形式
+     =========== =========== ======================================================
 
     :Returns:
      **CR**
@@ -58,24 +65,34 @@ def hovcontour(xy,time,data,*args,**kwargs):
       時間軸。datetimeオブジェクトのarray。
      **data** : 2darray
       プロットするデータ。
-     **xylabel** : {'lon', 'lat'}, optional
-      横軸を経度表示にする場合はlon,緯度表示にする場合はlatを指定する
-     **fmt** : str, optional
-      時間軸ラベルの表示形式。デフォルトは%Hz%d%b%Y。
-     **cint** : float, optional
-      コンター間隔。
-
     :Returns:
      **CR**
+
+    **Keyword**
+     =========== =========== ======================================================
+     Value       Default      Description
+     =========== =========== ======================================================
+     colors      'k'         コンターの色。
+     cint        None        コンター間隔。指定しない場合は自動で決定される。
+     cintlab     True        図の右下にcontour interval= 'cint unit'の形式で
+                             コンター間隔の説明を表示。cintを指定した場合に有効。
+     labunit     ''          cinttext=Trueの場合に表示する単位。
+     labxtext     0          コンター間隔を表す文字列の位置
+     labytext    -15         コンター間隔を表す文字列の位置
+     xylab       None        横軸を経度表示にする場合は'lon',
+                             緯度表示にする場合は'lat'を指定する
+     fmt         %Hz%d%b\n%Y 時間軸ラベルの表示形式
+     =========== =========== ======================================================
+
 
     **Examples**
       
     """
     ax = kwargs.get('ax',plt.gca())
-    xylabel = kwargs.pop('xlabel',None)
-    cint =  kwargs.pop('cint',None)
     kwargs.setdefault('colors','k')
     ax.set_ylim(time.max(),time.min())
+           
+    xylabel = kwargs.pop('xlabel',None)
     fmt = kwargs.pop('fmt','%HZ%d%b\n%Y')
     if isinstance(time[0],datetime):
         ax.yaxis.set_major_formatter(ticker.DateFormatter(fmt=fmt))
@@ -83,10 +100,19 @@ def hovcontour(xy,time,data,*args,**kwargs):
         ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(ticker.lon2txt))
     elif xylabel=='lat':
         ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(ticker.lat2txt))
+        
+    cint = kwargs.pop('cint', None)        
     if cint != None:
         kwargs.setdefault('locator',matplotlib.ticker.MultipleLocator(cint))
-        ax.text(1,-0.15,'contour interval = %g' % cint, 
-                transform=ax.transAxes,ha='right')#,fontsize=10)
+        if kwargs.pop('cintlab',True):
+            labxtext = kwargs.pop('labxtext', 0)
+            labytext = kwargs.pop('labytext', -15)
+            labunit = kwargs.pop('labunit', '')
+            ax.annotate('contour interval = %g %s' % (cint, labunit),
+                        xy=(1, 0), xycoords='axes fraction',
+                        xytext=(labxtext, labytext), textcoords='offset points',
+                        ha='right',va='top')
+        
     return ax.contour(xy,time,data,*args,**kwargs)
 
 def hovcontourf(xy,time,data,*args,**kwargs):
@@ -100,13 +126,20 @@ def hovcontourf(xy,time,data,*args,**kwargs):
       時間軸。datetimeオブジェクトのarray。
      **data** : 2darray
       プロットするデータ。
-     **xylabel** : {'lon', 'lat'}, optional
-      横軸を経度表示にする場合はlon,緯度表示にする場合はlatを指定する
-     **fmt** : str, optional
-      時間軸ラベルの表示形式。デフォルトは%Hz%d%b%Y。
-     **cint** : float, optional
-      コンター間隔。
+    :Returns:
+     **CF**
 
+    **Keyword**
+     =========== =========== ======================================================
+     Value       Default      Description
+     =========== =========== ======================================================
+     colors      'k'         コンターの色。
+     cint        None        コンター間隔。指定しない場合は自動で決定される。
+     xylab       None        横軸を経度表示にする場合は'lon',
+                             緯度表示にする場合は'lat'を指定する
+     fmt         %Hz%d%b\n%Y 時間軸ラベルの表示形式
+     =========== =========== ======================================================
+     
     :Returns:
      **CF**
 
@@ -116,15 +149,18 @@ def hovcontourf(xy,time,data,*args,**kwargs):
     ax = kwargs.get('ax',plt.gca())
     xylabel = kwargs.pop('xylabel',None)
     ax.set_ylim(time.max(),time.min())
-    fmt = kwargs.pop('fmt','%HZ%d%b\n%Y')
-    xlint = kwargs.pop('xlint',None)
+    
+    fmt = kwargs.pop('fmt','%HZ%d%b\n%Y')    
     if isinstance(time[0],datetime):
         ax.yaxis.set_major_formatter(ticker.DateFormatter(fmt=fmt))
     if xylabel=='lon':
         ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(ticker.lon2txt))
     elif xylabel=='lat':
         ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(ticker.lat2txt))
-    if xlint!=None:
-        ax.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(xlint))
+
+    cint = kwargs.pop('cint', None)        
+    if cint != None:
+        kwargs.setdefault('locator',matplotlib.ticker.MultipleLocator(cint))
+        
     return ax.contourf(xy,time,data,*args,**kwargs)
 

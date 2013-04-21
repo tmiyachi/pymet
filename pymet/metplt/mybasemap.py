@@ -196,35 +196,39 @@ class MyBasemap(Basemap):
         **Keyword**
          指定可能なキーワード(一部)
          
-         ========== ======= ======================================================
-         Value      Default Description
-         ========== ======= ======================================================
-         colors     'k'     コンターの色。
-         skip       1       データの表示間隔。data[::skip,::skip]が使われる。
-         cint       None    コンター間隔。指定しない場合は自動で決定される。
-         cinttext   True    図の右下にcontour interval= 'cint unit'の形式で
-                            コンター間隔の説明を表示。cintを指定した場合に有効。
-         unit       ''      cinttext=Trueの場合に表示する単位。
-         textpos
+         =========== ========= ======================================================
+         Value       Default   Description
+         =========== ========= ======================================================
+         colors      'k'       コンターの色。
+         skip        1         データの表示間隔。data[::skip,::skip]が使われる。
+         cint        None      コンター間隔。指定しない場合は自動で決定される。
+         cintlab     True      図の右下にcontour interval= 'cint unit'の形式で
+                               コンター間隔のラベルを表示。cintを指定した場合に有効。
+         labunit     ''        cinttext=Trueの場合に表示する単位。
+         labxtext     0        コンター間隔を表す文字列の位置
+         labytext    -15       コンター間隔を表す文字列の位置
          zorder
-         ========== ======= ======================================================
+         =========== ========= ======================================================
 
         **Examples**
          .. plot:: ../examples/contour.py
         """
         ax = self.ax or self._check_ax()
-        kwargs.setdefault('colors','k')
-        kwargs.setdefault('latlon',True)
-        skip = kwargs.pop('skip',1)
-        cint = kwargs.pop('cint',None)
-        cinttext = kwargs.pop('cinttext',True)
-        textpos = kwargs.pop('textpos',(1,-0.1))
-        unit = kwargs.pop('unit','')
+        kwargs.setdefault('colors', 'k')
+        kwargs.setdefault('latlon', True)
+        skip = kwargs.pop('skip', 1)
+
+        cint = kwargs.pop('cint', None)        
         if cint != None:
             kwargs.setdefault('locator',matplotlib.ticker.MultipleLocator(cint))
-            if cinttext:
-                ax.text(textpos[0],textpos[1],'contour interval = %g %s' % (cint, unit), 
-                        transform=ax.transAxes,ha='right')
+            if kwargs.pop('cintlab',True):
+                labxtext = kwargs.pop('labxtext', 0)
+                labytext = kwargs.pop('labytext', -15)
+                labunit = kwargs.pop('labunit', '')
+                ax.annotate('contour interval = %g %s' % (cint, labunit),
+                            xy=(1, 0), xycoords='axes fraction',
+                            xytext=(labxtext, labytext), textcoords='offset points',
+                            ha='right',va='top')
 
         if (lon.ndim<2 and lat.ndim<2): 
             lon, lat = np.meshgrid(lon, lat)
@@ -386,13 +390,33 @@ class MyBasemap(Basemap):
           referrence arrowの値につける単位。
          **loc** : tuple, optional
           referrence arrowの位置。
+
+        **Keyword**
+         独自キーワード
+         
+         =============== =========== ======================================================
+         Value           Default     Description
+         =============== =========== ======================================================
+         loc             (0.90,1.05)
+         reflen
+         unit
+         =============== =========== ======================================================
+
+         デフォルトを独自に設定しているキーワード
+         
+         =============== ======= ======================================================
+         Value           Default Description
+         =============== ======= ======================================================
+         labelpos        'N'
+         =============== ======= ======================================================
         """
         ax = self.ax or self._check_ax()
         unit = kwargs.pop('unit', '')
-        loc = kwargs.pop('loc', (0.95, 1.05))
+        loc = kwargs.pop('loc', (0.90, 1.05))
         reflen = np.abs(QV.U+1j*QV.V).max()
         reflen = np.around(reflen,decimals=-int(np.log10(reflen)))
-        ax.quiverkey(QV,loc[0],loc[1],reflen,'%g %s'%(reflen,unit),labelpos='W')
+        labelpos = kwargs.get('labelpos', 'N')
+        ax.quiverkey(QV,loc[0],loc[1],reflen,'%g %s'%(reflen,unit),labelpos=labelpos)
 
     def drawbox(self,lon1,lat1,lon2,lat2,**kwargs):
         u"""
