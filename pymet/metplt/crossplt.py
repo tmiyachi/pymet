@@ -5,7 +5,7 @@
 import matplotlib.pyplot as plt
 import matplotlib.ticker
 import numpy as np
-
+import pymet.tools as tools
 import ticker
 
 __all__ = ['crossplot','crosscontour','crosscontourf']
@@ -23,6 +23,7 @@ def crossplot(xy, z, **kwargs):
     :Returns:
      
     **Keyword**
+
      =========== ========= ======================================================
      Value       Default   Description
      =========== ========= ======================================================
@@ -50,11 +51,11 @@ def crossplot(xy, z, **kwargs):
         ax.yaxis.set_major_locator(loc)
         ax.yaxis.set_major_formatter(fmt)
         
-    xylabel = kwargs.pop('xylabel', None)
-    if xlabel=='lon':
-        ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(ticker.lon2txt))
-    elif xlabel=='lat':
-        ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(ticker.lat2txt))
+    xylab = kwargs.pop('xylab', None)
+    if xylab=='lon':
+        ax.xaxis.set_major_formatter(ticker.XaxisFormatter())
+    elif xylab=='lat':
+        ax.xaxis.set_major_formatter(ticker.YaxisFormatter())
 
     return ax.plot(xy, z, **kwargs)
 
@@ -74,6 +75,7 @@ def crosscontour(xy, z, data, **kwargs):
      **CR**
 
     **Keyword**
+    
      =========== ========= ======================================================
      Value       Default   Description
      =========== ========= ======================================================
@@ -108,11 +110,11 @@ def crosscontour(xy, z, data, **kwargs):
         ax.yaxis.set_major_locator(loc)
         ax.yaxis.set_major_formatter(fmt)
         
-    xylabel = kwargs.pop('xylabel', None)
-    if xylabel=='lon':
-        ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(ticker.lon2txt))
-    elif xylabel=='lat':
-        ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(ticker.lat2txt))
+    xylab = kwargs.pop('xylab', None)
+    if xylab=='lon':
+        ax.xaxis.set_major_formatter(ticker.XaxisFormatter())
+    elif xylab=='lat':
+        ax.xaxis.set_major_formatter(ticker.YaxisFormatter())
 
     cint = kwargs.pop('cint', None)        
     if cint != None:
@@ -143,6 +145,7 @@ def crosscontourf(xy, z, data, **kwargs):
      **CF**
 
     **Keyword**
+    
      =========== ========= ======================================================
      Value       Default   Description
      =========== ========= ======================================================
@@ -155,7 +158,7 @@ def crosscontourf(xy, z, data, **kwargs):
      =========== ========= ======================================================
 
     **Examples**
-     .. plot:: ../examples/crosscontour.py              
+     .. plot:: ../examples/crosscontourf.py              
     """
     ax = kwargs.get('ax',plt.gca())
     if kwargs.pop('zinvert', True):
@@ -173,10 +176,11 @@ def crosscontourf(xy, z, data, **kwargs):
     if cint != None:
         kwargs.setdefault('locator',matplotlib.ticker.MultipleLocator(cint))
 
-    xylabel = kwargs.pop('xylabel', None)
-    if xylabel=='lon':
-        ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(ticker.lon2txt))
-    elif xylabel=='lat':
-        ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(ticker.lat2txt))
+    xylab = kwargs.pop('xylab', None)
+    if xylab=='lon':
+        ax.xaxis.set_major_formatter(ticker.XaxisFormatter())
+    elif xylab=='lat':
+        ax.xaxis.set_major_formatter(ticker.YaxisFormatter())
+
     return ax.contourf(xy,z,data,**kwargs)
 

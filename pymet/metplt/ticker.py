@@ -6,33 +6,13 @@ from mpl_toolkits.basemap import Basemap
 import matplotlib.ticker
 import matplotlib.dates
 import numpy as np
-import pymet.tools
+import pymet.tools as tools
 
-__all__ = ['BasemapXaxisFormatter','BasemapYaxisFormatter',
-           'BasemapXaxisLocator','BasemapYaxisLocator',
-           'DateFormatter', 
-           'lon2txt','lat2txt']
+__all__ = ['BasemapXaxisLocator','BasemapYaxisLocator',
+           'BasemapXaxisFormatter','BasemapYaxisFormatter',
+           'XaxisFormatter','YaxisFormatter',
+           'DateFormatter']
 
-
-class BasemapXaxisFormatter(matplotlib.ticker.Formatter):
-    u"""
-    経度ラベルためのFormatter。
-    """
-    def __init__(self, baseMap):
-        self.baseMap=baseMap
-    def __call__(self,x ,pos=1):
-        lon,lat = self.baseMap(x,0,inverse=True)
-        return lon2txt(lon,pos=pos)
-    
-class BasemapYaxisFormatter(matplotlib.ticker.Formatter):
-    u"""
-    緯度ラベルのためのFormatter。
-    """
-    def __init__(self,baseMap):
-        self.baseMap=baseMap
-    def __call__(self,y,pos=1):
-        lon,lat = self.baseMap(0,y,inverse=True)
-        return lat2txt(lat,pos=pos)
 
 class BasemapXaxisLocator(matplotlib.ticker.FixedLocator):
     u"""
@@ -58,77 +38,41 @@ class BasemapYaxisLocator(matplotlib.ticker.FixedLocator):
         xlocs, ylocs = self.baseMap(self.lonlocs,self.latlocs)
         return ylocs
 
-def lon2txt(lon, pos=None):
+class BasemapXaxisFormatter(matplotlib.ticker.Formatter):
     u"""
-    経度の値を文字列に変換する。
-
-    0度からの相対経度を東経、西経の文字列(30\N{DEGREE SIGN}E,
-    140\N{DEGREE SIGN}Wなど)に変換する。
-
-    :Argumets:
-     **lon** : int
-      経度(degrees)。0度からの相対経度で表す。
-     **pos** : optional
-     
-    :Returns:
-     **lonlab** : str
-      経度のラベル。
-      
-    **Examples**
-     >>> lon2txt(135)
-     '135\N{DEGREE SIGN}E'
-     >>> lon2txt(-30)
-     '30\N{DEGREE SIGN}W'
-     >>> lon2txt(250)
-     '110\N{DEGREE SIGN}W'
+    Basemapの経度ラベルためのFormatter。
     """
-    fmt = '%g'
-    lon = (lon+360) % 360
-    if lon>180:
-        lonlabstr = u'%s\N{DEGREE SIGN}W'%fmt
-        lonlab = lonlabstr%abs(lon-360)
-    elif lon<180 and lon != 0:
-        lonlabstr = u'%s\N{DEGREE SIGN}E'%fmt
-        lonlab = lonlabstr%lon
-    else:
-        lonlabstr = u'%s\N{DEGREE SIGN}'%fmt
-        lonlab = lonlabstr%lon
-    return lonlab
-
-def lat2txt(lat, pos=None):
+    def __init__(self, baseMap):
+        self.baseMap=baseMap
+    def __call__(self,x ,pos=None):
+        lon,lat = self.baseMap(x,0,inverse=True)
+        return tools.lon2txt(lon)
+    
+class BasemapYaxisFormatter(matplotlib.ticker.Formatter):
     u"""
-    緯度の値を文字列に変換する。
-
-    緯度を北緯、南緯の文字列(30\N{DEGREE SIGN}N,60\N{DEGREE SIGN}Sなど)
-    に変換する。
-
-    :Argumets:
-     **lon** : int
-      緯度(degrees)。南緯はマイナス、北緯はプラス。
-     **pos** : optional
-     
-    :Returns:
-     **lonlab** : str
-      緯度のラベル。
-      
-    **Examples**
-     >>> lat2txt(60)
-     '60\N{DEGREE SIGN}N'
-     >>> lat2txt(-30)
-     '30\N{DEGREE SIGN}S'
+    Basemapの緯度ラベルのためのFormatter。
     """
-    fmt = '%g'
-    if lat<0:
-        latlabstr = u'%s\N{DEGREE SIGN}S'%fmt
-        latlab = latlabstr%abs(lat)
-    elif lat>0:
-        latlabstr = u'%s\N{DEGREE SIGN}N'%fmt
-        latlab = latlabstr%lat
-    else:
-        latlabstr = u'%s\N{DEGREE SIGN}'%fmt
-        latlab = latlabstr%lat
-    return latlab
+    def __init__(self,baseMap):
+        self.baseMap=baseMap
+    def __call__(self,y,pos=None):
+        lon,lat = self.baseMap(0,y,inverse=True)
+        return tools.lat2txt(lat)
 
+class XaxisFormatter(matplotlib.ticker.Formatter):
+    u"""
+    経度ラベルのためのFormatter
+    """
+    def __call__(self, lon, pos=None):
+        return tools.lon2txt(lon)
+
+class YaxisFormatter(matplotlib.ticker.Formatter):
+    u"""
+    緯度ラベルのためのFormatter
+    """
+    def __call__(self, lat, pos=None):
+        return tools.lat2txt(lat)
+    
+    
 class DateFormatter(matplotlib.ticker.Formatter):
     u"""
     時間軸ラベルのためのFormatter。localeの設定に関係なく%bは英語大文字の略称になる。
@@ -142,4 +86,4 @@ class DateFormatter(matplotlib.ticker.Formatter):
         self.tz  = tz
     def __call__(self, t, pos=1):
         d = matplotlib.dates.num2date(t, self.tz) 
-        return pymet.tools.d2s(d, fmt=self.fmt)
+        return tools.d2s(d, fmt=self.fmt)

@@ -4,21 +4,32 @@ u"""
 ユーティリティモジュール (:mod:`pymet.tools`)
 ==============================================
 
+-------------------
+配列を扱うツール
+-------------------
 .. autosummary::
 
     unshape
     deunshape
     expand
+
+-------------------
+文字列を扱うツール
+-------------------
+.. autosummary::
     d2s
     s2d
-
+    lon2txt
+    lat2txt
+    
 --------------    
 """
 import numpy as np
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
-__all__ = ['unshape', 'deunshape', 'expand', 'd2s', 's2d']
+__all__ = ['unshape', 'deunshape', 'expand',
+           'lon2txt', 'lat2txt', 'd2s', 's2d']
 
 def unshape(a):
     u"""
@@ -162,3 +173,72 @@ def s2d(datestring):
     mm = __months__.index(date[-7:-4])+1
     yyyy = date[-4:]
     return datetime(int(yyyy), int(mm), int(dd), int(hh), int(mm))
+
+def lon2txt(lon):
+    u"""
+    経度の値を文字列に変換する。
+
+    0度からの相対経度を東経、西経の文字列(30\N{DEGREE SIGN}E,
+    140\N{DEGREE SIGN}Wなど)に変換する。
+
+    :Argumets:
+     **lon** : int
+      経度(degrees)。0度からの相対経度で表す。
+     
+    :Returns:
+     **lonlab** : str
+      経度のラベル。
+      
+    **Examples**
+     >>> lon2txt(135)
+     '135\N{DEGREE SIGN}E'
+     >>> lon2txt(-30)
+     '30\N{DEGREE SIGN}W'
+     >>> lon2txt(250)
+     '110\N{DEGREE SIGN}W'
+    """
+    fmt = '%g'
+    lon = (lon+360) % 360
+    if lon>180:
+        lonlabstr = u'%s\N{DEGREE SIGN}W'%fmt
+        lonlab = lonlabstr%abs(lon-360)
+    elif lon<180 and lon != 0:
+        lonlabstr = u'%s\N{DEGREE SIGN}E'%fmt
+        lonlab = lonlabstr%lon
+    else:
+        lonlabstr = u'%s\N{DEGREE SIGN}'%fmt
+        lonlab = lonlabstr%lon
+    return lonlab
+
+def lat2txt(lat):
+    u"""
+    緯度の値を文字列に変換する。
+
+    緯度を北緯、南緯の文字列(30\N{DEGREE SIGN}N,60\N{DEGREE SIGN}Sなど)
+    に変換する。
+
+    :Argumets:
+     **lon** : int
+      緯度(degrees)。南緯はマイナス、北緯はプラス。
+     
+    :Returns:
+     **lonlab** : str
+      緯度のラベル。
+      
+    **Examples**
+     >>> lat2txt(60)
+     '60\N{DEGREE SIGN}N'
+     >>> lat2txt(-30)
+     '30\N{DEGREE SIGN}S'
+    """
+    fmt = '%g'
+    if lat<0:
+        latlabstr = u'%s\N{DEGREE SIGN}S'%fmt
+        latlab = latlabstr%abs(lat)
+    elif lat>0:
+        latlabstr = u'%s\N{DEGREE SIGN}N'%fmt
+        latlab = latlabstr%lat
+    else:
+        latlabstr = u'%s\N{DEGREE SIGN}'%fmt
+        latlab = latlabstr%lat
+    return latlab

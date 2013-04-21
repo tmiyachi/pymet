@@ -49,8 +49,9 @@ u"""
    ticker.BasemapYaxisLocator
    ticker.BasemapXaxisFormatter   
    ticker.BasemapYaxisFormatter
-   ticker.lon2txt
-   ticker.lat2txt
+   ticker.XaxisFormatter   
+   ticker.YaxisFormatter
+   ticker.DateFormatter
 
 -----------------------
 """

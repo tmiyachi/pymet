@@ -6,13 +6,14 @@ import matplotlib.pyplot as plt
 import matplotlib.dates
 import matplotlib.ticker
 from datetime import datetime
+import pymet.tools as tools
 import numpy as np
 import ticker
 
 __all__ = ['hovplot','hovcontour','hovcontourf']
 
 def hovplot(xy,time,**kwargs):
-    u"""
+    ur"""
     ホフメラー図のプロット。
 
     :Arguments:
@@ -24,13 +25,14 @@ def hovplot(xy,time,**kwargs):
      **CR**
 
     **Keyword**
-     =========== =========== ======================================================
-     Value       Default     Description
-     =========== =========== ======================================================
-     xylab       None        横軸を経度表示にする場合は'lon',
-                             緯度表示にする場合は'lat'を指定する
-     fmt         %Hz%d%b\n%Y 時間軸ラベルの表示形式
-     =========== =========== ======================================================
+
+     =========== ============ ======================================================
+     Value       Default      Description
+     =========== ============ ======================================================
+     xylab       None         横軸を経度表示にする場合は'lon',
+                              緯度表示にする場合は'lat'を指定する
+     fmt         %Hz%d%b\\n%Y 時間軸ラベルの表示形式
+     =========== ============ ======================================================
 
     :Returns:
      **CR**
@@ -38,7 +40,6 @@ def hovplot(xy,time,**kwargs):
     **Examples**      
     """
     ax = kwargs.get('ax',plt.gca())
-    xylabel = kwargs.pop('xylabel',None)
     ax.set_ylim(time.max(),time.min())
     fmt = kwargs.pop('fmt','%HZ%d%b\n%Y')
     
@@ -47,15 +48,17 @@ def hovplot(xy,time,**kwargs):
             ax.yaxis.set_major_formatter(matplotlib.ticker.NullFormatter())
         else:
             ax.yaxis.set_major_formatter(ticker.DateFormatter(fmt=fmt))
-    if xylabel=='lon':
-        ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(ticker.lon2txt))
-    elif xylabel=='lat':
-        ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(ticker.lat2txt))
+
+    xylab = kwargs.pop('xylab',None)            
+    if xylab=='lon':
+        ax.xaxis.set_major_formatter(ticker.XaxisFormatter())
+    elif xylab=='lat':
+        ax.xaxis.set_major_formatter(ticker.YaxisFormatter())        
     return ax.plot(xy,time,*args,**kwargs)
 
 
 def hovcontour(xy,time,data,*args,**kwargs):
-    u"""
+    ur"""
     ホフメラー図のコンタープロット。
 
     :Arguments:
@@ -69,20 +72,21 @@ def hovcontour(xy,time,data,*args,**kwargs):
      **CR**
 
     **Keyword**
-     =========== =========== ======================================================
+    
+     =========== ============ ======================================================
      Value       Default      Description
-     =========== =========== ======================================================
-     colors      'k'         コンターの色。
-     cint        None        コンター間隔。指定しない場合は自動で決定される。
-     cintlab     True        図の右下にcontour interval= 'cint unit'の形式で
-                             コンター間隔の説明を表示。cintを指定した場合に有効。
-     labunit     ''          cinttext=Trueの場合に表示する単位。
-     labxtext     0          コンター間隔を表す文字列の位置
-     labytext    -15         コンター間隔を表す文字列の位置
-     xylab       None        横軸を経度表示にする場合は'lon',
-                             緯度表示にする場合は'lat'を指定する
-     fmt         %Hz%d%b\n%Y 時間軸ラベルの表示形式
-     =========== =========== ======================================================
+     =========== ============ ======================================================
+     colors      'k'          コンターの色。
+     cint        None         コンター間隔。指定しない場合は自動で決定される。
+     cintlab     True         図の右下にcontour interval= 'cint unit'の形式で
+                              コンター間隔の説明を表示。cintを指定した場合に有効。
+     labunit     ''           cinttext=Trueの場合に表示する単位。
+     labxtext     0           コンター間隔を表す文字列の位置
+     labytext    -15          コンター間隔を表す文字列の位置
+     xylab       None         横軸を経度表示にする場合は'lon',
+                              緯度表示にする場合は'lat'を指定する
+     fmt         %Hz%d%b\\n%Y 時間軸ラベルの表示形式
+     =========== ============ ======================================================
 
 
     **Examples**
@@ -92,14 +96,15 @@ def hovcontour(xy,time,data,*args,**kwargs):
     kwargs.setdefault('colors','k')
     ax.set_ylim(time.max(),time.min())
            
-    xylabel = kwargs.pop('xlabel',None)
     fmt = kwargs.pop('fmt','%HZ%d%b\n%Y')
     if isinstance(time[0],datetime):
         ax.yaxis.set_major_formatter(ticker.DateFormatter(fmt=fmt))
-    if xylabel=='lon':
-        ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(ticker.lon2txt))
-    elif xylabel=='lat':
-        ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(ticker.lat2txt))
+
+    xylab = kwargs.pop('xylab',None)        
+    if xylab=='lon':
+        ax.xaxis.set_major_formatter(ticker.XaxisFormatter())
+    elif xylab=='lat':
+        ax.xaxis.set_major_formatter(ticker.YaxisFormatter())        
         
     cint = kwargs.pop('cint', None)        
     if cint != None:
@@ -116,7 +121,7 @@ def hovcontour(xy,time,data,*args,**kwargs):
     return ax.contour(xy,time,data,*args,**kwargs)
 
 def hovcontourf(xy,time,data,*args,**kwargs):
-    u"""
+    ur"""
     ホフメラー図の塗りつぶしコンタープロット。
 
     :Arguments:
@@ -129,34 +134,32 @@ def hovcontourf(xy,time,data,*args,**kwargs):
     :Returns:
      **CF**
 
-    **Keyword**
-     =========== =========== ======================================================
+    **Keyword**    
+     =========== ============ ======================================================
      Value       Default      Description
-     =========== =========== ======================================================
-     colors      'k'         コンターの色。
-     cint        None        コンター間隔。指定しない場合は自動で決定される。
-     xylab       None        横軸を経度表示にする場合は'lon',
-                             緯度表示にする場合は'lat'を指定する
-     fmt         %Hz%d%b\n%Y 時間軸ラベルの表示形式
-     =========== =========== ======================================================
+     =========== ============ ======================================================
+     colors      'k'          コンターの色。
+     cint        None         コンター間隔。指定しない場合は自動で決定される。
+     xylab       None         横軸を経度表示にする場合は'lon',
+                              緯度表示にする場合は'lat'を指定する
+     fmt         %Hz%d%b\\n%Y 時間軸ラベルの表示形式
+     =========== ============ ======================================================
      
-    :Returns:
-     **CF**
-
     **Examples**
      .. plot:: ../examples/hovcontourf.py      
     """
     ax = kwargs.get('ax',plt.gca())
-    xylabel = kwargs.pop('xylabel',None)
     ax.set_ylim(time.max(),time.min())
     
     fmt = kwargs.pop('fmt','%HZ%d%b\n%Y')    
     if isinstance(time[0],datetime):
         ax.yaxis.set_major_formatter(ticker.DateFormatter(fmt=fmt))
-    if xylabel=='lon':
-        ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(ticker.lon2txt))
-    elif xylabel=='lat':
-        ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(ticker.lat2txt))
+
+    xylab = kwargs.pop('xylab',None)        
+    if xylab=='lon':
+        ax.xaxis.set_major_formatter(ticker.XaxisFormatter())
+    elif xylab=='lat':
+        ax.xaxis.set_major_formatter(ticker.YaxisFormatter())        
 
     cint = kwargs.pop('cint', None)        
     if cint != None:
