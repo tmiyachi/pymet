@@ -24,8 +24,8 @@ class McGrid:
     グリッド情報を扱うためのクラス
 
     :Parameters:
-     **name**
-
+     **name** : str
+      
      **lon**
 
      **lat**
@@ -90,9 +90,10 @@ class McGrid:
         self.time = time
         self.ens  = ens
         self.punit = 100.
+
     def _setdimsattr(self, name, which):
         u"""
-        dims属性を設定するための内部ルーチン
+        dims属性を設定するための内部ルーチン。
         """
         dimsattr = self.__dict__['dims']
         correct_order = ['ens','time','lev','lat','lon']
@@ -154,6 +155,7 @@ class McGrid:
         except ValueError:
             raise AttributeError, "McGrid instance has no dimension '{0}'".format(dname)
         raise AttributeError, "McGrid instance has no attribute '{0}'".format(name)
+    
     def copy(self):
         u"""
         McGridオブジェクトの深いコピーを返す。
@@ -164,15 +166,41 @@ class McGrid:
             if v is not None:
                 grid.__dict__[a] = copy.deepcopy(v)
         return grid
+
     def latlon(self):
         u"""
         2次元プロットのための緯度・経度配列を返す。
-
+        
         :Returns:
          **lat, lon** : 2darray
-          緯度,経度配列。
+          緯度,経度配列
         """
+        if np.size(self.lon) < 2 or np.size(self.lat) < 2:
+            raise ValueError, "McGrid instance does not have enogh length of 'lon' and 'lat' dimension" 
+
         return np.meshgrid(self.lon, self.lat)
+
+    def dimindex(self, dimnames, filtered=False):
+        u"""
+        次元のインデックスを返す。
+
+        :Arguments:
+         **dimnames** : str or list
+          次元名もしくは、次元名のリスト
+         **filtered** : リストを与えた場合に、gridに含まれる次元のみで検索するかどうか。
+                        デフォルトはFalse。Falseの場合に含まれない次元名を与えるとValueErrorとなる。
+        :Returns:
+         **index** : int or list
+          引数がリストの場合はリストを返す。
+        """
+        try:
+            if isinstance(dimnames, str):
+                return self.dims.index(dimnames)
+            else:
+                if filtered: dimnames = filter(lambda s: s in self.dims, dimnames)
+                return [self.dims.index(dimname) for dimname in dimnames]
+        except:
+            raise ValueError, "McGrid instance has no dimension '{0}'".format(dimnames)
     
     def gridmask(self, **kwargs):
         u"""
@@ -181,8 +209,10 @@ class McGrid:
         :Arguments:
          **lon, lat, lev** : tuple or list of floats, or float, optional
            経度、緯度、鉛直次元の指定する領域。
-         **time** : tuple or list of datetime object, or datetime object, optional
+         **time** : tuple or list or datetime object, optional
            時間次元の範囲。
+         **ens** : tuple or list or int
+           アンサンブル次元の範囲。
 
         :Returns:
          **mask** : bool type ndarray
@@ -258,9 +288,9 @@ class McField(np.ma.MaskedArray):
         
      .. autosummary::
         McField.dmean
+        
     """
     def __new__(cls, data, **kwargs):
-        print 'call __new__ in McField'
         cls.name = None
         cls.grid = McGrid()
         return super(McField, cls).__new__(cls, data, **kwargs)
@@ -271,7 +301,7 @@ class McField(np.ma.MaskedArray):
         if grid == None:
             grid = McGrid(name)
             self.grid = grid
-        elif isinstance(grid,McGrid):
+        elif isinstance(grid, McGrid):
             self.grid = grid
         else:
             raise TypeError, "grid must be a McGrid instance"
@@ -299,29 +329,25 @@ class McField(np.ma.MaskedArray):
         ## ここからかなり変則。検討課題。
         # np.indiceで各軸でのインデックスの配列をつくり、
         # keysでスライスして各次元でのスライスインデックス(1次元)をつくる
-        ind = np.indices(self.shape)
-        dimidx = [np.unique(ind[i][keys]) for i in range(self.ndim)]
-        # 各次元の値のスライスを求めて、変更する。
-        for dimname, idx in zip(self.grid.dims, dimidx):
-            setattr(grid, dimname, getattr(grid, dimname)[idx])
-
-        return McField(data, name=self.name, grid=grid, mask=data.mask)
+        try:
+            ind = np.indices(self.shape)
+            dimidx = [np.unique(ind[i][keys]) for i in range(self.ndim)]
+            # 各次元の値のスライスを求めて、変更する。
+            for dimname, idx in zip(self.grid.dims, dimidx):
+                setattr(grid, dimname, getattr(grid, dimname)[idx])
+                
+            return McField(data, name=self.name, grid=grid, mask=data.mask)                
+        except:
+            return data
 
     def get(self, **kwargs):
         u"""
         指定した次元の範囲のスライスを返す。
 
         :Arguments:
-         **lon** : float or tuple, optional
-          経度次元の範囲。
-         **lat** : float or tuple, optional
-          緯度次元の範囲。
-         **lev** : float or tuple, optional
-          鉛直次元の範囲。
-         **time** : datetime object or tuple, optional
-          時間次元の範囲。
-         **ens** : float or tuple, optional
-          アンサンブル次元の範囲。
+         **lon, lat, lev, time, ens** : optional
+          経度、緯度、鉛直、時間、アンサンブル次元の範囲。
+          指定の仕方は :py:func:`McGrid.gridmask` に準ずる。
         :Returns:
          **result** : McField object
 
@@ -340,16 +366,9 @@ class McField(np.ma.MaskedArray):
         指定した領域に対する平均を求める。
 
         :Arguments:
-         **lon** : tuple, optional
-          経度次元の範囲。
-         **lat** : tuple, optional
-          緯度次元の範囲。
-         **lev** : tuple, optional
-          鉛直次元の範囲。
-         **time** : tuple of datetime, optional
-          時間次元の範囲。
-         **ens** : tuple, optional
-          アンサンブル次元の範囲。
+         **lon, lat, lev, time, ens** : optional
+          経度、緯度、鉛直、時間、アンサンブル次元の範囲。
+          指定の仕方は :py:func:`McGrid.gridmask` に準ずる。
 
         :Returns:
          **result** : McField object
@@ -371,18 +390,101 @@ class McField(np.ma.MaskedArray):
     #--------------------------------------------------------------
     #-- MaskedArrayのMarithmeticsメソッドに対するラッパー
     #--------------------------------------------------------------
-    ## def docstring(docstr, sep='\n'):
-    ##     def _decorator(func):
-    ##         super_func = np.ma.MaskedArray
-    ##         if func.__doc__ == None:
-    ##             func.__doc__ = docstr
-    ##         else:
-    ##             func.__doc__ = sep.join([func.__doc__, docstr])
-    ##         return func
-##        return _decorator
-
     ## Arithmetics
-    ## axis, dtype, out 型: outオプションには対応せず互換性のために残しておく
+    #-------------------------------------------------------------
+    #-- 領域指定計算対応済みメソッド
+    #-------------------------------------------------------------
+    def mean(self, axis=None, dtype=None, out=None, **kwargs):
+        u"""
+        指定した軸、もしくは領域での平均を計算する。
+
+        :Arguments:
+         **lon, lat, lev, time, ens** : tuple or list
+          平均を計算する領域。指定の仕方は :py:func:`McGrid.gridmask` に準ずる。
+         **axis** : int, optional
+          平均を計算する軸。指定しない場合は全領域で計算。
+          lon,lev,lat,time,ensが指定されている場合は無視される。
+          
+        :Returns:
+         **result** : McField or float
+
+        **Examples**
+         >>> field.mean(lon=(0,180), lat=(0,90))
+        """
+        # gridを持たない場合はMaskedArrayを返す
+        if not hasattr(self, 'grid') or out!=None:
+            np.ma.asarray(self).mean(axis=axis, dtype=dtype, out=out)
+            
+        if len(kwargs) != 0:
+            field = self.get(**kwargs)
+            grid = field.grid.copy()
+            axes = grid.dimindex(kwargs.keys(), filtered=True)
+            result = np.ma.asarray(field)
+            for i, axis in enumerate(axes):            
+                result = result.mean(axis=axis-i, dtype=dtype, out=out)            
+        else:
+            grid = self.grid.copy()
+            axes = [axis]
+            result = np.ma.asarray(self).mean(axis=axis, dtype=dtype, out=out)
+            
+        rndim = getattr(result, 'ndim', 0)
+        # 返り値が無次元の場合、gridを持たない場合はMcFieldにしない
+        if not rndim:
+            return result        
+        # 縮約される次元の値をNoneにする        
+        for i, axis in enumerate(axes):
+            setattr(grid, grid.dims[axis-i], None)
+        result = McField(result, name=self.name, grid=grid, mask=result.mask)
+
+        return result
+
+    def sum(self, axis=None, dtype=None, out=None, **kwargs):
+        u"""
+        指定した軸、もしくは領域での合計を計算する。
+
+        :Arguments:
+         **lon, lat, lev, time, ens** : tuple or list
+          計算する領域。指定の仕方は :py:func:`McGrid.gridmask` に準ずる。
+         **axis** : int, optional
+          計算する軸。指定しない場合は全領域で計算。
+          lon,lev,lat,time,ensが指定されている場合は無視される。
+          
+        :Returns:
+         **result** : McField or float
+         
+        **Examples**
+         >>> field.sum(lon=(0,180), lat=(0,90))
+        """
+        # gridを持たない場合はMaskedArrayを返す
+        if not hasattr(self, 'grid') or out!=None:
+            np.ma.asarray(self).sum(axis=axis, dtype=dtype, out=out)
+            
+        if len(kwargs) != 0:
+            field = self.get(**kwargs)
+            grid = field.grid.copy()
+            axes = grid.dimindex(kwargs.keys(), filtered=True)
+            result = np.ma.asarray(field)
+            for i, axis in enumerate(axes):            
+                result = result.sum(axis=axis-i, dtype=dtype, out=out)            
+        else:
+            grid = self.grid.copy()
+            axes = [axis]
+            result = np.ma.asarray(self).sum(axis=axis, dtype=dtype, out=out)
+            
+        rndim = getattr(result, 'ndim', 0)
+        # 返り値が無次元の場合、gridを持たない場合はMcFieldにしない
+        if not rndim:
+            return result        
+        # 縮約される次元の値をNoneにする        
+        for i, axis in enumerate(axes):
+            setattr(grid, grid.dims[axis-i], None)
+        result = McField(result, name=self.name, grid=grid, mask=result.mask)
+
+        return result
+
+    ##----------------------------------------------------------------------------
+    #-- 領域指定未対応
+    ##----------------------------------------------------------------------------
     def cumsum(self, axis=None, dtype=None, out=None):
         u"""
         """
@@ -419,23 +521,6 @@ class McField(np.ma.MaskedArray):
         
         return result
 
-    def mean(self, axis=None, dtype=None, out=None):
-        u"""
-        """
-        marray = np.ma.asarray(self)
-        result = marray.mean(axis=axis, dtype=dtype, out=out)
-        rndim = getattr(result, 'ndim', 0)
-
-        # 返り値が無次元の場合、gridを持たない場合はMcFieldにしない
-        if not rndim or not hasattr(self, 'grid') or out!=None:
-            return result        
-        # 縮約される次元の値をNoneにする
-        grid = self.grid.copy()        
-        if axis != None:
-            setattr(grid, grid.dims[axis], None)
-        result = McField(result, name=self.name, gird=grid, mask=result.mask)
-
-        return result
 
     def prod(self, axis=None, dtype=None, out=None):
         u"""
@@ -455,23 +540,6 @@ class McField(np.ma.MaskedArray):
 
         return result
 
-    def sum(self, axis=None, dtype=None, out=None):
-        u"""
-        """
-        marray = np.ma.asarray(self)
-        result = marray.sum(axis=axis, dtype=dtype, out=out)
-        rndim = getattr(result, 'ndim', 0)
-
-        # 返り値が無次元の場合、gridを持たない場合はMcFieldにしない
-        if not rndim or not hasattr(self, 'grid') or out!=None:
-            return result        
-        # 縮約される次元の値をNoneにする            
-        grid = self.grid.copy()        
-        if axis != None:
-            setattr(grid, grid.dims[axis], None)
-        result = McField(result, name=self.name, gird=grid, mask=result.mask)
-
-        return result
 
     ## axis, dtype, out, ddof 型: outオプションには対応せず互換性のために残しておく
     def std(self, axis=None, dtype=None, out=None, ddof=None):
