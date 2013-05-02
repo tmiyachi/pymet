@@ -19,7 +19,7 @@ lev = uwnd.grid.lev
 io.close()
 
 # plot
-CF = metplt.crosscontourf(lat, lev, uwnd, omega, xylab='lat')
+CF = metplt.crosscontourf(lat, lev, uwnd, xylab='lat')
 plt.colorbar(CF)
 plt.xticks([-90,-60,-30,0,30,60,90])
 plt.title('NCEP-NCAR Reanalysis Zonal Wind Aug 1981-2010\n %s cross-section'%lon2txt(60))
