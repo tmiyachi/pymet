@@ -6,8 +6,11 @@ import mpl_toolkits.basemap
 import matplotlib.pyplot as plt
 import matplotlib.ticker
 import numpy as np
-
+import pymet.tools as tools
 import ticker
+from matplotlib.font_manager import FontProperties
+import matplotlib
+rcParams = matplotlib.rcParams
 
 __all__ = ['MyBasemap']
 
@@ -30,15 +33,16 @@ class MyBasemap(Basemap):
       ======== ============================================================
 
      **地図の範囲**
-      ======== =================================================================================
-      Keyword  Description
-      ======== =================================================================================
-      lon      地図の経度の範囲。デフォルトは(-180, 180)。
-      lat      地図の緯度の範囲。デフォルトは(-90, 90)。npstere,spstereでは(lat[0],90),
-               (-90,lat[-1])になる。
-      lon_0    地図の中心経度。cyl,mercでは無視される。デフォルトは(lon[0]+lon[1])/2。
-      lat_0    地図の中心緯度。cyl,mercでは無視される。デフォルトは(lat[0]+lat[1])/2。
-      ======== =================================================================================
+      ============= =================================================================================
+      Keyword       Description
+      ============= =================================================================================
+      lon           地図の経度の範囲。デフォルトは(-180, 180)。
+      lat           地図の緯度の範囲。デフォルトは(-90, 90)。npstere,spstereでは(lat[0],90),
+                    (-90,lat[-1])になる。
+      lon_0         地図の中心経度。cyl,mercでは無視される。デフォルトは(lon[0]+lon[1])/2。
+      lat_0         地図の中心緯度。cyl,mercでは無視される。デフォルトは(lat[0]+lat[1])/2。
+      boundinglat   npstere,spstereのときの外周緯度。デフォルトは赤道。
+      ============= =================================================================================
       
      **軸、枠**  
       ======== =================================================================================
@@ -46,9 +50,9 @@ class MyBasemap(Basemap):
       ======== =================================================================================
       xlint    経度メモリの間隔(degrees)。
       ylint    緯度メモリの間隔(degrees)。
-      grid     
+      grid     緯線,経線を引くかどうか。デフォルトはFalse。
       ======== =================================================================================
-
+      
      **その他**
       ======== =========================================================================
       ax       地図を作成するaxesオブジェクトを指定する場合。指定しない場合はplt.gca()。
@@ -72,7 +76,7 @@ class MyBasemap(Basemap):
 
 
     **Examples**
-     >>>
+     >>> m = MyBasemap(lon=(0,180), lat=(0,90), projection='cyl', xlint=30, ylin=30)
      >>>
 
     .. seealso::
@@ -84,32 +88,36 @@ class MyBasemap(Basemap):
     def __init__(self,lon=None,lat=None,xlint=None,ylint=None,nocoast=False,
                  grid=False,**keys):
         if lon != None:
-            keys['llcrnrlon']=lon[0]
-            keys['urcrnrlon']=lon[1]
+            slon = keys.setdefault('llcrnrlon', lon[0])
+            elon = keys.setdefault('urcrnrlon', lon[1])
+        else:
+            slon = keys.setdefault('llcrnrlon', 0.)
+            elon = keys.setdefault('urcrnrlon', 360.)
         if lat != None:
-            keys['llcrnrlat']=lat[0]
-            keys['urcrnrlat']=lat[1]
-
+            slat = keys.setdefault('llcrnrlat', lat[0])
+            elat = keys.setdefault('urcrnrlat', lat[1])                        
+        else:
+            slat = -90.
+            elat = 90.            
         projection = keys.setdefault('projection','cyl')
 
         # 地図に合わせたデフォルト値
-        if projection == 'merc':
-            keys['llcrnrlat']=lat[0]-0.00001
-        elif projection == 'npstere':
-            keys.setdefault('boundinglat',max(lat[0], 0.))
-            keys.setdefault('lon_0',0.5*(lon[0]+lon[1]))
+        if projection == 'npstere':
+            boundinglat = keys.setdefault('boundinglat',max(slat, 0.))
+            keys.setdefault('lon_0',0.5*(slon+elon))
             keys.setdefault('suppress_ticks',True)
             keys.setdefault('round',True)
         elif projection == 'spstere':
-            keys.setdefault('boundinglat',min(lat[1], 0.))
-            keys.setdefault('lon_0',0.5*(lon[0]+lon[1]))
+            keys.setdefault('boundinglat',min(elat, 0.))
+            keys.setdefault('lon_0',0.5*(slon+elon))
             keys.setdefault('suppress_ticks',True)
             keys.setdefault('round',True)
         elif projection == 'lcc':
-            keys.setdefault('lon_0',0.5*(lon[0]+lon[1]))
-            keys.setdefault('lat_0',0.5*(lat[0]+lat[1]))
+            keys.setdefault('lon_0',0.5*(slon+elon))
+#            keys.setdefault('lat_0',0.5*(slat+elat))
             keys.setdefault('suppress_ticks',True)
         if not grid: keys.setdefault('suppress_ticks',False)
+
         # draw map
         Basemap.__init__(self,**keys)
         self.drawmapboundary()
@@ -124,10 +132,11 @@ class MyBasemap(Basemap):
             ax.xaxis.set_major_formatter(ticker.BasemapXaxisFormatter(self))   
             ax.yaxis.set_major_formatter(ticker.BasemapYaxisFormatter(self))
             if xlint != None:
-                self.set_xlint(xlint)
+                self.set_xlint(xlint,sx=slon)
             if ylint != None:
-                self.set_ylint(ylint)
-       
+                self.set_ylint(ylint,sy=slat)
+            ax.tick_params(direction='out', top='off', right='off')
+            
     def fillcontinents(self,color='lightgray',zorder=0,**keys):
         u"""
         大陸に色をつける。
@@ -147,33 +156,43 @@ class MyBasemap(Basemap):
         """
         Basemap.fillcontinents(self,color=color,zorder=zorder,**keys)
 
-    def set_xlint(self,xlint):
+    def set_xlint(self,xlint,sx=0.):
         u"""
         x軸目盛りの間隔(degrees)を指定する。
 
         :Arguments:
          **xlint**: float
           目盛り間隔(degrees)。
+         **sx** : float, optional
+          スタート位置。デフォルトはゼロ。
         """
         ax = self.ax or self._check_ax()
-        xlocs = np.arange(0,360.0001,xlint)
+        xlocs = np.arange(sx,sx+360.0001,xlint)
         ax.xaxis.set_major_locator(ticker.BasemapXaxisLocator(self,xlocs))
 
-    def set_ylint(self,ylint):
+    def set_ylint(self,ylint,sy=-90.):
         u"""
         y軸目盛りの間隔(degrees)を指定する。
 
         :Arguments:
          **ylint**: float
           目盛り間隔(degrees)。
+         **sy** : float, optional
+          目盛りのスタート位置。デフォルトは-90。          
         """
         ax = self.ax or self._check_ax()
-        ylocs = np.arange(-90, 90.001, ylint)
+        ylocs = np.arange(sy, 90.001, ylint)
         ax.yaxis.set_major_locator(ticker.BasemapYaxisLocator(self,ylocs))
 
     def plot(self,lon,lat,*args,**kwargs):
         u"""
-        プロット。
+        通常のプロット。
+
+        :Arguments:
+         **lon** : array_like
+          経度
+         **lat** : array_like
+          緯度
         """
         x, y = self(lon,lat)
         return Basemap.plot(self, x, y, *args, **kwargs)
@@ -189,9 +208,8 @@ class MyBasemap(Basemap):
           経度。
          **data** : 2darray
           プロットするデータ。
-
          :Returns:
-
+          **CR**
 
         **Keyword**
          指定可能なキーワード(一部)
@@ -204,14 +222,14 @@ class MyBasemap(Basemap):
          cint        None      コンター間隔。指定しない場合は自動で決定される。
          cintlab     True      図の右下にcontour interval= 'cint unit'の形式で
                                コンター間隔のラベルを表示。cintを指定した場合に有効。
-         labunit     ''        cinttext=Trueの場合に表示する単位。
-         labxtext     0        コンター間隔を表す文字列の位置
-         labytext    -15       コンター間隔を表す文字列の位置
-         zorder
+         labunit               cinttext=Trueの場合に表示する単位。
+         hoffset     0         コンター間隔を表す文字列の位置のオフセット
+         voffset     auto      コンター間隔を表す文字列の位置のオフセット
          =========== ========= ======================================================
 
         **Examples**
          .. plot:: ../examples/contour.py
+
         """
         ax = self.ax or self._check_ax()
         kwargs.setdefault('colors', 'k')
@@ -222,19 +240,24 @@ class MyBasemap(Basemap):
         if cint != None:
             kwargs.setdefault('locator',matplotlib.ticker.MultipleLocator(cint))
             if kwargs.pop('cintlab',True):
-                labxtext = kwargs.pop('labxtext', 0)
-                labytext = kwargs.pop('labytext', -15)
+                hoffset = kwargs.pop('hoffset', 0)
+                voffset = -FontProperties(size=rcParams['font.size']).get_size_in_points() - rcParams['xtick.major.pad'] - rcParams['xtick.major.size']
+                voffset = kwargs.pop('voffset', voffset)                
                 labunit = kwargs.pop('labunit', '')
                 ax.annotate('contour interval = %g %s' % (cint, labunit),
                             xy=(1, 0), xycoords='axes fraction',
-                            xytext=(labxtext, labytext), textcoords='offset points',
+                            xytext=(hoffset, voffset), textcoords='offset points',
                             ha='right',va='top')
-
-        if (lon.ndim<2 and lat.ndim<2): 
+                
+        if np.ndim(lon)==1 or np.ndim(lat)==1:
             lon, lat = np.meshgrid(lon, lat)
-            
+        else:
+            if np.ndim(lon)==2: lon = lon[0,:]
+            if np.ndim(lat)==2: lat = lat[:,0]                
+            lon, lat = np.meshgrid(lon, lat)
+
         # 境界に応じてサイクリックにする
-        if self.urcrnrlon%360. == self.llcrnrlon%360.:
+        if self.urcrnrlon%360.==self.llcrnrlon%360. and (lon[0,-1]-lon[0,-2])>=(lon[0,0]+360.-lon[0,-1]):
             lon = np.c_[lon, lon[:,0]+360.]
             lat = np.c_[lat, lat[:,0]]
             data = np.c_[data, data[:,0]]        
@@ -267,12 +290,12 @@ class MyBasemap(Basemap):
          cint       None    コンター間隔。指定しない場合は自動で決定される。         
          ========== ======= ======================================================
 
-         basemapと共通のキーワード(デフォルトを独自に設定しているもの)
-         
+         basemapと共通のキーワード(デフォルトを独自に設定しているもの)         
          ========== ======= ======================================================
          Value      Default Description
          ========== ======= ======================================================
          exntend    'both'
+         latlon     True    lon,latを経度,緯度で解釈する場合はTrue
          ========== ======= ======================================================
                   
         **Examples**
@@ -282,15 +305,20 @@ class MyBasemap(Basemap):
         skip = kwargs.pop('skip',1)
         kwargs.setdefault('latlon',True)
         kwargs.setdefault('extend', 'both')
+        
         cint = kwargs.pop('cint', None)
         if cint != None:
             kwargs.setdefault('locator',matplotlib.ticker.MultipleLocator(cint))
 
-        if (lon.ndim<2 and lat.ndim<2): 
+        if np.ndim(lon)==1 or np.ndim(lat)==1:
+            lon, lat = np.meshgrid(lon, lat)
+        else:
+            if np.ndim(lon)==2: lon = lon[0,:]
+            if np.ndim(lat)==2: lat = lat[:,0]                
             lon, lat = np.meshgrid(lon, lat)
 
         # 境界に応じてサイクリックにする
-        if self.urcrnrlon%360. == self.llcrnrlon%360.:
+        if self.urcrnrlon%360.==self.llcrnrlon%360. and (lon[0,-1]-lon[0,-2])>=(lon[0,0]+360.-lon[0,-1]):
             lon = np.c_[lon, lon[:,0]+360.]
             lat = np.c_[lat, lat[:,0]]
             data = np.c_[data, data[:,0]]        
@@ -308,7 +336,7 @@ class MyBasemap(Basemap):
          **lat** : array_like
           経度。
          **u, v** : 2darray
-          プロットするデータ。
+          プロットするベクトルデータ。
 
         :Returns: 
          **QV** 
@@ -320,6 +348,9 @@ class MyBasemap(Basemap):
          Value           Default Description
          =============== ======= ======================================================
          skip            1       データの表示間隔。data[::skip,::skip]が使われる。
+         data_scale              基準長(dot_scale)あたりの実データの長さ。デフォルトは
+                                 max(sqrt(u**2+v**2))                                   
+         dot_scale       30      基準長さ(ドット,ピクセル)         
          =============== ======= ======================================================
 
          デフォルトを独自に設定しているキーワード
@@ -327,6 +358,8 @@ class MyBasemap(Basemap):
          =============== ======= ======================================================
          Value           Default Description
          =============== ======= ======================================================
+         scale_units     width
+         scale                   scale_unitsの1単位に対するデータ長
          headwidth
          headaxislength
          headlength
@@ -339,27 +372,56 @@ class MyBasemap(Basemap):
          .. plot:: ../examples/quiver.py
          
         """
-        if (lon.ndim<2 and lat.ndim<2): 
-            lon, lat = np.meshgrid(lon, lat)
+        ax = self.ax or self._check_ax()
+        skip = kwargs.pop('skip',1)
 
+        if np.ndim(lon)==1 or np.ndim(lat)==1:
+            lon, lat = np.meshgrid(lon, lat)
+        else:
+            if np.ndim(lon)==2: lon = lon[0,:]
+            if np.ndim(lat)==2: lat = lat[:,0]                
+            lon, lat = np.meshgrid(lon, lat)
+            
         # 境界に応じてサイクリックにする
-        if self.urcrnrlon%360. == self.llcrnrlon%360.:
+        if self.urcrnrlon%360. == self.llcrnrlon%360. and (lon[0,-1]-lon[0,-2])>=(lon[0,0]+360.-lon[0,-1]):
             lon = np.c_[lon, lon[:,0]+360.]
             lat = np.c_[lat, lat[:,0]]
             u = np.c_[u, u[:,0]]
             v = np.c_[v, v[:,0]]
 
-        ax = self.ax or self._check_ax()
-        skip = kwargs.pop('skip',1)
-        #kwargs.setdefault('latlon',True)
+        # 緯度経度座標で与えられたu,vを地図座標での座標方向に合わせて回転
+        kwargs.setdefault('latlon', True)
+        if self.projection!='cyl':
+            u, v = self.rotate_vector(u,v,lon,lat)
+            
+        # スケールを決める
+        data_scale = kwargs.pop('data_scale', None)
+        dot_scale  = kwargs.pop('dot_scale', 30.)   
+        if not kwargs.has_key('scale_units'):
+            kwargs.setdefault('scale_units', 'width')
+            ax_width = ax.bbox.width                     # 図の横幅(dot)
+            # データの最大値を有効数字1桁で丸めてデータの基準長とする
+            if data_scale == None:
+                data_scale = tools.roundoff(np.hypot(u[::skip,::skip], v[::skip,::skip]).max(), digit=1)
+            scale = data_scale * ax_width / dot_scale           # (test) dot_scale(dot)がdata_scaleになるようにする
+            kwargs.setdefault('scale', scale)
+
+        # 矢印の形状の設定
         kwargs.setdefault('headwidth',15)
         kwargs.setdefault('headaxislength',0)
         kwargs.setdefault('headlength',10)
         kwargs.setdefault('linewidth',0.5)
         kwargs.setdefault('width',0.001)
-        return Basemap.quiver(self,lon[::skip,::skip],lat[::skip,::skip],
-                              u[::skip,::skip],v[::skip,::skip],*args,**kwargs)
-    
+        
+        QV = Basemap.quiver(self,lon[::skip,::skip],lat[::skip,::skip],
+                            u[::skip,::skip],v[::skip,::skip],*args,**kwargs)
+
+        # quiverkeyのために基準長さを残しておく
+        if data_scale!=None:
+            QV.data_scale = data_scale
+
+        return QV
+            
     def colorbar(self,mappable=None,location='right',size="5%",pad='2%',fig=None,ax=None,**kwargs):
         u"""
         カラーバーを描画する。        
@@ -397,8 +459,8 @@ class MyBasemap(Basemap):
          =============== =========== ======================================================
          Value           Default     Description
          =============== =========== ======================================================
-         loc             (0.90,1.05)
-         reflen
+         loc             (0.95,1.05)
+         data_scale     
          unit
          =============== =========== ======================================================
 
@@ -412,11 +474,18 @@ class MyBasemap(Basemap):
         """
         ax = self.ax or self._check_ax()
         unit = kwargs.pop('unit', '')
-        loc = kwargs.pop('loc', (0.90, 1.05))
-        reflen = np.abs(QV.U+1j*QV.V).max()
-        reflen = np.around(reflen,decimals=-int(np.log10(reflen)))
+        loc = kwargs.pop('loc', (0.95, 1.05))
+
+        # referrence arrow の実データでの長さの優先順位
+        # 1. data_scaleで与える
+        # 2. QVのdata_scale
+        # 3. 最大値
+
+        data_scale = kwargs.pop('data_scale', None)
+        if data_scale==None:
+            data_scale = getattr(QV, 'data_scale', tools.roundoff(np.sqrt(QV.U**2 + QV.V**2).max(), digit=1))
         labelpos = kwargs.get('labelpos', 'N')
-        ax.quiverkey(QV,loc[0],loc[1],reflen,'%g %s'%(reflen,unit),labelpos=labelpos)
+        ax.quiverkey(QV,loc[0],loc[1],data_scale,'%g %s'%(data_scale,unit),labelpos=labelpos)
 
     def drawbox(self,lon1,lat1,lon2,lat2,**kwargs):
         u"""

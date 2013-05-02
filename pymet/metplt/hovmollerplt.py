@@ -81,8 +81,8 @@ def hovcontour(xy,time,data,*args,**kwargs):
      cintlab     True         図の右下にcontour interval= 'cint unit'の形式で
                               コンター間隔の説明を表示。cintを指定した場合に有効。
      labunit     ''           cinttext=Trueの場合に表示する単位。
-     labxtext     0           コンター間隔を表す文字列の位置
-     labytext    -15          コンター間隔を表す文字列の位置
+     hoffset     0            コンター間隔を表す文字列の位置のオフセット
+     voffset     auto         コンター間隔を表す文字列の位置のオフセット
      xylab       None         横軸を経度表示にする場合は'lon',
                               緯度表示にする場合は'lat'を指定する
      fmt         %Hz%d%b\\n%Y 時間軸ラベルの表示形式
@@ -110,12 +110,13 @@ def hovcontour(xy,time,data,*args,**kwargs):
     if cint != None:
         kwargs.setdefault('locator',matplotlib.ticker.MultipleLocator(cint))
         if kwargs.pop('cintlab',True):
-            labxtext = kwargs.pop('labxtext', 0)
-            labytext = kwargs.pop('labytext', -15)
+            hoffset = kwargs.pop('hoffset', 0)
+            voffset = -FontProperties(size=rcParams['font.size']).get_size_in_points() - rcParams['xtick.major.pad'] - rcParams['xtick.major.size']
+            voffset = kwargs.pop('voffset', voffset)                
             labunit = kwargs.pop('labunit', '')
             ax.annotate('contour interval = %g %s' % (cint, labunit),
                         xy=(1, 0), xycoords='axes fraction',
-                        xytext=(labxtext, labytext), textcoords='offset points',
+                        xytext=(hoffset, voffset), textcoords='offset points',
                         ha='right',va='top')
         
     return ax.contour(xy,time,data,*args,**kwargs)
@@ -134,6 +135,7 @@ def hovcontourf(xy,time,data,*args,**kwargs):
     :Returns:
      **CF**
 
+     
     **Keyword**    
      =========== ============ ======================================================
      Value       Default      Description
@@ -145,11 +147,20 @@ def hovcontourf(xy,time,data,*args,**kwargs):
      fmt         %Hz%d%b\\n%Y 時間軸ラベルの表示形式
      =========== ============ ======================================================
      
+     basemapと共通のキーワード(デフォルトを独自に設定しているもの)         
+     ========== ======= ======================================================
+     Value      Default Description
+     ========== ======= ======================================================
+     exntend    'both'
+     ========== ======= ======================================================
+     
     **Examples**
-     .. plot:: ../examples/hovcontourf.py      
+     .. plot:: ../examples/hovcontourf.py
+    
     """
     ax = kwargs.get('ax',plt.gca())
     ax.set_ylim(time.max(),time.min())
+    kwargs.setdefault('extend', 'both')
     
     fmt = kwargs.pop('fmt','%HZ%d%b\n%Y')    
     if isinstance(time[0],datetime):
