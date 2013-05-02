@@ -2,6 +2,7 @@
 import numpy as np
 import copy
 from datetime import datetime
+import pymet.stats as stats
 
 __all__ = ['McGrid', 'McField', 'join']
 
@@ -10,12 +11,12 @@ def testgrid():
     lon = np.arange(0,360,2.5)
     lat = np.arange(-90,90.1,2.5)
     lev = [1000,500,200]
-    time = [datetime(2009,10,11), datetime(2009,10,12)]
+    time = [datetime(2009,10,d) for d in range(1, 11)]
     return McGrid(name=name,lon=lon,lat=lat,lev=lev,time=time)
 
 def testfield():
     grid = testgrid()
-    data = np.arange(73*144*3*2, dtype=np.float32).reshape(2,3,73,144)
+    data = np.arange(73*144*3*10, dtype=np.float32).reshape(10,3,73,144)
     return McField(data, name='test_field', grid=grid)
     
     
@@ -155,7 +156,7 @@ class McGrid:
         except ValueError:
             raise AttributeError, "McGrid instance has no dimension '{0}'".format(dname)
         raise AttributeError, "McGrid instance has no attribute '{0}'".format(name)
-    
+
     def copy(self):
         u"""
         McGridオブジェクトの深いコピーを返す。
@@ -315,7 +316,10 @@ class McField(np.ma.MaskedArray):
                                   
     def __getitem__(self, keys):
         ## まずデータ部分について、keysでスライスする
-        data = super(np.ma.MaskedArray, self).__getitem__(keys)
+        ## super.__getitem__だとmaskが上手くスライスできない?
+        data = np.ma.asarray(self)[keys]
+#        data = super(np.ma.MaskedArray, self).__getitem__(keys)
+
         ## ゼロ要素は次元を削除
         data = np.ma.squeeze(data)
 
@@ -387,6 +391,66 @@ class McField(np.ma.MaskedArray):
             result = result.mean(axis=axis)
         return result
 
+    #--------------------------------------------------------------
+    #--- pymetの関数のメソッド化
+    #--------------------------------------------------------------
+    def runave(self, length, bound='mask'):
+        u"""
+        移動平均の結果を返す
+
+        .. seealso::
+           .. autosummary::
+              :nosignatures:
+     
+               pymet.stats.runave
+
+        """
+        grid = self.grid.copy()
+        data = np.ma.getdata(self)
+        mask = np.ma.getmask(self)
+
+        result = stats.runave(data, length, axis=grid.tdim, bound=bound)
+        if np.size(result) < 2:
+            return result
+        if bound == 'valid':
+            grid.time = grid.time[length/2:-length/2]
+        return McField(result, name='runave', grid=grid, mask=mask)
+
+    def lowfreq(self, cutoff=10, bound='mask'):
+        u"""
+        低周波フィルターをかけた成分を返す。
+
+        :Arguments:
+         **cutoff** : int, optional
+          カットオフ周波数。''日数''で指定する。デフォルトは10日。
+         **bound** : {'mask', 'valid'}, optional
+          境界の扱い方。デフォルトはmask。
+        :Returns:
+         **out** : McField object
+        """
+        grid = self.grid.copy()
+        data = np.ma.getdata(self)
+        mask = np.ma.getmask(self)
+
+        # grid.timeからcutoff日に対応するステップ数を求める
+        difftime = np.diff(grid.time)
+        if not np.all(difftime == difftime[0]):
+            raise ValueError, "time step must be same"
+        cutoff_step = int(cutoff*3600.*24 / difftime[0].total_seconds())
+
+        result = stats.lancoz(data, cutoff_step, length=2*cutoff+1,
+                              axis=grid.tdim, bound=bound, mode='lowpass')
+        if np.size(result) < 2:
+            return result
+        if bound == 'valid':
+            grid.time = grid.time[length/2:-length/2]
+            mask = tools.mrollaxis(mask, grid.tdim, 0)
+            mask = mask[length/2:-length/2,...]
+            mask = tools.mrollaxis(mask, 0, grid.tdim+1)
+        print result.mask[:,0,0,0]
+        mask = mask | result.mask
+        return McField(result, name='lowpass', grid=grid, mask=mask)        
+    
     #--------------------------------------------------------------
     #-- MaskedArrayのMarithmeticsメソッドに対するラッパー
     #--------------------------------------------------------------
