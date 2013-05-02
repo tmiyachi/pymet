@@ -18,7 +18,7 @@ io.close()
 
 # plot
 m = MyBasemap(lon=(0,360), lat=(-90,90), xlint=60, ylint=30)
-m.contour(lon, lat, data, cint=100)
+m.contour(lon, lat, data, cint=100, labunit='m')
 plt.title('NCEP-NCAR Reanalysis Z500 Aug2010')
 
 plt.show()

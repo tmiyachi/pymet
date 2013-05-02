@@ -19,8 +19,8 @@ lon, lat = u200.grid.latlon()
 io.close()
 
 # plot
-m = MyBasemap(lon=(0,360), lat=(-90,90), xlint=60, ylint=30)
-QV = m.quiver(lon, lat, u200, v200, skip=4)
+m = MyBasemap(lon=(0,360), lat=(-90,90), xlint=60, ylint=30, projection='cyl')
+QV = m.quiver(lon, lat, u200, v200, skip=4, latlon=True)
 m.quiverkey(QV, unit='m/s')
 plt.title('NCEP-NCAR Reanalysis U,V200 Aug2010')
 

@@ -12,7 +12,7 @@ io.open('http://www.esrl.noaa.gov/psd/thredds/dodsC/Datasets/ncep.reanalysis.dai
 io.setdim(lon=(0,130),lat=40, lev=200, time=(datetime(2010,7,1),datetime(2010,8,1)))
 
 # read data
-data = io.get('vwnd')
+data = io.get('ave(vwnd,lat=37.5,lat=42.5)')
 lon = data.grid.lon
 time = data.grid.time
 
@@ -20,7 +20,7 @@ time = data.grid.time
 io.close()
 
 # plot
-CF = metplt.hovcontourf(lon, time, data, xylabel='lat', fmt='%d%b')
+CF = metplt.hovcontourf(lon, time, data, xylab='lat', fmt='%d%b')
 plt.colorbar(CF)
 plt.title('NCEP-NCAR Reanalysis v200 AUG2010')
 
