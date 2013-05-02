@@ -12,6 +12,7 @@ u"""
     unshape
     deunshape
     expand
+    mrollaxis
 
 -------------------
 文字列を扱うツール
@@ -22,14 +23,21 @@ u"""
     lon2txt
     lat2txt
     
+---------------------
+数値を扱うツール
+---------------------
+.. autosummary::
+    roundoff
 --------------    
 """
 import numpy as np
+import math
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
-__all__ = ['unshape', 'deunshape', 'expand',
-           'lon2txt', 'lat2txt', 'd2s', 's2d']
+__all__ = ['unshape', 'deunshape', 'expand', 'mrollaxis',
+           'lon2txt', 'lat2txt', 'd2s', 's2d',
+           'roundoff']
 
 def unshape(a):
     u"""
@@ -47,19 +55,17 @@ def unshape(a):
     
      
     **Examples**
-
-    >>> a = np.arange(40).reshape(2,4,5)
-    >>> a.shape
-    (2, 4, 5)
-    >>> b, oldshape = tools.unshape(a)
-    >>> b.shape
-    (2, 20)    
-    >>> c = tools.deunshape(b, oldshape)
-    >>> c.shape
-    (2, 4, 5)
+     >>> a = np.arange(40).reshape(2,4,5)
+     >>> a.shape
+     (2, 4, 5)
+     >>> b, oldshape = tools.unshape(a)
+     >>> b.shape
+     (2, 20)    
+     >>> c = tools.deunshape(b, oldshape)
+     >>> c.shape
+     (2, 4, 5)
     """
-    a  = np.array(a)
-    if a.ndim < 2:
+    if np.ndim(a) < 2:
         raise ValueError, "a must be at least 2 dimension"
     
     oldshape = a.shape
@@ -73,26 +79,25 @@ def deunshape(a, oldshape):
 
     :Arguments:
      **a**        : array_like
+      入力配列
      **oldshape** : tuple
-
+      出力配列の形状(unshapeの返り値)
     :Returns:
      **arraynd**  : ndarray
+      形状oldshapeの配列
       
     **Examples**
-
-    >>> a = np.arange(40).reshape(2,4,5)
-    >>> a.shape
-    (2, 4, 5)
-    >>> b, oldshape = tools.unshape(a)
-    >>> b.shape
-    (2, 20)
-    >>> c = tools.deunshape(b, oldshape)
-    >>> c.shape
-    (2, 4, 5)
+     >>> a = np.arange(40).reshape(2,4,5)
+     >>> a.shape
+     (2, 4, 5)
+     >>> b, oldshape = tools.unshape(a)
+     >>> b.shape
+     (2, 20)
+     >>> c = tools.deunshape(b, oldshape)
+     >>> c.shape
+     (2, 4, 5)
     """
-
-    arraynd = np.array(a)
-    arraynd = arraynd.reshape(oldshape)
+    arraynd = a.reshape(oldshape)
     
     return arraynd
 
@@ -107,7 +112,6 @@ def expand(a, ndim, axis=0):
       出力配列の次元数
      **axis** : int, optional
       入力配列の要素を残す位置。デフォルトはゼロ(先頭)で後ろにnp.newaxisが挿入される。
-
     :Returns:
      **res** : ndarray
       出力配列。次元数はndim。
@@ -126,7 +130,7 @@ def expand(a, ndim, axis=0):
      >>> NA = np.newaxis
      >>> y = x[NA, :, NA]     
     """
-    res = np.array(a)
+    res = np.asarray(a)
     if res.ndim != 1:
         raise ValueError, "input array must be one dimensional array"
     idx = range(ndim)
@@ -135,9 +139,35 @@ def expand(a, ndim, axis=0):
         res = np.expand_dims(res, axis=i)
     return res
 
+def mrollaxis(a, axis, start=0):
+    u"""
+    numpy.rollaxisのMaskedArray対応版
 
+    :Arguments:
+     **a** : array_like
+      入力配列
+     **axis** : int
+      移動する軸
+     **start** : int, optional
+      移動させる位置。デフォルトはゼロ。
+    :Returns:
+     **out** : array_like
+      入力がndarrayならndarray、maskedarrayならmaskedarray
+    """
+    if not hasattr(a, 'mask'):
+        return np.rollaxis(a, axis, start=start)
+    else:
+        mask = np.ma.getmaskarray(a)        
+        data = np.ma.getdata(a)
+        mask = np.rollaxis(mask, axis, start=start)
+        data = np.rollaxis(data, axis, start=start)
+        out = np.ma.asarray(data)
+        out.mask = mask
+        return out
+
+    
 __months__ = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']    
-def d2s(d, fmt='%H:%MZ%d%b%Y'):
+def d2s(d, fmt='%HZ%d%b%Y'):
     u"""
     datetimeオブジェクトを文字列に変換する。
 
@@ -146,7 +176,16 @@ def d2s(d, fmt='%H:%MZ%d%b%Y'):
       変換するdatetimeオブジェクト
      **fmt** : str
       変換する文字列のフォーマット。書式はdatetime.strftimeに従う。localeに関わらず、%bは英語大文字の月名に変換される。
-      デフォルトはGrADS形式の日付文字列'hh:mmZddmmmyyyy'
+      デフォルトは'hhZddmmmyyyy'
+    :Returns:
+     **out** : str
+      日付文字列
+
+    **Exmaples**
+     >>> d2s(datetime(2009,10,13,12))
+     '12Z13OCT2009'
+     >>> d2s(datetime(2009,10,13,12), fmt='%H:%MZ:%d%b%Y')
+     '12:00Z13OCT2009'
     """
     fmt = fmt.replace('%b', __months__[d.month-1])
     if d.year < 1900:
@@ -161,7 +200,16 @@ def s2d(datestring):
 
     :Arguments:
      **datestring** : str
-     
+      日付文字列
+    :Returns:
+     **out** : datetime obejct
+
+    **EXamples**
+     >>> s2d('12:30Z13OCT2009')
+     datetime(2009, 10, 13, 12, 30)
+     >>> s2d('12Z13OCT2009')
+     datetime(2009, 10, 13, 12)
+    
     """
     time, date = datestring.upper().split('Z')
     if time.count(':')>0:
@@ -242,3 +290,30 @@ def lat2txt(lat):
         latlabstr = u'%s\N{DEGREE SIGN}'%fmt
         latlab = latlabstr%lat
     return latlab
+
+def roundoff(a, digit=2):
+    u"""
+    与えたれた数値を指定した有効数字の桁数に四捨五入で丸める
+
+    :Arguments:
+     **a** : float
+      数値
+     **digit** : int, optional
+      丸めた結果の桁数。デフォルトは2。
+    :Returns:
+     **out** : float
+      丸めた数値
+
+    **Examples**
+     >>> roundoff(3.44e10, digit=2)
+     3.4e10
+     >>> roundoff(3.49e-10, digit=2)
+     3.5e-10
+        
+    """
+    if a > 1:
+        return round(a, -int(math.log10(a))+digit-1)
+    else:
+        return round(a, -int(math.log10(a))+digit)
+
+
