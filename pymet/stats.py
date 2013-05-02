@@ -6,10 +6,12 @@
 .. autosummary::
 
    runave
+   lancoz
    regression
    rmse
    acc
    eof
+   corr
 
 ---------------   
 """
@@ -21,12 +23,12 @@ import scipy.stats as stats
 PI = constants.pi
 NA = np.newaxis
 
-__all__ = ['runave', 'regression',
-           'rmse', 'acc',
+__all__ = ['runave', 'regression', 'lancoz', 
+           'rmse', 'acc', 'corr',
            'eof']
 
 def runave(a, length, axis=0, bound='mask'):
-    u"""
+    ur"""
     移動平均。
 
     :Arguments:
@@ -38,25 +40,25 @@ def runave(a, length, axis=0, bound='mask'):
       移動平均をする軸。デフォルトは 0。
      **bound**  : {'mask', 'valid'}, optional
       'mask':
-        By default, mode is same. This returns output of first dimension length N.
-        Boundary componets are masked.
+        入力データと同じ形状の配列で結果を返す。フィルタがかからない両端はマスクされる。
       'valid':
-       Mode valid returns output of length N - length + 1.
-       running average is only given for points where the signals overlap completely.
-
+        フィルタがかからない両端の無効な値を除いた結果を返す。入力データの時系列の長さをNとすると、
+        N - length + 1. (偶数の場合は N - length) が出力の時系列の長さとなる。
     :Returns:
       **out** : ndarray or MaskedArray
 
+    .. note::
+      lengthが奇数の場合は前後length/2項、偶数の場合はlength+1項を使って先頭と末尾に0.5の重みをつける。
 
-    **Notes**
+      すなわち、lengthがn=2k+1(奇数)のとき、
 
-    lengthが奇数の場合は前後length/2項、偶数の場合はlength+1項を使って先頭と末尾に0.5の重みをつける。
-    すなわち、length=5のときは、out[i] = (a[i-2]+a[i-1]+a[i]+a[i+1]+a[i+2])/5. 、    
-    length=4のときは、out[i] = (0.5*a[i-2]+a[i-1]+a[i]+a[i+1]+0.5*a[i+2])/5. となる。    
+      .. math:: \bar{a}_{i} = \frac{a_{i-k} + a_{i-k+1} + \ldots + a_{i} + \ldots + a_{i+k}}{n}
 
-    
-    **Examples**
-       
+      n=2k(偶数)のとき、
+
+      .. math:: \bar{a}_{i} = \frac{0.5*a_{i-k} + a_{i-k+1} + \ldots + a_{i} + \ldots + a_{i+k-1} + 0.5*a_{i+k}}{n}
+
+    **Examples**       
      >>> runave([1, 2, 3, 4, 5], 3, bound='mask')
      masked_array(data = [-- 2.0 3.0 4.0 --], 
                   mask = [ True False False False True ],
@@ -67,8 +69,8 @@ def runave(a, length, axis=0, bound='mask'):
     """
     rdata = np.array(a)
     ndim = rdata.ndim
-    rdata = np.rollaxis(rdata, axis, ndim)
     nt = rdata.shape[axis]
+    rdata = np.rollaxis(rdata, axis, 0)
     if nt < length:
         raise ValueError, "input array first dimension length must be larger than length."
 
@@ -78,14 +80,14 @@ def runave(a, length, axis=0, bound='mask'):
         else:
             w = np.r_[0.5, np.ones(length-1), 0.5]/float(length)                
         out = signal.convolve(rdata, w, mode='same')
-        if bound=='mask':
+        if bound == 'mask':
             out = np.ma.asarray(out)
             out[:length/2] = np.ma.masked
             out[-(length/2):] = np.ma.masked
-        elif 'valid':
+        elif bound == 'valid':
             out = out[(length/2):-(length/2)]
         else:
-            raise ValueError, "unexpected boud option '%{0}'".format(bound)
+            raise ValueError, "unexpected bound option '%{0}'".format(bound)
     else:
         rdata, oldshape = tools.unshape(rdata) 
         if length%2 != 0:
@@ -102,62 +104,112 @@ def runave(a, length, axis=0, bound='mask'):
             out = out[(length/2):-(length/2),:]
         else:
             raise ValueError, "unexpected boud option '%{0}'".format(bound)
-        out = tools.deunshape(out, oldshape)
-        out = np.rollaxis(out, ndim-1, axis)
+        out = tools.deunshape(out, (-1,) + oldshape[1:])
+        out = tools.mrollaxis(out, 0, axis+1)
         
     return out
 
-def lancoz(rdata,cutoff,mode='same'):
-    """calculate low-pass filter (Duchon, 1979)    
+def lancoz(a, cutoff, cutoff2=None, length=None, axis=0, bound='mask', mode='lowpass'):
+    ur"""
+    時系列データに対してLancozフィルタをかける。
 
-    Arguments:
+    :Arguments:
+     **a** : array_like
+      入力データ
+     **cutoff** : int
+      カットオフ(イン)周期。入力データのステップ数で指定
+     **cutoff2** : int
+      バンドパスフィルタをかける場合の2つ目のカットオフ(イン)周期。入力データのステップ数で指定
+     **length** : int
+      項数。デフォルトは 2*max(cutoff,cutoff2)+1
+     **axis**   : int, optional
+      移動平均をする軸。デフォルトは 0。
+     **bound**  : {'mask', 'valid'}, optional
+      'mask':
+        入力データと同じ形状の配列で結果を返す。フィルタがかからない両端はマスクされる。
+      'valid':
+        フィルタがかからない両端の無効な値を除いた、(入力データの時間次元の長さ) - length + 1.
+        の配列で結果を返す。
+     **mode** : {'lowpass', 'highpass', 'bandpass'}, optional
+      'lowpass':
+       low-passフィルタとして施す。デフォルト。
+      'hoghpass'
+       high-passフィルタとして施す。
+      'bandpass'
+       band-passフィルタとして施す。
+    :Return:
+      **out** : array_like
 
-       'array'  -- (N,...) first dimension must be time. 
+    .. note::
+     カットオフ周波数fc、項数nのLancoz低周波フィルタの重み関数は、
 
-       'cutoff' -- cutoff frquency 
+     .. math:: w_{k} = 2f_{c}\,{\rm sinc}(2f_{c}k)\,{\rm sinc}(k/n) \hspace{3em} k = -n, \ldots, n
 
-       'mode'   -- {'valid', 'same'}, optional
-              'same':
-                    By default, mode is same. This returns output of first dimension length N.
-                    Boundary componets are masked.
-              'valid':
-                    Mode valid returns output of length N - 2*cutoff.
-                    running average is only given for points where the signals overlap completely. 
+     で表される。ここでsinc(x)は正規化されたsinc関数で、
 
-    Return:
-       'out'    -- filtered array
+     .. math:: {\rm sinc}(x) = \frac{\sin(\pi x)}{\pi x} \hspace{3em} {\rm sinc}(0) = 1
 
+    **Examples**
+     サンプリング間隔1日のデータに、カットオフ周期10日、項数21のLancoz低周波フィルタをかける。
+      >>> data.shape
+      (100, 21, 73, 144)
+      >>> lowpass = lancoz(data, 10, axis=0, length=21, bound='same', mode='lowpass')
+      
+    **Refferences**
+      Duchon, C. E., 1979: Lanczos Filtering in One and Two Dimensions. J. Appl. Meteor., 18, 1016–1022.
+      doi: <http://dx.doi.org/10.1175/1520-0450(1979)018<1016:LFIOAT>2.0.CO;2>
+       
     """
+    rdata = np.array(a)
+    ndim = rdata.ndim
     nt = rdata.shape[0]
-    if nt < 2*cutoff+1:
-        print "input array first dimension length must be larger than 2*fl+1."
-        sys.exit()
-    n = cutoff
-    i = np.arange(-n,n+1)
-    w = np.sin(2.*PI*cutoff*i)*np.sin(PI*i/n)/PI/i/PI/pi*n
-    w = w/w.sum()
+    rdata = np.rollaxis(rdata, axis, 0)
+    
+    if length == None: length = 2*max(cutoff,cutoff2) + 1
+    if nt < length:
+        raise ValueError, "input array time dimension length must be larger than 2*cutoff+1."
+    elif length%2 == 0:
+        raise ValueError, "length keyword must be odd number"
 
-    if rdata.ndim == 1:
-        out = np.ma.array(signal.convolve(rdata, w, mode=mode))
-        if mode=='same':
-            out[:n] = np.ma.masked
-            out[-n:] = np.ma.masked
-    elif rdata.ndim == 2:
-        w = np.vstack([np.zeros(len(w)),w,np.zeros(len(w))])
-        out = np.ma.array(signal.convolve2d(rdata, w, mode=mode))
-        if mode=='same':
-            out[:n,:] = np.ma.masked
-            out[-n:,:] = np.ma.masked
-    else :
-        rdata, oldshape = unshape(rdata) 
-        w = np.vstack([np.zeros(len(w)),np.ones(length),np.zeros(len(w))])
-        out = np.ma.array(signal.convolve2d(rdata, w, mode='same'))
-        if mode=='same':
-            out[:n,:] = np.ma.masked
-            out[-n:,:] = np.ma.masked
+    fc = 1./cutoff  # cutoff(or in) frequency
+    n = length/2
+    k = np.arange(-n, n+1)
+    if mode == 'lowpass':
+        w = 2. * fc * np.sinc(2.*fc*k) * np.sinc(k/n)
+    elif mode == 'highpass':
+        w = -2. * fc * np.sinc(2.*fc*k) * np.sinc(k/n)
+    elif mode == 'bandpass':
+        if cutoff2 == None: raise ValueError, "cutoff2 value is required in bandpass mode"
+        fc1 = max(fc, 1./cutoff2) # cut off
+        fc2 = min(fc, 1./cutoff2) # cut in
+        w = 2. * (fc1*np.sinc(2.*fc1*k) - fc2*np.sinc(2.*fc2*k)) * np.sinc(k/n)
+    else:
+        raise ValueError, "mode '{0}' is invalid".format(mode)
+            
+    if ndim == 1:
+        out = signal.convolve(rdata, w, mode='same')
+        if bound == 'mask':
+            out = np.ma.asarray(out)
+            out[:length/2] = np.ma.masked
+            out[-(length/2):] = np.ma.masked
+        elif bound == 'valid':
+            out = out[(length/2):-(length/2)]
         else:
-            out = out[n:-n,:]
-        out = out.reshape((-1,)+oldshape[1:])
+            raise ValueError, "unexpected bound option '%{0}'".format(bound)
+    else:
+        rdata, oldshape = tools.unshape(rdata) 
+        w = np.vstack([np.zeros(length), w, np.zeros(length)])
+        out = signal.convolve2d(rdata, w, mode='same')
+        if bound=='mask':
+            out = np.ma.asarray(out)
+            out[:length/2,:] = np.ma.masked
+            out[-(length/2):,:] = np.ma.masked
+        elif 'valid':
+            out = out[(length/2):-(length/2),:]
+        else:
+            raise ValueError, "unexpected boud option '%{0}'".format(bound)
+        out = tools.deunshape(out, (-1,) + oldshape[1:])
+        out = tools.mrollaxis(out, 0, axis+1)
 
     return out
 
@@ -228,7 +280,41 @@ def regression(x, y, axis=0, dof=None):
         
     return a, b, prob
 
-def rmse(var, basis, exaxes=None):
+def corr(a, b, axis=None):
+    u"""
+    相関係数を計算する。
+
+    :Arguments:
+     **a, b** : array_like
+      入力
+     **axis** : int, optional
+      a, b の一方が1次元で、もう一方が多次元の場合に相関を計算する軸。
+    :Returns:
+     **out** : array_like
+           
+    """
+    a = np.asarray(a)
+    b = np.asarray(b)
+
+    if axis == None:
+        if not a.shape == b.shape:
+            raise ValueError, "input array must have shame shape"
+    else:
+        if a.ndim == 1:
+            a = tools.expand(a, b.ndim, axis=axis)
+        else:
+            b = tools.expand(b, a.ndim, axis=axis)
+    
+    a_anom = a - a.mean(axis=axis)
+    b_anom = b - b.mean(axis=axis)
+    
+    xy = (a_anom*b_anom).sum(axis=axis)
+    xx = a.std(axis=axis)
+    yy = b.std(axis=axis)
+
+    return xy/xx/yy
+
+def rmse(var, basis, axes=None):
     u"""
     二乗平均誤差(Root Mean Square Error)を計算する。
 
@@ -244,10 +330,22 @@ def rmse(var, basis, exaxes=None):
     ## if not exaxes==None:
     ##     for axis in list(exaxes).sort():
     ##         basis = np.expand_dims(basis, axis=axis)
+    var = np.ma.asarray(var)
+    basis = np.ma.asarray(basis)
     if var.ndim!=basis.ndim:
         raise ValueError, "input array size is incorrect"
-    return np.sqrt(np.mean((var - basis)**2))
-
+    out = (var - basis)**2
+    if axes==None:
+        out = np.ma.sqrt(np.ma.mean(out))
+    elif isinstance(axes, int):
+        out = np.ma.sqrt(np.ma.mean(out,axis=axes))
+    else:
+        axes = list(axes).sort()
+        for i, axis in enumerate(axes):
+            out = np.ma.mean(axis=axis-i)
+        out = np.ma.sqrt(out)
+    return out
+        
 def acc(fcst, anal, clim):
     u"""
     アノマリー相関を計算する。
@@ -260,22 +358,17 @@ def acc(fcst, anal, clim):
      **clim** : ndarray
       気候値
     :Returns:
-     **out**  : ndarray
-      アノマリー相関
+     **out**  : float
+      アノマリー相関。
+
+    **Examples**
     """
+    
+
+    
     if not fcst.ndim==anal.ndim==clim.ndim:
         raise ValueError, "input array size is incorrect"
     return np.corrcoef((fcst-clim),(anal-clim))[0,1]
-
-
-
-
-
-
-
-
-
-
 
 
 def eofold(data,lat=None,ano=True):
