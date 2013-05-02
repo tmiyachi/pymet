@@ -7,13 +7,28 @@ u"""
 .. currentmodule:: pymet.field
 
 ------------------------
-格子点データを扱うクラス
+格子点情報を扱うクラス
 ------------------------
 
 .. autosummary::
 
-   McField
    McGrid
+   McGrid.copy
+   McGrid.latlon
+   McGrid.gridmask
+   McGrid.dimindex
+
+------------------------
+格子点データを扱うクラス
+------------------------
+
+.. autosummary::
+   McField
+   McField.get
+   McField.runave
+   McField.lowfreq   
+   McField.mean
+   McField.sum
    
 -----------------------
 

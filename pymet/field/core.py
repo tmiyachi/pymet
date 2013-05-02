@@ -273,16 +273,22 @@ class McField(np.ma.MaskedArray):
         McField.copy
         McField.get
 
+        McField.dmean
+
+        McField.runave
+        McField.lowfreq
+
+        McField.mean    
+        McField.sum
+                
         McField.anom
         McField.conjugate
         McField.cumsum
         McField.cumprod  
-        McField.mean    
+
         McField.prod    
         McField.std     
-        McField.sum     
-        McField.var
-        
+        McField.var        
         McField.max 
         McField.min
         McField.ptp
@@ -377,8 +383,6 @@ class McField(np.ma.MaskedArray):
         :Returns:
          **result** : McField object
 
-        **Exmaples**
-         >>>
         """
         mask = self.grid.gridmask(**kwargs)
         result = self[mask]
