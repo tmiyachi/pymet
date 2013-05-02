@@ -14,7 +14,7 @@ u"""
    dvardp
    d2vardx2
    d2vardy2
-   dvardvar
+..    dvardvar
    div
    rot
 
@@ -40,6 +40,7 @@ import numpy as np
 import constants as constants
 import scipy.interpolate
 import _internal
+import tools
 
 NA=np.newaxis
 a0=constants.earth_radius
@@ -47,70 +48,70 @@ g = constants.earth_gravity
 PI = constants.pi
 d2r=PI/180.
 
-__all__ = ['dvardx', 'dvardy', 'dvardp', 'd2vardx2', 'd2vardy2', 'div', 'rot', 'dvardvar',
+__all__ = ['dvardx', 'dvardy', 'dvardp', 'd2vardx2', 'd2vardy2', 'div', 'rot', #'dvardvar',
            'vint',
            'vinterp','distance']
 
 #=== 微分と差分 ====================================================================================
 
-def dvardx(var, lon, xdim, cyclic=True):
+def dvardx(var, lon, lat, xdim, ydim, cyclic=True):
     ur"""
-    経度方向の微分を中央差分で計算。
+    経度方向のx微分を中央差分で計算。
 
     :Arguments:
      **var** : ndarray
        微分を計算する領域の格子点の値
      **lon** : array_like
        経度
-     **xdim**: int
-       経度度次元のインデックス。len(var.shape[xdim]) == len(lon)でなければならない。
+     **lat** : array_like
+       緯度
+     **xdim, ydim**: int
+       入力配列の経度、緯度次元のインデックス
      **cyclic** : bool, optional
        東西の境界を周期境界として扱うかどうか。False の場合は周期境界を用いずに前方、後方差分
-       で計算する。デフォルトは True。
-
-       
+       で計算する。デフォルトは True。       
     :Returns:
      **result** : ndarray
        varと同じ形状。
 
-
     .. note::
-       差分は次のように計算している。
+       球面緯度経度座標系におけるx微分は、次のように定義される。
 
-       .. math:: \left(\frac{\partial X}{\partial x} \right)_{i} = \frac{1}{a}\frac{X_{i+1} - X_{i-1}}{\lambda_{i+1} - \lambda_{i-1}}
+       .. math:: \frac{\partial X}{\partial x} = \frac{1}{a\cos\phi}\frac{\partial X}{\partial \lambda}
 
-       ここで、lambdaは経度(degrees)、aは地球半径。
+       ここで、aは地球半径。これを中央差分で次のように計算する。
+       
+       .. math:: \left( \frac{\partial X}{\partial x} \right)_{i,j}
+                  = \frac{1}{a\cos\phi_{j}}\frac{X_{i+1,j} - X_{i-1,j}}{\lambda_{i+1} - \lambda_{i-1}}
 
-       cyclic=Falseの場合は、
+       cyclic=Falseの場合は、両端は前方、後方差分を用いて、
 
-       .. math:: \left( \frac{\partial X}{\partial x} \right)_{0}
-               = \frac{1}{a}\frac{X_{1} - X_{0}}{\lambda_{1} - \lambda_{0}}
+       .. math:: \left( \frac{\partial X}{\partial x} \right)_{0,j}
+               = \frac{1}{a\cos\phi_{j}}\frac{X_{1,j} - X_{0,j}}{\lambda_{1} - \lambda_{0}}
                  \hspace{3em}
-                 \left( \frac{\partial X}{\partial x} \right)_{N-1}
-               = \frac{1}{a}\frac{X_{N-1} - X_{N-2}}{\lambda_{N-1} - \lambda_{N-2}}
+                 \left( \frac{\partial X}{\partial x} \right)_{N-1,j}
+               = \frac{1}{a\cos\phi_{j}}\frac{X_{N-1,j} - X_{N-2,j}}{\lambda_{N-1} - \lambda_{N-2}}
 
        で計算する。
+               
+    **Examples**    
+     >>> var.shape
+     (24, 73, 144)
+     >>> lon = np.arange(0, 360, 2.5)
+     >>> lat = np.arange(-90, 90.1, 2.5)
+     >>> result = dvardx(var, lon, lat, 2, 1, cyclic=True)
+     >>> result.shape
+     (24, 73, 144)
 
-
-
-        
-    **Examples**
+     領域が全球でない場合。
     
-    >>> var.shape
-    (24, 73, 144)
-    >>> lon = np.arange(0, 360, 2.5)
-    >>> result = dvardx(var, lon, 2, cyclic=True)
-    >>> result.shape
-    (24, 73, 144)
-
-    領域が全球でない場合。
-    
-    >>> var.shape
-    (24, 73, 72)
-    >>> lon = np.arange(0, 180, 2.5)
-    >>> result = dvardx(var, lon, 2, cyclic=False)
-    >>> result.shape
-    (24, 73, 72)
+     >>> var.shape
+     (24, 73, 72)
+     >>> lon = np.arange(0, 180, 2.5)
+     >>> lat = np.arange(-90, 90.1, 2.5)
+     >>> result = dvardx(var, lon, lat, 2, 1, cyclic=False)
+     >>> result.shape
+     (24, 73, 72)
     """ 
     var = np.array(var)
     ndim = var.ndim
@@ -133,14 +134,16 @@ def dvardx(var, lon, xdim, cyclic=True):
                np.r_[(lon[1]-lon[0] ),\
                     (lon[2:]-lon[:-2]   ),\
                     (lon[-1]-lon[-2])]
-    out = dvar/dx/a0
-    out = np.rollaxis(out,ndim-1,xdim)
-
+                    
+    dvar = np.rollaxis(dvar,ndim-1,xdim)
+    dx = a0 * tools.expand(dx,ndim,xdim) * tools.exapand(np.cos(lat*d2r),ndim,ydim)
+    out = dvar/dx
+    
     return out
 
 def dvardy(var, lat, ydim):
-    u"""
-    緯度方向の微分を中央差分で計算。南北端は前方、後方差分
+    ur"""
+    緯度方向のy微分を中央差分で計算。南北端は前方、後方差分
 
     :Arguments:
      **var** : ndarray
@@ -148,22 +151,38 @@ def dvardy(var, lat, ydim):
      **lat** : array_like
        緯度
      **ydim**: int
-       緯度次元のインデックス。len(var.shape[ydim]) == len(lat)でなければならない。
-
-       
+       緯度次元のインデックス。len(var.shape[ydim]) == len(lat)でなければならない。       
     :Returns:
      **result** : ndarray
        varと同じ形状。
 
+    .. note::
+       球面緯度経度座標系におけるy微分は、次のように定義される。
+
+       .. math:: \frac{\partial X}{\partial y} = \frac{1}{a}\frac{\partial X}{\partial \phi}
+
+       ここで、aは地球半径。これを中央差分で次のように計算する。
        
-    **Examples**
-    
-    >>> var.shape
-    (24, 73, 144)
-    >>> lat = np.arange(-90, 90.1, 2.5)
-    >>> result = dvardy(var, lat, 1)
-    >>> result.shape
-    (24, 73, 144)
+       .. math:: \left( \frac{\partial X}{\partial x} \right)_{i,j}
+                  = \frac{1}{a}\frac{X_{i,j+1} - X_{i,j-1}}{\phi_{j+1} - \phi_{j-1}}
+
+       南北端は前方、後方差分を用いて、
+
+       .. math:: \left( \frac{\partial X}{\partial y} \right)_{i,0}
+                 = \frac{1}{a}\frac{X_{i,1} - X_{i,0}}{\phi_{1} - \phi_{0}}
+                   \hspace{3em}
+                   \left( \frac{\partial X}{\partial y} \right)_{i,N-1}
+                 = \frac{1}{a}\frac{X_{i,N-1} - X_{i,N-2}}{\phi_{N-1} - \phi_{N-2}}
+
+       で計算する。
+       
+    **Examples**    
+     >>> var.shape
+     (24, 73, 144)
+     >>> lat = np.arange(-90, 90.1, 2.5)
+     >>> result = dvardy(var, lat, 1)
+     >>> result.shape
+     (24, 73, 144)
     """ 
     var = np.array(var)
     ndim = var.ndim
@@ -184,7 +203,7 @@ def dvardy(var, lat, ydim):
     return out
 
 def dvardp(var, lev, zdim, punit=100.):
-    u"""
+    ur"""
     鉛直方向の微分をlog(p)の中央差分で計算。上下端は前方、後方差分
 
     :Arguments:
@@ -202,11 +221,29 @@ def dvardp(var, lev, zdim, punit=100.):
      **dvardp** : ndarray
        varと同じ形状をもつ。
 
+    .. note::
+       気圧座標系におけるp微分は、次のように書き換えられる。
+
+       .. math:: \frac{\partial X}{\partial p} = \frac{1}{p}\frac{\partial X}{\partial \ln{p}}
+
+       したがって、中央差分では、
        
-    **Examples**
-    
-    >>>
-    >>>
+       .. math:: \left( \frac{\partial X}{\partial p} \right)_{k}
+                  = \frac{1}{p_{k}}\frac{X_{k+1} - X_{k-1}}{\ln{p_{k+1}} - \ln{p_{k-1}}}
+
+       とかける。上下端は前方、後方差分を用いて、
+
+       .. math:: \left( \frac{\partial X}{\partial p} \right)_{0}
+                     = \frac{1}{p_{0}}\frac{X_{1} - X_{0}}{\ln{p_{1}} - \ln{p_{0}}}
+                 \hspace{3em}
+                 \left( \frac{\partial X}{\partial p} \right)_{N-1}
+                     = \frac{1}{p_{N-1}}\frac{X_{N-1} - X_{N-2}}{\ln{p_{N-1}} - \ln{p_{N-2}}}
+
+       で計算する。
+       
+    **Examples**    
+     >>>
+     >>>
     """ 
     var = np.array(var)
     ndim = var.ndim
@@ -228,17 +265,21 @@ def dvardp(var, lev, zdim, punit=100.):
 
     return out
 
-def d2vardx2(var, lon, xdim, cyclic=True):
-    u"""
-    経度方向の2階微分を中央差分で計算。
+# not compleate----------------------------------------------------------------------------------------------------
+
+def d2vardx2(var, lon, lat, xdim, ydim, cyclic=True):
+    ur"""
+    経度方向の2階x微分を中央差分で計算。
 
     :Arguments:
      **var** : ndarray
        微分を計算する領域の格子点の値
      **lon** : array_like
        経度
-     **xdim** : int 
-       経度次元のインデックス。len(var.shape[xdim]) == len(lon)でなければならない。
+     **lat** : array_like
+       緯度
+     **xdim, ydim** : int 
+       経度、緯度次元のインデックス。
      **cyclic** : bool, optional
        経度方向にはサイクリックとするかどうか。デフォルトではTrue。Falseの場合は東西端はゼロとする。
 
@@ -247,11 +288,21 @@ def d2vardx2(var, lon, xdim, cyclic=True):
      **result** : ndarray
        varと同じ形状をもつ。
 
+    .. note::
+       球面緯度経度座標系におけるx2回微分は、次のように定義される。
 
-    **Examples**
-    
-    >>>
-    >>>
+       .. math:: \frac{\partial^2 X}{\partial x^2} = \frac{1}{a^2\cos^2\phi}\frac{\partial^2 X}{\partial \lambda^2}
+
+       ここで、aは地球半径。これを中央差分で次のように計算する。
+       
+       .. math:: \left( \frac{\partial^2 X}{\partial x^2} \right)_{i,j}
+                  = \frac{4}{a^2\cos^2\phi_{j}}\frac{X_{i+1,j} - 2X_{i,j} + X_{i-1,j}}{\lambda_{i+1} - \lambda_{i-1}}
+
+       cyclic=Falseの場合は、両端はゼロとする。
+
+    **Examples**    
+     >>>
+     >>>
     """ 
     var = np.array(var)
     ndim = var.ndim
@@ -279,14 +330,17 @@ def d2vardx2(var, lon, xdim, cyclic=True):
                np.r_[(lon[1]-lon[0] ),\
                     (lon[2:]-lon[:-2]   ),\
                     (lon[-1]-lon[-2])]
-    out = 4.*dvar/dx/dx/a0/a0
+
+    dvat = np.rollaxis(dvar,ndim-1,xdim)
+    dx   = a0**2 * tools.expand(dx**2,ndim,xdim) * tools.exapand(np.cos(lat*d2r)**2,ndim,ydim)
+    out = 4.*dvar/dx
     #reroll lon dim axis to original dim
     out = np.rollaxis(out,ndim-1,xdim)
 
     return out
 
 def d2vardy2(var, lat, ydim):
-    u"""
+    ur"""
     緯度方向の2階微分を中央差分で計算。南北端はゼロとする。
 
     .. todo:: 南北端をマスクするようなオプションの追加。 
@@ -298,17 +352,26 @@ def d2vardy2(var, lat, ydim):
        緯度
      **ydim** : int 
        緯度次元のインデックス。len(var.shape[ydim]) == len(lat)でなければならない。
-
        
     :Returns:
      **result** : ndarray
        varと同じ形状をもつ。
 
+    .. note::
+       球面緯度経度座標系におけるy2回微分は、次のように定義される。
+
+       .. math:: \frac{\partial^2 X}{\partial y^2} = \frac{1}{a^2}\frac{\partial^2 X}{\partial \phi^2}
+
+       ここで、aは地球半径。これを中央差分で次のように計算する。
        
-    **Examples**
-    
-    >>>
-    >>>
+       .. math:: \left( \frac{\partial^2 X}{\partial y^2} \right)_{i,j}
+                  = \frac{4}{a^2}\frac{X_{i,j+1} - 2X_{i,j} + X_{i,j-1}}{\lambda_{j+1} - \lambda_{j-1}}
+
+       cyclic=Falseの場合は、両端はゼロとする。
+       
+    **Examples**    
+     >>>
+     >>>
     """ 
     var = np.array(var)
     ndim = var.ndim
@@ -333,7 +396,7 @@ def d2vardy2(var, lat, ydim):
     return out
 
 def div(u, v, lon, lat, xdim, ydim, cyclic=True):
-    u"""
+    ur"""
     水平発散を計算する。
 
     :Arguments:
@@ -345,38 +408,77 @@ def div(u, v, lon, lat, xdim, ydim, cyclic=True):
        緯度、経度の軸
      **cyclic** : bool, optional
        経度微分の際に周境界とするかどうか。デフォルトはTrue
-
     
     :Returns:
      **div** : ndarray
        u, v と同じ形状のndarray
-
        
-    **Notes**
+    .. note::
+       球面緯度経度座標系における水平発散は次のように定義される。
+
+       .. math:: \mbox{\boldmath $\nabla$}\cdot\mbox{\boldmath $v$}
+                    = \frac{1}{a\cos\phi} \left[ \frac{\partial u}{\partial \lambda} +\frac{\partial (v\cos\phi)}{\partial \phi} \right] 
+                    = \frac{1}{a\cos\phi}\frac{\partial u}{\partial \lambda} + \frac{1}{a}\frac{\partial v}{\partial \phi} - \frac{v\tan\phi}{a}
+
+       ここで、aは地球半径。これを中央差分で次のように計算する。
+       
+       .. math:: (\mbox{\boldmath $\nabla$}\cdot\mbox{\boldmath $v$})_{i,j}
+                    = \left(\frac{1}{a\cos\phi}\frac{\partial u}{\partial \lambda}\right)_{i,j}
+                        + \left(\frac{1}{a}\frac{\partial v}{\partial \phi}\right)_{i,j}
+                        - \frac{v_{i,j}\tan\phi_{j}}{a}
+
+       緯度、経度微分の項は、:py:func:`dvardx`、 :py:func:`dvardy` を内部で呼ぶ。境界の扱いもこれらに準ずる。
     
-    :math:`\partial u/\partial x+\partial v/\partial y`
-
-
     **Examples**
-
-    >>> from pymet.grid import div
-    >>> 
+     >>> from pymet.grid import div
+     >>> 
     """
     u, v = np.array(u), np.array(v)
     ndim = u.ndim
-
-    out = dvardx(u,lon,xdim,cyclic=cyclic) + dvardy(v,lat,ydim)
+    
+    out = dvardx(u,lon,lat,xdim,ydim,cyclic=cyclic) + dvardy(v,lat,ydim) - v*tools.expand(np.tan(lat*d2r),ndim,ydim)/a0
 
     return out
 
 def rot(u, v, lon, lat, xdim, ydim, cyclic=True):
-    u"""
-    回転を計算
+    ur"""
+    回転の鉛直成分を計算する。
+
+    :Arguments:
+     **u, v** : ndarray
+       ベクトルの東西、南北成分。
+     **lon, lat** : array_like
+       緯度と経度
+     **xdim, ydim** : int
+       緯度、経度の軸
+     **cyclic** : bool, optional
+       経度微分の際に周境界とするかどうか。デフォルトはTrue
+    
+    :Returns:
+     **div** : ndarray
+       u, v と同じ形状のndarray
+       
+    .. note::
+       球面緯度経度座標系における回転の鉛直成分は次のように定義される。
+
+       .. math:: \mbox{\boldmath $k$}\cdot(\mbox{\boldmath $\nabla$}\times\boldmath{v})
+                    &= \frac{1}{a\cos\phi} \left[ \frac{\partial v}{\partial \lambda} - \frac{\partial (u\cos\phi)}{\partial \phi} \right] \\
+                    &= \frac{1}{a\cos\phi}\frac{\partial v}{\partial \lambda} - \frac{1}{a}\frac{\partial u}{\partial \phi} + \frac{u\tan\phi}{a}
+
+       ここで、aは地球半径。これを中央差分で次のように計算する。
+       
+       .. math:: [\mbox{\boldmath $k$}\cdot(\mbox{\boldmath $\nabla$}\times\boldmath{v})]_{i,j}
+                    = \left(\frac{1}{a\cos\phi}\frac{\partial v}{\partial \lambda}\right)_{i,j}
+                        - \left(\frac{1}{a}\frac{\partial u}{\partial \phi}\right)_{i,j}
+                        + \frac{u_{i,j}\tan\phi_{j}}{a}
+
+       緯度、経度微分の項は、:py:func:`dvardx`、 :py:func:`dvardy` を内部で呼ぶ。境界の扱いもこれらに準ずる。
+    
     """
     u, v = np.array(u), np.array(v)
     ndim = u.ndim
 
-    out = dvardx(v,lon,xdim,cyclic=cyclic) - dvardy(u,lat,ydim)
+    out = dvardx(v,lon,xdim,cyclic=cyclic) - dvardy(u,lat,ydim) + u*tools.expand(np.tan(lat*d2r),ndim,ydim)/a0
 
     return out
     
@@ -406,10 +508,8 @@ def dvardvar(var1, var2, dim, cyclic=True):
 
     return out
 
-#=============================================================================
-
 def vint(var, bottom, top, lev, zdim, punit=100.):
-    u"""
+    ur"""
     質量重み付き鉛直積分。
     
     :Arguments:
@@ -430,9 +530,9 @@ def vint(var, bottom, top, lev, zdim, punit=100.):
        入力配列から鉛直次元を除いた形状と同じ。
 
     .. note::
-
+       p面座標系で与えられるデータの鉛直積分は次式で定義される。
+       
        .. math:: vint = \frac{1}{g}\int_{bottom}^{top} X dp
-
        
     **Examples**
 
@@ -471,11 +571,9 @@ def vinterp(var, oldz, newz, zdim, logintrp=True, bounds_error=True):
        log(z)で線形内挿するかどうか。デフォルトはTrue
      **bounds_error** : bool, optional
 
-
     :Returns:
      **result** : array_like
        内挿後のデータ。result.shape[zdim] == len(new_z)になる。
-
        
     **Examples**
 

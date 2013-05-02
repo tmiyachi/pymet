@@ -33,7 +33,7 @@ def dvardx(field, cyclic=True):
     data = np.ma.getdata(field, subok=False)
     mask = np.ma.getmask(field)
 
-    result = pymet.grid.dvardx(data, grid.lon, grid.xdim, cyclic=True)
+    result = pymet.grid.dvardx(data, grid.lon, grid.lat, grid.xdim, grid,ydim, cyclic=True)
     if np.size(result)<2:
         return result
     return McField(result, name=field.name, grid=grid, mask=mask)
@@ -121,7 +121,7 @@ def d2vardx2(field, cyclic=True):
     data = np.ma.getdata(field, subok=False)
     mask = np.ma.getmask(field)
 
-    result = pymet.grid.d2vardx2(data, grid.lon, grid.xdim, cyclic=True)
+    result = pymet.grid.d2vardx2(data, grid.lon, grid.lat, grid.xdim, grid.ydim, cyclic=True)
     if np.size(result) < 2:
         return result
     return McField(result, name=field.name, grid=grid, mask=mask)
