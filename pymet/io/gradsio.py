@@ -1,7 +1,7 @@
 # coding:utf-8
 """
 """
-from grads import GaCore
+from grads import GaCore, GrADSError
 from pymet.field import McField, McGrid
 from pymet.tools import d2s, s2d
 import numpy as np
@@ -18,28 +18,34 @@ class GradsIO:
       **Echo** : bool, optional
          gradsの出力を標準出力に表示するかどうか。デフォルトはFalse。
 
-    .. note::
-
-
     **Examples**
-     >>> gaio = pymet.io.GradsIO()
+     >>> gaio = pymet.io.GradsIO(Echo=False)
+     >>> gaio.open('u.ctl')
+     >>> gaio.open('v.ctl')
+     >>> ga.setdim(lon=(0,180), lat=(-90,90), lev=500, time=datetime(2009,10,13,12))
+     >>> u = ga.get('u')
+     >>> v = ga.get('v')
+     >>> gaio.allclose()
 
     **Attrubutes**
-
-    ======= ====================================
-    ga
-    ======= ====================================
+    
+     ======= ===================================================================
+     ga      grads.GaCoreクラスのインスタンス
+     fn      現在開いているファイル数
+     fnames  現在開いているファイル名
+     vars    現在開いているファイルに含まれる変数名
+     ======= ===================================================================
 
     **Methods**
-    .. currentmodule:: pymet.io.gradsio.GradsIO
-    
-    ..  autosummary::
+     ..  autosummary::
 
-        open
-        command
-        setdim
-        get
-        __init__
+         open
+         close
+         allclose
+         command
+         setdim
+         get
+         __init__
 
     """
     def __init__(self, Echo=False):
@@ -47,6 +53,7 @@ class GradsIO:
         self.ga = ga
         self.fn = 0   # 開いているファイル数
         self.vars = []
+        self.fnames = []
         self._first = True
         
     def open(self, fname, Quiet=True):
@@ -72,6 +79,7 @@ class GradsIO:
         self.ga('set dfile '+str(self.fn))
         qfile = self.ga.query('file')
         self.vars.append(qfile.vars)
+        self.fnames.append(fname)
 
         if self._first:
             coords = self.ga.coords()
@@ -93,16 +101,19 @@ class GradsIO:
             fid = self.fn
         self.ga('close '+str(fid))
         self.vars.pop(fid-1)
+        self.fnames.pop(fid-1)
         self.fn = self.fn - 1
         
     def allclose(self):
         u"""
         開いているすべてのファイルを閉じる。
         """
-        self.ga('allclose')
+        for fid in range(self.fn,0,-1):
+            self.ga.cmd('close %d' % fid)
         self.fn = 0
         self._first = True
         self.vars = []
+        self.fnames = []
         
     def command(self,command_string):
         u"""
@@ -162,11 +173,11 @@ class GradsIO:
             self.ga('set z %d %d' % z)
         elif z != None:
             self.ga('set z %d' % z)
-            
+
         if isinstance(time, tuple):
-            self.ga('set time %s %s' % (d2s(time[0]), d2s(time[1])))
+            self.ga('set time %s %s' % (d2s(time[0],fmt='%H:%MZ%d%b%Y'),d2s(time[1],fmt='%H:%MZ%d%b%Y')))
         elif time != None:
-            self.ga('set time %s' % d2s(time))
+            self.ga('set time %s' % d2s(time,fmt='%H:%MZ%d%b%Y'))
         elif isinstance(t, tuple):
             self.ga('set t %d %d' % t)
         elif t != None:
@@ -239,7 +250,7 @@ class GradsIO:
             except:
                 self.ga.flush()
                 self.ga.setdim(dh)
-                raise
+                raise GrADSError, "Syntax Error"
         elif nt == max(ne, nt, nz):
             try:
                 for i, e in enumerate(range(e1,e2+1)):
@@ -251,7 +262,7 @@ class GradsIO:
             except:
                 self.ga.flush()
                 self.ga.setdim(dh)
-                raise
+                raise GrADSError, "Syntax Error"
         else:
             try:
                 for j, t in enumerate(range(t1,t2+1)):
@@ -263,7 +274,7 @@ class GradsIO:
             except:
                 self.ga.flush()
                 self.ga.setdim(dh)
-                raise
+                raise GrADSError, "Syntax Error"
         out  = np.squeeze(out)
         out  = np.ma.array(out, mask=(out==info.undef))
         self.ga.flush()
