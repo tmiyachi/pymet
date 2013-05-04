@@ -1,0 +1,8 @@
+538c538
+<                 qh.t    = (int(self.rword(5,9)), int(self.rword(5,9)))
+---
+>                 qh.t    = (float(self.rword(5,9)), float(self.rword(5,9)))
+542c542
+<                 qh.t    = (int(float(self.rword(5,11))), int(float(self.rword(5,13))))
+---
+>                 qh.t    = (float(float(self.rword(5,11))), float(float(self.rword(5,13))))
