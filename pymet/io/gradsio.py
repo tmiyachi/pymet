@@ -87,19 +87,11 @@ class GradsIO:
                 self.ga('set lon %f %f' % (coords.lon[0], coords.lon[-2]))
             self._first = False
             
-    def close(self, fid=-1):
+    def close(self):
         u"""
-        fidで指定したファイル番号のファイルを閉じる。
-
-        :Arguments:
-         **fid** : int, optional
-          閉じるファイル番号。指定しない場合は、最後に開いたファイルを閉じる。
+        最後に開いたファイルを閉じる。
         """
-        if fid > self.fn:
-            raise ValueError, "the number of opened files is less than "+str(fid)
-        elif fid == -1:
-            fid = self.fn
-        self.ga('close '+str(fid))
+        self.ga('close %d' % self.fid)
         self.vars.pop(fid-1)
         self.fnames.pop(fid-1)
         self.fn = self.fn - 1
