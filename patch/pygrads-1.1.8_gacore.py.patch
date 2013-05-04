@@ -1,8 +1,27 @@
-538c538
-<                 qh.t    = (int(self.rword(5,9)), int(self.rword(5,9)))
----
->                 qh.t    = (float(self.rword(5,9)), float(self.rword(5,9)))
-542c542
-<                 qh.t    = (int(float(self.rword(5,11))), int(float(self.rword(5,13))))
----
->                 qh.t    = (float(float(self.rword(5,11))), float(float(self.rword(5,13))))
+*** gacore.py	2013-05-05 01:57:00.299407275 +0900
+--- gacore.py	2013-05-05 01:57:53.084351490 +0900
+***************
+*** 535,545 ****
+              qh.t_state = self.rword(5,3)
+              if qh.t_state == 'fixed':
+                  qh.time = (self.rword(5,6), self.rword(5,6))
+!                 qh.t    = (int(self.rword(5,9)), int(self.rword(5,9)))
+              else:
+                  qh.rank = qh.rank+1
+                  qh.time = (self.rword(5,6),  self.rword(5,8))
+!                 qh.t    = (int(float(self.rword(5,11))), int(float(self.rword(5,13))))
+  
+  #           Ensemble dimension only supported in GrADS v2.0
+  #           -----------------------------------------------
+--- 535,545 ----
+              qh.t_state = self.rword(5,3)
+              if qh.t_state == 'fixed':
+                  qh.time = (self.rword(5,6), self.rword(5,6))
+!                 qh.t    = (float(self.rword(5,9)), float(self.rword(5,9)))
+              else:
+                  qh.rank = qh.rank+1
+                  qh.time = (self.rword(5,6),  self.rword(5,8))
+!                 qh.t    = (float(float(self.rword(5,11))), float(float(self.rword(5,13))))
+  
+  #           Ensemble dimension only supported in GrADS v2.0
+  #           -----------------------------------------------
