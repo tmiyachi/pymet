@@ -300,17 +300,17 @@ def corr(a, b, axis=None):
         if not a.shape == b.shape:
             raise ValueError, "input array must have shame shape"
     else:
-        if a.ndim == 1:
+        if a.ndim == 1 and b.ndim>1:
             a = tools.expand(a, b.ndim, axis=axis)
-        else:
+        elif b.ndim == 1 and a.ndim>1:
             b = tools.expand(b, a.ndim, axis=axis)
     
     a_anom = a - a.mean(axis=axis)
     b_anom = b - b.mean(axis=axis)
-    
+
     xy = (a_anom*b_anom).sum(axis=axis)
-    xx = a.std(axis=axis)
-    yy = b.std(axis=axis)
+    xx = np.sqrt((a_anom**2).sum(axis=axis))
+    yy = np.sqrt((b_anom**2).sum(axis=axis))
 
     return xy/xx/yy
 
