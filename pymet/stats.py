@@ -19,7 +19,7 @@ import numpy as np
 import scipy.signal as signal
 import tools, constants
 import scipy.linalg as linalg
-import scipy.stats as stats
+import scipy.stats
 PI = constants.pi
 NA = np.newaxis
 
@@ -75,7 +75,7 @@ def runave(a, length, axis=0, bound='mask'):
         raise ValueError, "input array first dimension length must be larger than length."
 
     if ndim == 1:
-        if length%2 != 0:
+        if length%2 == 1:
             w = np.ones(length)/float(length)
         else:
             w = np.r_[0.5, np.ones(length-1), 0.5]/float(length)                
@@ -91,10 +91,10 @@ def runave(a, length, axis=0, bound='mask'):
     else:
         rdata, oldshape = tools.unshape(rdata) 
         if length%2 != 0:
-            w = np.vstack((np.zeros(length),np.ones(length),np.zeros(length)))/float(length)
+            w = np.c_[(np.zeros(length),np.ones(length),np.zeros(length))]/float(length)
         else:
-            w = np.vstack((np.zeros(length+1),np.r_[0.5, np.ones(length-1), 0.5],\
-                           np.zeros(length+1)))/float(length)
+            w = np.c_[(np.zeros(length+1),np.r_[0.5, np.ones(length-1), 0.5],
+                           np.zeros(length+1))]/float(length)
         out = signal.convolve2d(rdata, w, mode='same')
         if bound=='mask':
             out = np.ma.asarray(out)
@@ -198,7 +198,7 @@ def lancoz(a, cutoff, cutoff2=None, length=None, axis=0, bound='mask', mode='low
             raise ValueError, "unexpected bound option '%{0}'".format(bound)
     else:
         rdata, oldshape = tools.unshape(rdata) 
-        w = np.vstack([np.zeros(length), w, np.zeros(length)])
+        w = np.c_[(np.zeros(length), w, np.zeros(length))]
         out = signal.convolve2d(rdata, w, mode='same')
         if bound=='mask':
             out = np.ma.asarray(out)
@@ -211,6 +211,72 @@ def lancoz(a, cutoff, cutoff2=None, length=None, axis=0, bound='mask', mode='low
         out = tools.deunshape(out, (-1,) + oldshape[1:])
         out = tools.mrollaxis(out, 0, axis+1)
 
+    return out
+
+def runcum(a, length, axis=0, bound='mask'):
+    ur"""
+    移動積算値を計算する。
+
+    :Arguments:
+     **a**      : array_like
+      入力配列
+     **length** : int
+      積算する項数
+     **axis**   : int, optional
+      積算する軸。デフォルトは 0。
+     **bound**  : {'mask', 'valid'}, optional
+      'mask':
+        入力データと同じ形状の配列で結果を返す。積算する項が足りない先端はマスクされる。
+      'valid':
+        積算する項が足りない先端を除いた長さの結果を返す。入力データの時系列の長さをNとすると、
+        N - length + 1. が出力の時系列の長さとなる。
+    :Returns:
+      **out** : ndarray or MaskedArray
+
+    **Examples**
+     >>> a = np.arnge(10)
+     >>> a
+     array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+     >>> runcum(a, 3, bound='mask')
+     masked_array(data = [-- -- 3.0 6.0 9.0 12.0 15.0 18.0 21.0 24.0],
+                  mask = [ True  True False False False False False False False False],
+                         fill_value = 1e+20)
+    >>> runcum(a, d, mode='valid')
+    array([  3.,   6.,   9.,  12.,  15.,  18.,  21.,  24.])
+    """
+    rdata = np.array(a)
+    ndim = rdata.ndim
+    nt = rdata.shape[axis]
+    rdata = np.rollaxis(rdata, axis, 0)
+    if nt < length:
+        raise ValueError, "input array first dimension length must be larger than length."
+
+    if ndim == 1:
+        w = np.ones(length)
+        out = signal.convolve(rdata, w, mode='full')
+        if bound == 'mask':
+            out = out[:-length+1]
+            out = np.ma.asarray(out)
+            out[:length-1] = np.ma.masked
+        elif bound == 'valid':
+            out = out[length-1:-length+1]
+        else:
+            raise ValueError, "unexpected bound option '%{0}'".format(bound)
+    else:
+        rdata, oldshape = tools.unshape(rdata) 
+        w = np.c_[(np.zeros(length),np.ones(length),np.zeros(length))]
+        out = signal.convolve2d(rdata, w, mode='full')
+        if bound=='mask':
+            out = out[:-length+1,1:-1]
+            out = np.ma.asarray(out)
+            out[:length-1,:] = np.ma.masked            
+        elif 'valid':
+            out = out[length-1:-length+1,1:-1]
+        else:
+            raise ValueError, "unexpected boud option '%{0}'".format(bound)
+        out = tools.deunshape(out, (-1,) + oldshape[1:])
+        out = tools.mrollaxis(out, 0, axis+1)
+        
     return out
 
 def regression(x, y, axis=0, dof=None):
@@ -254,7 +320,7 @@ def regression(x, y, axis=0, dof=None):
         # 自由度dofのt-検定
         e = y - a*x - b
         t = a*x.var()/np.sqrt(e.var()/(dof-2.))
-        prob = 1-stats.t.sf(np.abs(t),dof-2)*2        
+        prob = 1-scipy.stats.t.sf(np.abs(t),dof-2)*2        
     else:
         # 回帰する軸を先頭に
         y = np.rollaxis(y, axis, 0)
@@ -268,7 +334,7 @@ def regression(x, y, axis=0, dof=None):
         # t-検定
         e = y - x[:,NA]*a[NA,:] - b[NA,:]
         t = a*x.var()/np.sqrt(e.var(axis=0)/(dof-2.))
-        prob = 1-stats.t.sf(np.abs(t),dof-2)*2
+        prob = 1-scipy.stats.t.sf(np.abs(t),dof-2)*2
     
         # 元の形状に戻す
         a = tools.deunshape(a, oldshape)
@@ -290,7 +356,7 @@ def corr(a, b, axis=None):
      **axis** : int, optional
       a, b の一方が1次元で、もう一方が多次元の場合に相関を計算する軸。
     :Returns:
-     **out** : array_like
+     **r** : array_like
            
     """
     a = np.asarray(a)
@@ -301,7 +367,7 @@ def corr(a, b, axis=None):
             raise ValueError, "input array must have shame shape"
     else:
         if a.ndim == 1 and b.ndim>1:
-            a = tools.expand(a, b.ndim, axis=axis)
+            a = tools.expand(a, b.ndim, axis=axis)            
         elif b.ndim == 1 and a.ndim>1:
             b = tools.expand(b, a.ndim, axis=axis)
     
@@ -312,7 +378,9 @@ def corr(a, b, axis=None):
     xx = np.sqrt((a_anom**2).sum(axis=axis))
     yy = np.sqrt((b_anom**2).sum(axis=axis))
 
-    return xy/xx/yy
+    r = xy/xx/yy
+    
+    return r
 
 def rmse(var, basis, axes=None):
     u"""
