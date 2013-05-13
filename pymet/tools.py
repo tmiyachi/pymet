@@ -218,9 +218,9 @@ def s2d(datestring):
         hh = time
         mm = 0
     dd  = date[:-7]
-    mm = __months__.index(date[-7:-4])+1
+    mmm = __months__.index(date[-7:-4])+1
     yyyy = date[-4:]
-    return datetime(int(yyyy), int(mm), int(dd), int(hh), int(mm))
+    return datetime(int(yyyy), int(mmm), int(dd), int(hh), int(mm))
 
 def lon2txt(lon):
     u"""
