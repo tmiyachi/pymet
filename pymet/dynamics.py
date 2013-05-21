@@ -218,8 +218,10 @@ def tnflux2d(U, V, strm, lon, lat, xdim, ydim, cyclic=True, limit=100):
 
     # 大きさがlimit以上のグリッドと東風領域をマスクする。
     tnxy = np.sqrt(tnx**2 + tny**2)
-    tnx = np.ma.asarray(tnx, mask=tnxy>limit)
-    tny = np.ma.asarray(tny, mask=tnxy>limit)
+    tnx = np.ma.asarray(tnx)
+    tny = np.ma.asarray(tny)
+    tnx[tnxy>limit] = np.ma.masked
+    tny[tnxy>limit] = np.ma.masked
     tnx[U<0] = np.ma.masked
     tny[U<0] = np.ma.masked
     
@@ -297,12 +299,12 @@ def tnflux3d(U, V, T, strm, lon, lat, lev, xdim, ydim, zdim, cyclic=True, limit=
 
     # 水平成分の大きさがlimit以上のグリッドと東風領域をマスクする。
     tnxy = np.sqrt(tnx**2 + tny**2)
-    tnx = np.ma.asarray(tnx, mask=tnxy>limit)
-    tny = np.ma.asarray(tny, mask=tnxy>limit)
-    tnz = np.ma.asarray(tnz, mask=tnxy>limit)
-    tnx[U<0] = np.ma.masked
-    tny[U<0] = np.ma.masked
-    tnz[U<0] = np.ma.masked
+    tnx = np.ma.asarray(tnx)
+    tny = np.ma.asarray(tny)
+    tnz = np.ma.asarray(tnz)
+    tnx[(U<0) | (tnxy>limit)] = np.ma.masked
+    tny[(U<0) | (tnxy>limit)] = np.ma.masked
+    tnz[(U<0) | (tnxy>limit)] = np.ma.masked
     
     return tnx, tny, tnz
 
