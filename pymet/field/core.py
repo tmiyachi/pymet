@@ -180,7 +180,8 @@ class McGrid:
         if np.size(self.lon) < 2 or np.size(self.lat) < 2:
             raise ValueError, "McGrid instance does not have enogh length of 'lon' and 'lat' dimension" 
 
-        return np.meshgrid(self.lat, self.lon)
+        lon, lat = np.meshgrid(self.lon, self.lat)
+        return lat, lon
 
     def dimindex(self, dimnames, filtered=False):
         u"""
