@@ -35,9 +35,7 @@ class McGrid:
 
      **time**
 
-     **ens**
-     
-     **dims**
+     **ens**    
 
      **punit** : float, optional
       等圧面の気圧をPaに変換するためのパラメータ。デフォルトは100.でhPa->Paへの変換。
@@ -46,9 +44,10 @@ class McGrid:
     **Notes**
 
     **Examples**
-     >>> grid = pymet.McGrid(name='test_grid', lon=np.arange(0,360,2.5), lat=np.arange(-90,90.1,2.5)),
-                             lev=[1000.,500.,200.], time=[datetime(2009,10,11),datetime(2009,10,12),
-                             dims=['time','lev','lat','lon'])
+     >>> from pymet.field import *
+     >>> grid = McGrid(name='test_grid', lon=np.arange(0,360,2.5), lat=np.arange(-90,90.1,2.5)),
+                      lev=[1000.,500.,200.], time=[datetime(2009,10,11),datetime(2009,10,12),
+                      dims=['time','lev','lat','lon'])
 
     **Attributes**
     
@@ -74,9 +73,11 @@ class McGrid:
     ..  autosummary::
     
         copy
+        latlon
+        dimindex
+        dimshape    
         gridmask
-        __init__
-        __getattr__
+        getgrid
     
     """
     def __init__(self,name=None,lon=None,lat=None,lev=None,time=None,ens=None,punit=100.):
@@ -202,7 +203,18 @@ class McGrid:
                 return [self.dims.index(dimname) for dimname in dimnames]
         except:
             raise ValueError, "McGrid instance has no dimension '{0}'".format(dimnames)
-    
+
+    def dimshape(self):
+        u"""
+        """
+        shape = ()
+        for dim in ['ens','time','lev','lat','lon']:
+            dn = getattr(self, dim)
+            if dn != None: dn = np.size(dn)
+            shape += (dn,)
+
+        return shape
+        
     def gridmask(self, **kwargs):
         u"""
         指定した範囲の値をインデキシングするためのbool型配列を求める。
@@ -239,7 +251,7 @@ class McGrid:
                 mask.append(dimvalue==dimvalue)
             elif isinstance(kwdvalue, tuple):
                 kwdmin, kwdmax = min(kwdvalue), max(kwdvalue)
-                mask.append((dimvalue>=kwdmin) & (dimvalue<=kwdmax))
+                mask.append((dimvalue>=kwdmin) & (dimvalue<=kwdmax))                
             elif isinstance(kwdvalue, list):
                 mask.append(map((lambda x: x in dimvalue), kwdvalue))
             else:
@@ -247,6 +259,61 @@ class McGrid:
                     raise ValueError, "{0}={1} is out of domain".format(dim, kwdvalue)
                 mask.append(np.arange(len(dimvalue))==np.argmin(np.abs(dimvalue-kwdvalue)))
         return np.ix_(*mask)
+
+    def getgrid(self, **kwargs):
+        u"""
+        指定した範囲の値を含むようなMcGridを返す
+
+        :Arguments:
+         **lon, lat, lev** : tuple or list of floats, or float, optional
+           経度、緯度、鉛直次元の指定する領域。
+         **time** : tuple or list or datetime object, optional
+           時間次元の範囲。
+         **ens** : tuple or list or int
+           アンサンブル次元の範囲。
+
+        :Returns:
+         **grid** : McGrid
+
+        **Examples**    
+         範囲を指定する場合はタプルで指定する。
+          >>> grid = pymet.McGrid(name='test_grid', lon=np.arange(0,360,2.5), lat=np.arange(-90,90.1,2.5)),
+                                  lev=[1000.,500.,200.,100.], time=[datetime(2009,10,11),datetime(2009,10,12),
+                                  dims=['time','lev','lat','lon'])
+          >>> new_grid = grid.getgrid(lon=(0., 180.))
+         2つ以上の値で指定する場合はリストで指定する。
+          >>> new_grid = grid.getgrid(lev=[500,100])
+        """
+        for kwd in kwargs:
+            if not kwd in self.dims:
+                raise ValueError, "McGrid instance has no dimension {0}".format(kwd)
+        grid = self.copy()
+        for key, value in kwargs.items():
+            dimvalue = getattr(self, key)
+            if isinstance(value, tuple):
+                kwdmin, kwdmax = min(value), max(value)
+                mask = (dimvalue>=kwdmin) & (dimvalue<=kwdmax)
+            elif isinstance(value, list):
+                mask = map((lambda x: x in dimvalue), value)
+            else:
+                if value<dimvalue.min() or value>dimvalue.max():
+                    raise ValueError, "{0}={1} is out of domain".format(dim, value)
+                mask = np.argmin(np.abs(dimvalue-value))
+            new_dimvalue = dimvalue[mask]
+            nd = np.size(new_dimvalue)
+            if nd == 0:
+                setattr(grid, key, None)
+            elif nd == 1:
+                try:
+                    setattr(grid, key, new_dimvalue[0])
+                except TypeError:
+                    setattr(grid, key, new_dimvalue)
+                except:
+                    raise
+            else:
+                setattr(grid, key, new_dimvalue)
+                
+            return grid
     
 class McField(np.ma.MaskedArray):
     u"""
@@ -303,7 +370,8 @@ class McField(np.ma.MaskedArray):
         return super(McField, cls).__new__(cls, data, **kwargs)
     
     def __init__(self, data, name=None, grid=None, **kwargs):
-        super(McField,self).__init__(self, data, **kwargs)
+#        super(McField,self).__init__(self, data, **kwargs)
+        super(McField,self).__init__(data, **kwargs)
         self.name = name
         if grid == None:
             grid = McGrid(name)
@@ -347,7 +415,7 @@ class McField(np.ma.MaskedArray):
                 setattr(grid, dimname, getattr(grid, dimname)[idx])
                 
             return McField(data, name=self.name, grid=grid, mask=data.mask)                
-        except:
+        except:            
             return data
 
     def get(self, **kwargs):
@@ -403,6 +471,7 @@ class McField(np.ma.MaskedArray):
         移動平均の結果を返す
 
         .. seealso::
+        
            .. autosummary::
               :nosignatures:
      
@@ -453,7 +522,44 @@ class McField(np.ma.MaskedArray):
             mask = tools.mrollaxis(mask, 0, grid.tdim+1)
         print result.mask[:,0,0,0]
         mask = mask | result.mask
-        return McField(result, name='lowpass', grid=grid, mask=mask)        
+        return McField(result, name='lowpass', grid=grid, mask=mask)
+
+    #-------------------------------------------------------------
+    #-- インデックスをgridの値で返す関数
+    #-------------------------------------------------------------
+    def gridmin(self):
+        u"""
+        最小値をとる座標を返す。
+
+        :Returns:
+         **valuemin** :
+          最小値をとる次元の値。ens,time,lev,lat,lonの順で含まれる次元を返す。
+        """
+        grid = self.grid.copy()
+        data = np.ma.asarray(self)
+        idx = np.unravel_index(data.argmin(), data.shape)
+        valuemin = []        
+        for i, key in enumerate(grid.dims):
+            valuemin.append(getattr(grid, key)[idx[i]])
+
+        return valuemin
+
+    def gridmax(self):
+        u"""
+        最大値をとる座標を返す。
+
+        :Returns:
+         **valuemin** :
+          最大値をとる次元の値。ens,time,lev,lat,lonの順で含まれる次元を返す。
+        """
+        grid = self.grid.copy()
+        data = np.ma.asarray(self)
+        idx = np.unravel_index(data.argmax(), data.shape)
+        valuemax = []        
+        for i, key in enumerate(grid.dims):
+            valuemax.append(getattr(grid, key)[idx[i]])
+
+        return valuemax
     
     #--------------------------------------------------------------
     #-- MaskedArrayのMarithmeticsメソッドに対するラッパー
