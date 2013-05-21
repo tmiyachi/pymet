@@ -14,9 +14,9 @@ u"""
    dvardp
    d2vardx2
    d2vardy2
-..    dvardvar
    div
    rot
+   laplacian
 
 積分
 ====
@@ -48,7 +48,7 @@ g = constants.earth_gravity
 PI = constants.pi
 d2r=PI/180.
 
-__all__ = ['dvardx', 'dvardy', 'dvardp', 'd2vardx2', 'd2vardy2', 'div', 'rot', #'dvardvar',
+__all__ = ['dvardx', 'dvardy', 'dvardp', 'd2vardx2', 'd2vardy2', 'div', 'rot', 'laplacian', #'dvardvar',
            'vint',
            'vinterp','distance']
 
@@ -77,20 +77,20 @@ def dvardx(var, lon, lat, xdim, ydim, cyclic=True):
     .. note::
        球面緯度経度座標系におけるx微分は、次のように定義される。
 
-       .. math:: \frac{\partial X}{\partial x} = \frac{1}{a\cos\phi}\frac{\partial X}{\partial \lambda}
+       .. math:: \frac{\partial \Phi}{\partial x} = \frac{1}{a\cos\phi}\frac{\partial \Phi}{\partial \lambda}
 
        ここで、aは地球半径。これを中央差分で次のように計算する。
        
-       .. math:: \left( \frac{\partial X}{\partial x} \right)_{i,j}
-                  = \frac{1}{a\cos\phi_{j}}\frac{X_{i+1,j} - X_{i-1,j}}{\lambda_{i+1} - \lambda_{i-1}}
+       .. math:: \left( \frac{\partial \Phi}{\partial x} \right)_{i,j}
+                  = \frac{1}{a\cos\phi_{j}}\frac{\Phi_{i+1,j} - \Phi_{i-1,j}}{\lambda_{i+1} - \lambda_{i-1}}
 
        cyclic=Falseの場合は、両端は前方、後方差分を用いて、
 
-       .. math:: \left( \frac{\partial X}{\partial x} \right)_{0,j}
-               = \frac{1}{a\cos\phi_{j}}\frac{X_{1,j} - X_{0,j}}{\lambda_{1} - \lambda_{0}}
+       .. math:: \left( \frac{\partial \Phi}{\partial x} \right)_{0,j}
+               = \frac{1}{a\cos\phi_{j}}\frac{\Phi_{1,j} - \Phi_{0,j}}{\lambda_{1} - \lambda_{0}}
                  \hspace{3em}
-                 \left( \frac{\partial X}{\partial x} \right)_{N-1,j}
-               = \frac{1}{a\cos\phi_{j}}\frac{X_{N-1,j} - X_{N-2,j}}{\lambda_{N-1} - \lambda_{N-2}}
+                 \left( \frac{\partial \Phi}{\partial x} \right)_{N-1,j}
+               = \frac{1}{a\cos\phi_{j}}\frac{\Phi_{N-1,j} - \Phi_{N-2,j}}{\lambda_{N-1} - \lambda_{N-2}}
 
        で計算する。
                
@@ -136,7 +136,7 @@ def dvardx(var, lon, lat, xdim, ydim, cyclic=True):
                     (lon[-1]-lon[-2])]
                     
     dvar = np.rollaxis(dvar,ndim-1,xdim)
-    dx = a0 * tools.expand(dx,ndim,xdim) * tools.exapand(np.cos(lat*d2r),ndim,ydim)
+    dx = a0 * tools.expand(dx,ndim,xdim) * tools.expand(np.cos(lat*d2r),ndim,ydim)
     out = dvar/dx
     
     return out
@@ -159,20 +159,20 @@ def dvardy(var, lat, ydim):
     .. note::
        球面緯度経度座標系におけるy微分は、次のように定義される。
 
-       .. math:: \frac{\partial X}{\partial y} = \frac{1}{a}\frac{\partial X}{\partial \phi}
+       .. math:: \frac{\partial \Phi}{\partial y} = \frac{1}{a}\frac{\partial \Phi}{\partial \phi}
 
        ここで、aは地球半径。これを中央差分で次のように計算する。
        
-       .. math:: \left( \frac{\partial X}{\partial x} \right)_{i,j}
-                  = \frac{1}{a}\frac{X_{i,j+1} - X_{i,j-1}}{\phi_{j+1} - \phi_{j-1}}
+       .. math:: \left( \frac{\partial \Phi}{\partial y} \right)_{i,j}
+                  = \frac{1}{a}\frac{\Phi_{i,j+1} - \Phi_{i,j-1}}{\phi_{j+1} - \phi_{j-1}}
 
        南北端は前方、後方差分を用いて、
 
-       .. math:: \left( \frac{\partial X}{\partial y} \right)_{i,0}
-                 = \frac{1}{a}\frac{X_{i,1} - X_{i,0}}{\phi_{1} - \phi_{0}}
+       .. math:: \left( \frac{\partial \Phi}{\partial y} \right)_{i,0}
+                 = \frac{1}{a}\frac{\Phi_{i,1} - \Phi_{i,0}}{\phi_{1} - \phi_{0}}
                    \hspace{3em}
-                   \left( \frac{\partial X}{\partial y} \right)_{i,N-1}
-                 = \frac{1}{a}\frac{X_{i,N-1} - X_{i,N-2}}{\phi_{N-1} - \phi_{N-2}}
+                   \left( \frac{\partial \Phi}{\partial y} \right)_{i,N-1}
+                 = \frac{1}{a}\frac{\Phi_{i,N-1} - \Phi_{i,N-2}}{\phi_{N-1} - \phi_{N-2}}
 
        で計算する。
        
@@ -224,20 +224,20 @@ def dvardp(var, lev, zdim, punit=100.):
     .. note::
        気圧座標系におけるp微分は、次のように書き換えられる。
 
-       .. math:: \frac{\partial X}{\partial p} = \frac{1}{p}\frac{\partial X}{\partial \ln{p}}
+       .. math:: \frac{\partial \Phi}{\partial p} = \frac{1}{p}\frac{\partial \Phi}{\partial \ln{p}}
 
        したがって、中央差分では、
        
-       .. math:: \left( \frac{\partial X}{\partial p} \right)_{k}
-                  = \frac{1}{p_{k}}\frac{X_{k+1} - X_{k-1}}{\ln{p_{k+1}} - \ln{p_{k-1}}}
+       .. math:: \left( \frac{\partial \Phi}{\partial p} \right)_{k}
+                  = \frac{1}{p_{k}}\frac{\Phi_{k+1} - \Phi_{k-1}}{\ln{p_{k+1}} - \ln{p_{k-1}}}
 
        とかける。上下端は前方、後方差分を用いて、
 
-       .. math:: \left( \frac{\partial X}{\partial p} \right)_{0}
-                     = \frac{1}{p_{0}}\frac{X_{1} - X_{0}}{\ln{p_{1}} - \ln{p_{0}}}
+       .. math:: \left( \frac{\partial \Phi}{\partial p} \right)_{0}
+                     = \frac{1}{p_{0}}\frac{\Phi_{1} - \Phi_{0}}{\ln{p_{1}} - \ln{p_{0}}}
                  \hspace{3em}
-                 \left( \frac{\partial X}{\partial p} \right)_{N-1}
-                     = \frac{1}{p_{N-1}}\frac{X_{N-1} - X_{N-2}}{\ln{p_{N-1}} - \ln{p_{N-2}}}
+                 \left( \frac{\partial \Phi}{\partial p} \right)_{N-1}
+                     = \frac{1}{p_{N-1}}\frac{\Phi_{N-1} - \Phi_{N-2}}{\ln{p_{N-1}} - \ln{p_{N-2}}}
 
        で計算する。
        
@@ -291,12 +291,12 @@ def d2vardx2(var, lon, lat, xdim, ydim, cyclic=True):
     .. note::
        球面緯度経度座標系におけるx2回微分は、次のように定義される。
 
-       .. math:: \frac{\partial^2 X}{\partial x^2} = \frac{1}{a^2\cos^2\phi}\frac{\partial^2 X}{\partial \lambda^2}
+       .. math:: \frac{\partial^2 \Phi}{\partial x^2} = \frac{1}{a^2\cos^2\phi}\frac{\partial^2 \Phi}{\partial \lambda^2}
 
        ここで、aは地球半径。これを中央差分で次のように計算する。
        
-       .. math:: \left( \frac{\partial^2 X}{\partial x^2} \right)_{i,j}
-                  = \frac{4}{a^2\cos^2\phi_{j}}\frac{X_{i+1,j} - 2X_{i,j} + X_{i-1,j}}{\lambda_{i+1} - \lambda_{i-1}}
+       .. math:: \left( \frac{\partial^2 \Phi}{\partial x^2} \right)_{i,j}
+                  = \frac{4}{a^2\cos^2\phi_{j}}\frac{\Phi_{i+1,j} - 2\Phi_{i,j} + \Phi_{i-1,j}}{\lambda_{i+1} - \lambda_{i-1}}
 
        cyclic=Falseの場合は、両端はゼロとする。
 
@@ -332,7 +332,7 @@ def d2vardx2(var, lon, lat, xdim, ydim, cyclic=True):
                     (lon[-1]-lon[-2])]
 
     dvat = np.rollaxis(dvar,ndim-1,xdim)
-    dx   = a0**2 * tools.expand(dx**2,ndim,xdim) * tools.exapand(np.cos(lat*d2r)**2,ndim,ydim)
+    dx   = a0**2 * tools.expand(dx**2,ndim,xdim) * tools.expand(np.cos(lat*d2r)**2,ndim,ydim)
     out = 4.*dvar/dx
     #reroll lon dim axis to original dim
     out = np.rollaxis(out,ndim-1,xdim)
@@ -360,12 +360,12 @@ def d2vardy2(var, lat, ydim):
     .. note::
        球面緯度経度座標系におけるy2回微分は、次のように定義される。
 
-       .. math:: \frac{\partial^2 X}{\partial y^2} = \frac{1}{a^2}\frac{\partial^2 X}{\partial \phi^2}
+       .. math:: \frac{\partial^2 \Phi}{\partial y^2} = \frac{1}{a^2}\frac{\partial^2 \Phi}{\partial \phi^2}
 
        ここで、aは地球半径。これを中央差分で次のように計算する。
        
-       .. math:: \left( \frac{\partial^2 X}{\partial y^2} \right)_{i,j}
-                  = \frac{4}{a^2}\frac{X_{i,j+1} - 2X_{i,j} + X_{i,j-1}}{\lambda_{j+1} - \lambda_{j-1}}
+       .. math:: \left( \frac{\partial^2 \Phi}{\partial y^2} \right)_{i,j}
+                  = \frac{4}{a^2}\frac{\Phi_{i,j+1} - 2\Phi_{i,j} + \Phi_{i,j-1}}{\lambda_{j+1} - \lambda_{j-1}}
 
        cyclic=Falseの場合は、両端はゼロとする。
        
@@ -481,7 +481,50 @@ def rot(u, v, lon, lat, xdim, ydim, cyclic=True):
     out = dvardx(v,lon,xdim,cyclic=cyclic) - dvardy(u,lat,ydim) + u*tools.expand(np.tan(lat*d2r),ndim,ydim)/a0
 
     return out
+
+def laplacian(var, xdim, ydim, lon, lat, cyclic=True):
+    ur"""
+    球面上での2次元ラプラシアンを計算する。
+
+    :Arguments:
+     **var** : ndarray
+       スカラー場
+     **lon, lat** : array_like
+       緯度と経度
+     **xdim, ydim** : int
+       緯度、経度の軸
+     **cyclic** : bool, optional
+       経度微分の際に周境界とするかどうか。デフォルトはTrue
     
+    :Returns:
+     **out** : ndarray
+       varと同じ形状のndarray
+       
+    .. note::
+       球面緯度経度座標系における2次元ラプラシアンは次のように定義される。
+
+       .. math:: \nabla_{h}^2\Phi
+                    &= \frac{1}{a^2\cos^2\phi} \left[ \frac{\partial^2 \Phi}{\partial \lambda^2} + \cos\phi\frac{\partial}{\partial \phi}
+                       \left( \cos\phi \frac{\partial \Phi}{\partial \phi} \right) \right] \\
+                    &= \frac{1}{a^2\cos^2\phi}\frac{\partial \Phi}{\partial \lambda} + \frac{1}{a^2}\frac{\partial^2 \Phi}{\partial \phi^2}
+                       - \frac{\tan\phi}{a^2}\frac{\partial \Phi}{\partial \phi}
+
+       ここで、aは地球半径。これを中央差分で次のように計算する。
+       
+       .. math:: (\nabla_{h}^2\Phi)_{i,j}
+                    = \left(\frac{1}{a^2\cos^2\phi}\frac{\partial^2 \Phi}{\partial \lambda^2}\right)_{i,j}
+                        - \left(\frac{1}{a^2}\frac{\partial^2 \Phi}{\partial \phi^2}\right)_{i,j}
+                        - \frac{\tan\phi_{j}}{a} \left( \frac{1}{a}\frac{\partial \Phi}{\partial \phi}\right)_{i,j}
+
+       緯度、経度微分の項は、:py:func:`d2vardx2`、 :py:func:`d2vardy2` を内部で呼ぶ。境界の扱いもこれらに準ずる。        
+    """
+    var = np.asarray(var)
+    ndim = var.ndim
+
+    out = d2vardx2(var, lon, lat, xdim, ydim, cyclic=cyclic) + d2vardy2(var, lat, ydim) - tools.expand(np.tan(lat*d2r),ndim,ydim)*dvardy(var, lat, ydim)/a0
+    
+    return out
+
 def dvardvar(var1, var2, dim, cyclic=True):
     u"""
     d(var1)/d(var2) を axis=dim に沿って差分を計算
@@ -532,7 +575,7 @@ def vint(var, bottom, top, lev, zdim, punit=100.):
     .. note::
        p面座標系で与えられるデータの鉛直積分は次式で定義される。
        
-       .. math:: vint = \frac{1}{g}\int_{bottom}^{top} X dp
+       .. math:: vint = \frac{1}{g}\int_{bottom}^{top} \Phi dp
        
     **Examples**
 
@@ -633,8 +676,7 @@ def distance(lon1,lon2,lat1,lat2):
     **Examples**
 
     >>> from pymet.grid import distance
-    >>> distance(100., 180., 30., 40.)
-    
+    >>> distance(100., 180., 30., 40.)   
     """
     return a0 * np.arccos(np.sin(lat1*d2r)*np.sin(lat2*d2r)
                         +np.cos(lat1*d2r)*np.cos(lat2*d2r)*np.cos((lon2-lon1)*d2r))

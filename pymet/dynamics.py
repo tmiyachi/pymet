@@ -15,7 +15,8 @@ u"""
 -------------------   
 """
 import numpy as np
-import grid, constants, tools
+import constants, tools
+from grid import *
 
 __all__ = ['pottemp', 'ertelpv', 'tnflux2d', 'tnflux3d', 'stability']
 
@@ -107,15 +108,15 @@ def ertelpv(uwnd, vwnd, temp, lon, lat, lev, xdim, ydim, zdim, cyclic=True, puni
     # potential temperature
     theta = pottemp(t, lev, zdim, punit=punit)
     #
-    dthdp = grid.dvardp(theta, lev, zdim, punit=punit)
-    dudp  = grid.dvardp(u, lev, zdim, punit=punit)
-    dvdp  = grid.dvardp(v, lev, zdim, punit=punit)
+    dthdp = dvardp(theta, lev, zdim, punit=punit)
+    dudp  = dvardp(u, lev, zdim, punit=punit)
+    dvdp  = dvardp(v, lev, zdim, punit=punit)
 
-    dthdx = grid.dvardx(theta, lon, xdim, cyclic=cyclic)
-    dthdy = grid.dvardy(theta, lat, ydim)
+    dthdx = dvardx(theta, lon, lat, xdim, ydim, cyclic=cyclic)
+    dthdy = dvardy(theta, lat, ydim)
 
     # absolute vorticity
-    vor  = grid.rot(u, v, lon, lat, xdim, ydim, cyclic=cyclic)
+    vor  = rot(u, v, lon, lat, xdim, ydim, cyclic=cyclic)
     f    = tools.expand(constants.const_f(lat), ndim, axis=ydim)
     avor = f + vor
 
@@ -203,13 +204,13 @@ def tnflux2d(U, V, strm, lon, lat, xdim, ydim, cyclic=True, limit=100):
     U, V = np.asarray(U), np.asarray(V)
     ndim=U.ndim
 
-    dstrmdx    = dvardx(strm, lon, xdim, cyclic=cyclic)
+    dstrmdx    = dvardx(strm, lon, lat, xdim, ydim, cyclic=cyclic)
     dstrmdy    = dvardy(strm, lat, ydim)
-    d2strmdx2  = d2vardx2(strm, lon, xdim, cyclic=cyclic)
+    d2strmdx2  = d2vardx2(strm, lon, lat, xdim, ydim, cyclic=cyclic)
     d2strmdy2  = d2vardy2(strm, lat, ydim)
-    d2strmdxdy = dvardy(dvardx(strm, lon, xdim ,cyclic=cyclic), lat, ydim)
+    d2strmdxdy = dvardy(dvardx(strm,lon,lat,xdim,ydim,cyclic=cyclic),lat,ydim)
 
-    tnx = U * (dstrmdx**2 - strm*d2strmdx2) + V * (dstrmdx*dstrmdy - strm*d2strmdxdy)
+    tnx = U * (dstrmdx**2 - strm*d2strmdx2) + V*(dstrmdx*dstrmdy - strm*d2strmdxdy)
     tny = U * (dstrmdx*dstrmdy - strm*d2strmdxdy) + V * (dstrmdy**2 - strm*d2strmdy2)
 
     tnx = 0.5*tnx/np.abs(U + 1j*V)
@@ -278,13 +279,13 @@ def tnflux3d(U, V, T, strm, lon, lat, lev, xdim, ydim, zdim, cyclic=True, limit=
     S = stability(T, lev, zdim, punit=punit)
     f = tools.expand(constants.const_f(lat), ndim, axis=ydim)
 
-    dstrmdx    = dvardx(strm, lon, xdim, cyclic=cyclic)
+    dstrmdx    = dvardx(strm, lon, lat, xdim, ydim, cyclic=cyclic)
     dstrmdy    = dvardy(strm, lat, ydim)
     dstrmdp    = dvardp(strm, lev, zdim, punit=punit)
-    d2strmdx2  = d2vardx2(strm, lon, xdim, cyclic=cyclic)
+    d2strmdx2  = d2vardx2(strm, lon, lat, xdim, ydim, cyclic=cyclic)
     d2strmdy2  = d2vardy2(strm, lat, ydim)
     d2strmdxdy = dvardy(dstrmdx, lat, ydim)
-    d2strmdxdp = dvardx(dstrmdp, lon, xdim, cyclic=True)
+    d2strmdxdp = dvardx(dstrmdp, lon, lat, xdim, ydim, cyclic=True)
     d2strmdydp = dvardy(dstrmdp, lat, ydim)             
 
     tnx = U * (dstrmdx**2 - strm*d2strmdx2) + V * (dstrmdx*dstrmdy - strm*d2strmdxdy)
@@ -305,3 +306,9 @@ def tnflux3d(U, V, T, strm, lon, lat, lev, xdim, ydim, zdim, cyclic=True, limit=
     
     return tnx, tny, tnz
 
+def qgpv(strm, t, lon, lat, lev, xdim, ydim, zdim, cyclic=True, punit=100.):
+    ur"""
+    準地衡ポテンシャル渦度を計算する。
+    """
+    lapstrm = laplacian(strm, lon, lat, xdim, ydim, cyclic=True)
+     
