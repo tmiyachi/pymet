@@ -49,12 +49,13 @@ PI = constants.pi
 d2r=PI/180.
 
 __all__ = ['dvardx', 'dvardy', 'dvardp', 'd2vardx2', 'd2vardy2', 'div', 'rot', 'laplacian', #'dvardvar',
-           'vint',
-           'vinterp','distance']
+           'vint', 'vmean',
+           'vinterp', 'interpsubgrid',
+           'distance']
 
 #=== 微分と差分 ====================================================================================
 
-def dvardx(var, lon, lat, xdim, ydim, cyclic=True):
+def dvardx(var, lon, lat, xdim, ydim, cyclic=True, sphere=True):
     ur"""
     経度方向のx微分を中央差分で計算。
 
@@ -69,7 +70,10 @@ def dvardx(var, lon, lat, xdim, ydim, cyclic=True):
        入力配列の経度、緯度次元のインデックス
      **cyclic** : bool, optional
        東西の境界を周期境界として扱うかどうか。False の場合は周期境界を用いずに前方、後方差分
-       で計算する。デフォルトは True。       
+       で計算する。デフォルトは True。
+     **sphere** : bool, optional
+       球面緯度経度座標かどうか。デフォルトはTrue。Falseにすると直交座標として扱う。
+       
     :Returns:
      **result** : ndarray
        varと同じ形状。
@@ -116,13 +120,12 @@ def dvardx(var, lon, lat, xdim, ydim, cyclic=True):
     var = np.array(var)
     ndim = var.ndim
     var = np.rollaxis(var,xdim,ndim)
-    if cyclic:
+    if cyclic and sphere:
         dvar = np.concatenate(\
                     ((var[...,1]-var[...,-1])[...,NA],\
                     (var[...,2:]-var[...,:-2]),\
                     (var[...,0]-var[...,-2])[...,NA]), axis=-1)
-        dx   = PI/180. * \
-               np.r_[(lon[1]+360-lon[-1]),\
+        dx   = np.r_[(lon[1]+360-lon[-1]),\
                     (lon[2:]-lon[:-2]   ),\
                     (lon[0]+360-lon[-2] )]
     else:
@@ -130,18 +133,18 @@ def dvardx(var, lon, lat, xdim, ydim, cyclic=True):
                     ((var[...,1]-var[...,0])[...,NA],\
                     (var[...,2:]-var[...,:-2]),\
                     (var[...,-1]-var[...,-2])[...,NA]), axis=-1)
-        dx   = PI/180. * \
-               np.r_[(lon[1]-lon[0] ),\
+        dx   = np.r_[(lon[1]-lon[0] ),\
                     (lon[2:]-lon[:-2]   ),\
                     (lon[-1]-lon[-2])]
                     
     dvar = np.rollaxis(dvar,ndim-1,xdim)
-    dx = a0 * tools.expand(dx,ndim,xdim) * tools.expand(np.cos(lat*d2r),ndim,ydim)
+    if sphere:
+        dx = a0*PI/180.*tools.expand(dx,ndim,xdim) * tools.expand(np.cos(lat*d2r),ndim,ydim)
     out = dvar/dx
     
     return out
 
-def dvardy(var, lat, ydim):
+def dvardy(var, lat, ydim, sphere=True):
     ur"""
     緯度方向のy微分を中央差分で計算。南北端は前方、後方差分
 
@@ -152,6 +155,9 @@ def dvardy(var, lat, ydim):
        緯度
      **ydim**: int
        緯度次元のインデックス。len(var.shape[ydim]) == len(lat)でなければならない。       
+     **sphere** : bool, optional
+       球面緯度経度座標かどうか。デフォルトはTrue。Falseにすると直交座標として扱う。
+
     :Returns:
      **result** : ndarray
        varと同じ形状。
@@ -192,12 +198,13 @@ def dvardy(var, lat, ydim):
               [(var[...,1] -var[...,0]  )[...,NA],\
                (var[...,2:]-var[...,:-2]),\
                (var[...,-1]-var[...,-2] )[...,NA]], axis=-1) 
-    dy   = PI/180. * \
-           np.r_[(lat[1]-lat[0]),\
+    dy   = np.r_[(lat[1]-lat[0]),\
                  (lat[2:]-lat[:-2]),\
                  (lat[-1]-lat[-2])]
 
-    out = dvar/dy/a0
+    if sphere:
+        dy = a0*PI/180.*dy
+    out = dvar/dy
     out = np.rollaxis(out,ndim-1,ydim)
 
     return out
@@ -395,7 +402,7 @@ def d2vardy2(var, lat, ydim):
 
     return out
 
-def div(u, v, lon, lat, xdim, ydim, cyclic=True):
+def div(u, v, lon, lat, xdim, ydim, cyclic=True, sphere=True):
     ur"""
     水平発散を計算する。
 
@@ -408,6 +415,8 @@ def div(u, v, lon, lat, xdim, ydim, cyclic=True):
        緯度、経度の軸
      **cyclic** : bool, optional
        経度微分の際に周境界とするかどうか。デフォルトはTrue
+     **sphere** : bool, optional
+       球面緯度経度座標かどうか。デフォルトはTrue。Falseにすると直交座標として扱う。
     
     :Returns:
      **div** : ndarray
@@ -436,11 +445,18 @@ def div(u, v, lon, lat, xdim, ydim, cyclic=True):
     u, v = np.array(u), np.array(v)
     ndim = u.ndim
     
-    out = dvardx(u,lon,lat,xdim,ydim,cyclic=cyclic) + dvardy(v,lat,ydim) - v*tools.expand(np.tan(lat*d2r),ndim,ydim)/a0
+    out = dvardx(u,lon,lat,xdim,ydim,cyclic=cyclic,sphere=sphere) + dvardy(v,lat,ydim,sphere=sphere)
+    if sphere:
+       out = out - v*tools.expand(np.tan(lat*d2r),ndim,ydim)/a0
 
+    out = np.rollaxis(out, ydim, 0)
+    out[0,...]  = 0.
+    out[-1,...] = 0.
+    out = np.rollaxis(out, 0, ydim+1)
+    
     return out
 
-def rot(u, v, lon, lat, xdim, ydim, cyclic=True):
+def rot(u, v, lon, lat, xdim, ydim, cyclic=True, sphere=True):
     ur"""
     回転の鉛直成分を計算する。
 
@@ -453,6 +469,8 @@ def rot(u, v, lon, lat, xdim, ydim, cyclic=True):
        緯度、経度の軸
      **cyclic** : bool, optional
        経度微分の際に周境界とするかどうか。デフォルトはTrue
+     **sphere** : bool, optional
+       球面緯度経度座標かどうか。デフォルトはTrue。Falseにすると直交座標として扱う。
     
     :Returns:
      **div** : ndarray
@@ -478,8 +496,15 @@ def rot(u, v, lon, lat, xdim, ydim, cyclic=True):
     u, v = np.array(u), np.array(v)
     ndim = u.ndim
 
-    out = dvardx(v,lon,xdim,cyclic=cyclic) - dvardy(u,lat,ydim) + u*tools.expand(np.tan(lat*d2r),ndim,ydim)/a0
-
+    out = dvardx(v,lon,lat,xdim,ydim,cyclic=cyclic,sphere=sphere) - dvardy(u,lat,ydim,sphere=sphere)
+    if sphere:
+       out = out + u*tools.expand(np.tan(lat*d2r),ndim,ydim)/a0
+    
+    out = np.rollaxis(out, ydim, 0)
+    out[0,...]  = 0.
+    out[-1,...] = 0.
+    out = np.rollaxis(out, 0, ydim+1)
+    
     return out
 
 def laplacian(var, xdim, ydim, lon, lat, cyclic=True):
@@ -582,7 +607,7 @@ def vint(var, bottom, top, lev, zdim, punit=100.):
     >>>
     >>>
     """
-    var = np.asarray(var)
+    var = np.ma.asarray(var)
     lev = np.asarray(lev)
     ndim = var.ndim
 
@@ -591,9 +616,50 @@ def vint(var, bottom, top, lev, zdim, punit=100.):
     dp = lev_m[:-1] - lev_m[1:]
 
     #roll lat dim axis to last
-    var = np.rollaxis(var,zdim,ndim)
+    var = tools.mrollaxis(var,zdim,ndim)
     out = var[...,(lev <= bottom)&(lev >= top)] * dp / g * punit
     out = out.sum(axis=-1)
+
+    return out
+
+def vmean(var, bottom, top, lev, zdim, punit=100.):
+    ur"""
+    質量重み付き鉛直平均。
+    
+    :Arguments:
+     **var** : array_like
+       データ。       
+     **bottom, top** : float
+       平均の下端、上端。      
+     **lev** : 1d-array
+       等圧面のレベル
+     **zdim** : int
+       鉛直次元のインデックス。
+     **punit** : float, optional
+       levの単位(Pa)
+
+       
+    :Returns:
+     **result** : array_like
+       入力配列から鉛直次元を除いた形状と同じ。
+       
+    **Examples**
+
+    >>>
+    >>>
+    """
+    var = np.ma.asarray(var)
+    lev = np.asarray(lev)
+    ndim = var.ndim
+
+    lev = lev[(lev <= bottom)&(lev >= top)]
+    lev_m = np.r_[bottom,(lev[1:] + lev[:-1])/2.,top]
+    dp = lev_m[:-1] - lev_m[1:]
+
+    #roll lat dim axis to last
+    var = tools.mrollaxis(var,zdim,ndim)
+    out = var[...,(lev <= bottom)&(lev >= top)] * dp 
+    out = out.sum(axis=-1)/(dp.sum())
 
     return out
 
@@ -678,6 +744,91 @@ def distance(lon1,lon2,lat1,lat2):
     >>> from pymet.grid import distance
     >>> distance(100., 180., 30., 40.)   
     """
+    nx1, ny1 = np.size(lon1), np.size(lat1)
+    nx2, ny2 = np.size(lon2), np.size(lat2)
+
+    if nx1 == 1 and nx2 == 1 :
+        lon2 = np.asarray(lon2)
+        lat2 = np.asarray(lat2)
+    elif nx2 == 1 and ny2 == 1 :
+        lon1 = np.asarray(lon1)
+        lat1 = np.asarray(lat1)
+    elif nx1 > 1 and ny1 > 1 and nx2 > 1 and ny2 > 1:
+        lon1 = np.asarray(lon1)
+        lat1 = np.asarray(lat1)
+        lon2 = np.asarray(lon2)
+        lat2 = np.asarray(lat2)
+
     return a0 * np.arccos(np.sin(lat1*d2r)*np.sin(lat2*d2r)
                         +np.cos(lat1*d2r)*np.cos(lat2*d2r)*np.cos((lon2-lon1)*d2r))
 
+def interpsubgrid(lon, lat, data, clon, clat, typ='min', dxy=None):
+    u"""
+    最大・最小値をサブグリッドスケールに内挿する。
+    """
+    dlon = np.diff(lon)[0]
+    dlat = np.diff(lat)[0]
+    if (not np.all(np.diff(lon)==dlon)) or (not np.all(np.diff(lat)==dlat)): 
+        raise ValueError, "grid must be equally spaced"
+
+    if not dxy is None:
+        lons, lats = np.meshgrid(lon, lat)
+        mask = _domainmask(lons, lats, clon, clat, dxy, dxy)                    
+        if typ == 'min':
+            cidx = data[mask].argmin()
+        elif typ == 'max':
+            cidx = data[mask].argmax()
+        clon, clat = lons[mask][cidx], lats[mask][cidx]
+    cx, cy = _searchidx(clon, clat, lon, lat)
+
+    pm = data[cy,cx]
+    pa = data[cy+1,cx]
+    pb = data[cy,cx-1]
+    pc = data[cy-1,cx]
+    pd = data[cy,cx+1]
+
+    dy = pa - pc
+    dx = pd - pb
+    sy = pa + pc - 2*pm
+    sx = pb + pd - 2*pm
+
+    if typ == 'min' and min([pa,pb,pc,pd])>pm:
+        raise ValueError, 'minimum data grid is on the border of searched domain.'
+    elif typ == 'max' and max([pa,pb,pc,pd])>pm:
+        raise ValueError, 'maximum data grid is on the border of searched domain.'
+
+    if sx == 0:
+        xfactor = 0
+    else:
+        xfactor = dx/sx
+    if sy == 0:
+        yfactor = 0
+    else:
+        yfactor = dy/sy
+        clon  = clon - 0.5*dlon*xfactor
+        clat  = clat - 0.5*dlat*yfactor
+        cdata = pm - 0.125*dlon*dx*xfactor - 0.125*dlat*dy*yfactor
+
+    return clon, clat, cdata
+
+def _searchidx(lon, lat, lon_array, lat_array):
+    u"""
+    lon,latに最も近いインデックス
+    """
+    try:
+        xidx = np.argmin(np.abs(lon_array - lon))
+        yidx = np.argmin(np.abs(lat_array - lat))
+    except:
+        raise IndexError, "(lon,lat) = ({0},{1}) is out of bounds".format(lon,lat)
+    return xidx, yidx
+
+def _domainmask(lons, lats, clon, clat, dx, dy):
+    if clon-dx < 0:
+        mask = (lons<=clon+dx) | (lons>=clon+360-dx)
+        mask = mask & (lats>=clat-dy) & (lats<=clat+dy)
+    elif clon+dx >= 360.:
+        mask = (lons>=clon-dx) | (lons<=clon-360+dx)
+        mask = mask & (lats>=clat-dy) & (lats<=clat+dy)        
+    else:
+        mask = (lons>=clon-dx) & (lons<=clon+dx) & (lats>=clat-dy) & (lats<=clat+dy)
+    return mask
