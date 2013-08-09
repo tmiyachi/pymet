@@ -2,11 +2,12 @@
 import pymet.grid
 import numpy as np
 from core import *
+import pymet.tools as tools
 
 __all__ = ['dvardx', 'dvardy', 'dvardp', 'div', 'rot', 'd2vardx2', 'd2vardy2',
-           'vint']
+           'vint', 'dvardt', 'vmean']
 
-def dvardx(field, cyclic=True):
+def dvardx(field, cyclic=True)
     u"""
     経度方向の微分を中央差分で計算。
 
@@ -33,7 +34,7 @@ def dvardx(field, cyclic=True):
     data = np.ma.getdata(field, subok=False)
     mask = np.ma.getmask(field)
 
-    result = pymet.grid.dvardx(data, grid.lon, grid.lat, grid.xdim, grid,ydim, cyclic=True)
+    result = pymet.grid.dvardx(data, grid.lon, grid.lat, grid.xdim, grid.ydim, cyclic=True, sphere=grid.sphere)
     if np.size(result)<2:
         return result
     return McField(result, name=field.name, grid=grid, mask=mask)
@@ -61,7 +62,7 @@ def dvardy(field):
     data = np.ma.getdata(field, subok=False)
     mask = np.ma.getmask(field)
 
-    result = pymet.grid.dvardy(data, grid.lat, grid.ydim)
+    result = pymet.grid.dvardy(data, grid.lat, grid.ydim, sphere=grid.sphere)
     if np.size(result)<2:
         return result
     return McField(result, name=field.name, grid=grid, mask=mask)
@@ -183,7 +184,7 @@ def div(ufield, vfield, cyclic=True):
     v = np.ma.getdata(vfield, subok=False)
     mask = np.ma.getmask(ufield) | np.ma.getmask(vfield)
 
-    result = pymet.grid.div(u, v, grid.lon, grid.lat, grid.xdim, grid.ydim, cyclic=True)
+    result = pymet.grid.div(u, v, grid.lon, grid.lat, grid.xdim, grid.ydim, cyclic=True, sphere=grid.sphere)
     if np.size(result) < 2:
         return result
     return McField(result, name='div', grid=grid, mask=mask)
@@ -216,7 +217,7 @@ def rot(ufield, vfield, cyclic=True):
     v = np.ma.getdata(vfield, subok=False)
     mask = np.ma.getmask(ufield) | np.ma.getmask(vfield)
 
-    result = pymet.grid.rot(u, v, grid.lon, grid.lat, grid.xdim, grid.ydim, cyclic=True)
+    result = pymet.grid.rot(u, v, grid.lon, grid.lat, grid.xdim, grid.ydim, cyclic=True, sphere=grid.sphere)
     if np.size(result) < 2:
         return result
     return McField(result, name='rot', grid=grid, mask=mask)
@@ -238,10 +239,10 @@ def vint(field, bottom, top):
     """
     if not isinstance(field, McField):
         raise TypeError, "input must be McField instance"
-
+    var = np.ma.asarray(field)
     grid = field.grid.copy()
-    var = np.ma.getdata(field, subok=False)
-    mask = np.ma.getmask(field)
+#    var = np.ma.getdata(field, subok=False)
+#    mask = np.ma.getmask(field)
 
     result = pymet.grid.vint(var, bottom, top, lev=grid.lev, zdim=grid.zdim, punit=grid.punit)
 
@@ -250,4 +251,58 @@ def vint(field, bottom, top):
     grid.name = field.name + '_vint'
     grid.lev = None
     return McField(result, name=grid.name, grid=grid)
+
+def vmean(field, bottom, top):
+    u"""
+    質量重み付き鉛直平均。
+
+    :Argument:
+     **field** : McField object
+      入力データ。
+     **bottom** : float
+      下端
+     **top** : float
+      上端
+
+    :Returns:
+     **result** : McField object     
+    """
+    if not isinstance(field, McField):
+        raise TypeError, "input must be McField instance"
+    var = np.ma.asarray(field)
+    grid = field.grid.copy()
+
+    result = pymet.grid.vmean(var, bottom, top, lev=grid.lev, zdim=grid.zdim, punit=grid.punit)
+
+    if np.size(result) < 2:
+        return result
+    grid.name = field.name + '_vmean'
+    grid.lev = None
+    return McField(result, name=grid.name, grid=grid)
+
+def dvardt(field, bound='mask'):
+    grid = field.grid.copy()
+    var = np.ma.getdata(field, subok=False)
+    mask = np.ma.getmask(field)
+    ndim = np.ndim(var)
+    tdim = grid.tdim
+    
+    dvar = np.diff(var,n=2,axis=tdim)
+    dt   = map(lambda td: td.total_seconds(), grid.time[2:]-grid.time[:-2])
+
+    if bound == 'mask':
+       out = np.ma.empty(var.shape, dtype=field.dtype)
+       out = tools.mrollaxis(out, tdim, 0)
+       out[0,...]    = np.ma.masked
+       out[1:-1,...] = dvar/tools.expand(dt, ndim, tdim)
+       out[-1,...]   = np.ma.masked
+       out = tools.mrollaxis(out, 0, tdim+1)
+    elif bound == 'valid':
+        grid.time = grid.time[1:-1]
+        out = np.ma.asarray(dvar/dt)
+    return McField(out, name=grid.name, grid=grid, mask=out.mask | mask)
+       
+        
+    
+    
     

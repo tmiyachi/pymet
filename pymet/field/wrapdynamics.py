@@ -3,9 +3,10 @@
 # -- dynamicsへのラッパー
 #--------------------------------------------------------
 import pymet.dynamics as dynamics
+import numpy as np
 from core import *
 
-__all__ = ['pottemp', 'ertelpv', 'stability', 'tnflux2d', 'tnflux3d']
+__all__ = ['pottemp', 'ertelpv', 'stability', 'tnflux2d', 'tnflux3d', 'absvrt', 'rhmd']
 
 def pottemp(tfield, p0=1000000.):
     u"""
@@ -68,7 +69,7 @@ def ertelpv(ufield, vfield, tfield, cyclic=True):
 
     result = dynamics.ertelpv(uwnd, vwnd, temp, grid.lon, grid.lat, grid.lev,
                               grid.xdim, grid.ydim, grid.zdim,
-                              cyclic=cyclic, punit=grid.punit)
+                              cyclic=cyclic, punit=grid.punit, sphere=grid.sphere)
 
     return McField(result, name='ertelpv', grid=grid, mask=mask)
 
@@ -184,4 +185,33 @@ def tnflux3d(Ufield, Vfield, Tfield, strmfield, cyclic=True, limit=100.):
     tny = McField(tny, name='tnflux_y', grid=grid.copy(), mask=mask)
     tnz = McField(tnz, name='tnflux_z', grid=grid.copy(), mask=mask)
     return tnx, tny, tnz
+
+def absvrt(ufield, vfield, cyclic=True):
+    u"""
+    """
+    if not isinstance(ufield, McField) or not isinstance(vfield, McField):
+        raise TypeError, "input must be McField instance"
+    grid = ufield.grid.copy()
+    uwnd = np.ma.getdata(ufield, subok=False)
+    vwnd = np.ma.getdata(vfield, subok=False)
+    mask = np.ma.getmask(ufield) | np.ma.getmask(vfield)
+
+    result = dynamics.absvrt(uwnd, vwnd, grid.lon, grid.lat,
+                             grid.xdim, grid.ydim, cyclic=cyclic, sphere=grid.sphere)
+
+    return McField(result, name='absvrt', grid=grid, mask=mask)
+
+def rhmd(tfield, qvalfield, qtyp='q'):
+    u"""
+    """
+    if not isinstance(tfield, McField) or not isinstance(qvalfield, McField):
+        raise TypeError, "input must be McField instance"
+    grid = tfield.grid.copy()
+    temp = np.ma.getdata(tfield, subok=False)
+    qval = np.ma.getdata(qvalfield, subok=False)
+    mask = np.ma.getmask(tfield) | np.ma.getmask(qvalfield)
+
+    result = dynamics.rhmd(temp, qval, grid.lev, grid.zdim, punit=grid.punit, qtyp=qtyp)
+
+    return McField(result, name='rh', grid=grid, mask=mask)
 

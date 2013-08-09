@@ -80,7 +80,7 @@ class McGrid:
         getgrid
     
     """
-    def __init__(self,name=None,lon=None,lat=None,lev=None,time=None,ens=None,punit=100.):
+    def __init__(self,name=None,lon=None,lat=None,lev=None,time=None,ens=None,punit=100.,sphere=True):
         # インスタンス作成時にのみ次元の順序をGrADS形式の順序で設定し、
         # その後は、lon,lat,lev,time,ensが変更される度にその長さに応じて変更する
         self.__dict__['dims'] = ['ens','time','lev','lat','lon']
@@ -92,6 +92,7 @@ class McGrid:
         self.time = time
         self.ens  = ens
         self.punit = 100.
+        self.sphere = sphere
 
     def _setdimsattr(self, name, which):
         u"""
@@ -218,7 +219,7 @@ class McGrid:
         
     def gridmask(self, **kwargs):
         u"""
-        指定した範囲の値をインデキシングするためのbool型配列を求める。
+        指定した範囲の値をインデキシングするためのindexing配列を求める。
 
         :Arguments:
          **lon, lat, lev** : tuple or list of floats, or float, optional
@@ -229,7 +230,7 @@ class McGrid:
            アンサンブル次元の範囲。
 
         :Returns:
-         **mask** : bool type ndarray
+         **mask** : indexing ndarray
 
         **Examples**    
          範囲を指定する場合はタプルで指定する。
@@ -249,7 +250,7 @@ class McGrid:
             kwdvalue = kwargs.get(dim, None)
             if kwdvalue == None:
 #                mask.append(slice(None,None,None))
-                mask.append(dimvalue==dimvalue)
+                mask.append(dimvalue==dimvalue)                
             elif isinstance(kwdvalue, tuple):
                 kwdmin, kwdmax = min(kwdvalue), max(kwdvalue)
                 mask.append((dimvalue>=kwdmin) & (dimvalue<=kwdmax))                
@@ -259,6 +260,7 @@ class McGrid:
                 if kwdvalue<dimvalue.min() or kwdvalue>dimvalue.max():
                     raise ValueError, "{0}={1} is out of domain".format(dim, kwdvalue)
                 mask.append(np.arange(len(dimvalue))==np.argmin(np.abs(dimvalue-kwdvalue)))
+
         return np.ix_(*mask)
 
     def getgrid(self, **kwargs):
@@ -393,11 +395,11 @@ class McField(np.ma.MaskedArray):
         ## まずデータ部分について、keysでスライスする
         ## super.__getitem__だとmaskが上手くスライスできない?
         data = np.ma.asarray(self)[keys]
-#        data = super(np.ma.MaskedArray, self).__getitem__(keys)
+        #        data = super(np.ma.MaskedArray, self).__getitem__(keys)
 
         ## ゼロ要素は次元を削除
         data = np.ma.squeeze(data)
-
+        
         ## スライスの結果が、arrayにならなければMcFieldにしないで値を返す
         if np.size(data)<2:
             return data
@@ -490,13 +492,15 @@ class McField(np.ma.MaskedArray):
             grid.time = grid.time[length/2:-length/2]
         return McField(result, name='runave', grid=grid, mask=mask)
 
-    def lowfreq(self, cutoff=10, bound='mask'):
+    def timefilter(self, cut1, cut2=None, mode='lowpass', bound='mask'):
         u"""
-        低周波フィルターをかけた成分を返す。
+        Lanczosフィルターをかけた成分を返す。
 
         :Arguments:
-         **cutoff** : int, optional
-          カットオフ周波数。''日数''で指定する。デフォルトは10日。
+         **cut1** : int
+          カットオフ(イン)周波数。''日数''で指定する。
+         **cut2** : int
+          bandpassフィルター時のカットイン周波数。''日数''で指定する。
          **bound** : {'mask', 'valid'}, optional
           境界の扱い方。デフォルトはmask。
         :Returns:
@@ -507,13 +511,17 @@ class McField(np.ma.MaskedArray):
         mask = np.ma.getmask(self)
 
         # grid.timeからcutoff日に対応するステップ数を求める
-        difftime = np.diff(grid.time)
-        if not np.all(difftime == difftime[0]):
+        dt = np.diff(grid.time)[0]
+        if not np.all(np.diff(grid.time) == dt):
             raise ValueError, "time step must be same"
-        cutoff_step = int(cutoff*3600.*24 / difftime[0].total_seconds())
-
-        result = stats.lancoz(data, cutoff_step, length=2*cutoff+1,
-                              axis=grid.tdim, bound=bound, mode='lowpass')
+        
+        cut1 = int(cut1*3600.*24 / dt.total_seconds())
+        if cut2:
+            cut2 = int(cut2*3600.*24 / dt.total_seconds())
+            
+        length = 2*max(cut1, cut2) + 1
+        result = stats.lanczos_filter(data, cut1, cut2=cut2, length=length,
+                                      tdim=grid.tdim, bound=bound, mode=mode)
         if np.size(result) < 2:
             return result
         if bound == 'valid':
@@ -521,14 +529,14 @@ class McField(np.ma.MaskedArray):
             mask = tools.mrollaxis(mask, grid.tdim, 0)
             mask = mask[length/2:-length/2,...]
             mask = tools.mrollaxis(mask, 0, grid.tdim+1)
-        print result.mask[:,0,0,0]
+
         mask = mask | result.mask
-        return McField(result, name='lowpass', grid=grid, mask=mask)
+        return McField(result, name=self.name + '_' + mode, grid=grid, mask=mask)
 
     #-------------------------------------------------------------
     #-- インデックスをgridの値で返す関数
     #-------------------------------------------------------------
-    def gridmin(self):
+    def gridmin(self, **kwargs):
         u"""
         最小値をとる座標を返す。
 
@@ -536,8 +544,14 @@ class McField(np.ma.MaskedArray):
          **valuemin** :
           最小値をとる次元の値。ens,time,lev,lat,lonの順で含まれる次元を返す。
         """
-        grid = self.grid.copy()
-        data = np.ma.asarray(self)
+        if len(kwargs) != 0:
+            field = self.get(**kwargs)
+            grid = field.grid.copy()
+            data = np.ma.asarray(field)            
+        else:            
+            grid = self.grid.copy()
+            data = np.ma.asarray(self)
+            
         idx = np.unravel_index(data.argmin(), data.shape)
         valuemin = []        
         for i, key in enumerate(grid.dims):
@@ -545,23 +559,75 @@ class McField(np.ma.MaskedArray):
 
         return valuemin
 
-    def gridmax(self):
+    def gridmax(self, **kwargs):
         u"""
         最大値をとる座標を返す。
 
         :Returns:
-         **valuemin** :
+         **valuemax** :
           最大値をとる次元の値。ens,time,lev,lat,lonの順で含まれる次元を返す。
         """
-        grid = self.grid.copy()
-        data = np.ma.asarray(self)
+        if len(kwargs) != 0:
+            field = self.get(**kwargs)
+            grid = field.grid.copy()
+            data = np.ma.asarray(field)            
+        else:            
+            grid = self.grid.copy()
+            data = np.ma.asarray(self)
         idx = np.unravel_index(data.argmax(), data.shape)
         valuemax = []        
         for i, key in enumerate(grid.dims):
             valuemax.append(getattr(grid, key)[idx[i]])
 
         return valuemax
-    
+
+    def gridargmin(self, **kwargs):
+        u"""
+        最小値をとる座標のインデックスを返す。
+
+        :Returns:
+         **idx** :
+          最小値をとる座標のインデックスをタプルで返す。
+
+        .. note::
+         これは以下と同じである。
+
+         >>> np.unravel_index(field.argmin(), field.argmin())
+        """
+        if len(kwargs) != 0:
+            gmask = self.grid.gridmask(**kwargs)
+            mask = np.zeros(self.shape, dtype=np.bool)
+            mask[gmask] = True
+            mask = mask | np.ma.getmask(self)
+            data = np.ma.array(self, mask=mask)
+        else:
+            data = np.ma.array(self)            
+
+        idx = np.unravel_index(data.argmin(), data.shape)
+
+        return idx
+
+    def gridargmax(self, **kwargs):
+        u"""
+        最大値をとる座標のインデックスを返す。
+
+        :Returns:
+         **idx** :
+          最大値をとる座標のインデックスをタプルで返す。         
+        """
+        if len(kwargs) != 0:
+            gmask = self.grid.gridmask(**kwargs)
+            mask = np.zeros(self.shape, dtype=np.bool)
+            mask[gmask] = True
+            mask = mask | np.ma.getmask(self)
+            data = np.ma.array(self, mask=mask)
+        else:
+            data = np.ma.array(self)            
+
+        idx = np.unravel_index(data.argmax(), data.shape)
+
+        return idx
+
     #--------------------------------------------------------------
     #-- MaskedArrayのMarithmeticsメソッドに対するラッパー
     #--------------------------------------------------------------

@@ -18,7 +18,7 @@ import numpy as np
 import constants, tools
 from grid import *
 
-__all__ = ['pottemp', 'ertelpv', 'tnflux2d', 'tnflux3d', 'stability']
+__all__ = ['pottemp', 'ertelpv', 'tnflux2d', 'tnflux3d', 'stability', 'absvrt', 'rhmd']
 
 NA=np.newaxis
 kappa = constants.air_kappa
@@ -56,15 +56,15 @@ def pottemp(temp, lev, zdim, punit=100., p0=100000.):
     
     >>>
     """    
-    temp = np.asrray(temp)
+    temp = np.asarray(temp)
     ndim = temp.ndim
     p = tools.expand(lev, ndim, axis=zdim)
 
-    out = temp * ((p0/lev/unit)**kappa)
+    out = temp * ((p0/p/punit)**kappa)
 
     return out
     
-def ertelpv(uwnd, vwnd, temp, lon, lat, lev, xdim, ydim, zdim, cyclic=True, punit=100.):
+def ertelpv(uwnd, vwnd, temp, lon, lat, lev, xdim, ydim, zdim, cyclic=True, punit=100., sphere=True):
     ur"""
     エルテルのポテンシャル渦度を計算する。
 
@@ -102,8 +102,9 @@ def ertelpv(uwnd, vwnd, temp, lon, lat, lev, xdim, ydim, zdim, cyclic=True, puni
     **Examples**   
      >>>
     """
-    u, v, t = np.asarray(uwnd), np.asarray(vwnd), np.asarray(temp)
-    ndim=u.ndim
+    u, v, t = np.ma.getdata(uwnd), np.ma.getdata(vwnd), np.ma.getdata(temp)
+    mask    = np.ma.getmask(uwnd) | np.ma.getmask(vwnd) | np.ma.getmask(temp)
+    ndim    = u.ndim
 
     # potential temperature
     theta = pottemp(t, lev, zdim, punit=punit)
@@ -112,15 +113,21 @@ def ertelpv(uwnd, vwnd, temp, lon, lat, lev, xdim, ydim, zdim, cyclic=True, puni
     dudp  = dvardp(u, lev, zdim, punit=punit)
     dvdp  = dvardp(v, lev, zdim, punit=punit)
 
-    dthdx = dvardx(theta, lon, lat, xdim, ydim, cyclic=cyclic)
-    dthdy = dvardy(theta, lat, ydim)
+    dthdx = dvardx(theta, lon, lat, xdim, ydim, cyclic=cyclic, sphere=sphere)
+    dthdy = dvardy(theta, lat, ydim, sphere=sphere)
 
     # absolute vorticity
-    vor  = rot(u, v, lon, lat, xdim, ydim, cyclic=cyclic)
-    f    = tools.expand(constants.const_f(lat), ndim, axis=ydim)
+    vor  = rot(u, v, lon, lat, xdim, ydim, cyclic=cyclic, sphere=sphere)
+    f    = tools.expand(constants.earth_f(lat), ndim, axis=ydim)
     avor = f + vor
 
     out = -g * (avor*dthdp - (dthdx*dvdp-dthdy*dudp))
+
+    out = np.ma.array(out, mask=mask)
+    out = tools.mrollaxis(out, ydim, 0)
+    out[0,...]  = np.ma.masked
+    out[-1,...] = np.ma.masked
+    out = tools.mrollaxis(out, 0, ydim+1)
 
     return out
 
@@ -308,9 +315,40 @@ def tnflux3d(U, V, T, strm, lon, lat, lev, xdim, ydim, zdim, cyclic=True, limit=
     
     return tnx, tny, tnz
 
-def qgpv(strm, t, lon, lat, lev, xdim, ydim, zdim, cyclic=True, punit=100.):
-    ur"""
-    準地衡ポテンシャル渦度を計算する。
+def absvrt(uwnd, vwnd, lon, lat, xdim, ydim, cyclic=True, sphere=True):
+    u"""
+    
     """
-    lapstrm = laplacian(strm, lon, lat, xdim, ydim, cyclic=True)
-     
+    u, v    = np.ma.getdata(uwnd), np.ma.getdata(vwnd)
+    mask    = np.ma.getmask(uwnd) | np.ma.getmask(vwnd)
+    ndim    = u.ndim
+
+    vor  = rot(u, v, lon, lat, xdim, ydim, cyclic=cyclic, sphere=sphere)
+    f    = tools.expand(constants.earth_f(lat), ndim, axis=ydim)
+    out = f + vor
+
+    out = np.ma.array(out, mask=mask)
+    out = tools.mrollaxis(out, ydim, 0)
+    out[0,...]  = np.ma.masked
+    out[-1,...] = np.ma.masked
+    out = tools.mrollaxis(out, 0, ydim+1)
+    
+    return out
+
+def rhmd(temp, qval, lev, zdim, punit=100., qtyp='q'):
+    u"""
+    """
+    eps    = constants.air_eps
+    t, q   = np.ma.getdata(temp), np.ma.getdata(qval)
+    mask   = np.ma.getmask(temp) | np.ma.getmask(qval)
+    ndim   = t.ndim
+
+    if qtyp == 'q':
+        es  = np.exp(19.482 - 4303.4/(t-29.65))*100.    # JMA/WMO (Pa)
+        lev = tools.expand(lev, ndim, axis=zdim)*punit
+        e   = q*lev/(eps+(1-eps)*q)
+        rh  = e/es * 100
+    else:
+        raise TypeError, "qtyp '{0}' is incorrect".format(qtyp)
+
+    return rh
