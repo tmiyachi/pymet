@@ -7,7 +7,7 @@ import pymet.tools as tools
 __all__ = ['dvardx', 'dvardy', 'dvardp', 'div', 'rot', 'd2vardx2', 'd2vardy2',
            'vint', 'dvardt', 'vmean']
 
-def dvardx(field, cyclic=True)
+def dvardx(field, cyclic=True):
     u"""
     経度方向の微分を中央差分で計算。
 
