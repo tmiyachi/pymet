@@ -11,7 +11,7 @@ import pymet.tools as tools
 __all__ = ['BasemapXaxisLocator','BasemapYaxisLocator',
            'BasemapXaxisFormatter','BasemapYaxisFormatter',
            'XaxisFormatter','YaxisFormatter',
-           'DateFormatter']
+           'DateFormatter', 'ScaleFormatter']
 
 
 class BasemapXaxisLocator(matplotlib.ticker.FixedLocator):
@@ -22,10 +22,11 @@ class BasemapXaxisLocator(matplotlib.ticker.FixedLocator):
         self.baseMap=baseMap
         self.lonlocs = np.asarray(lonlocs)
         self.latlocs = np.ones(len(lonlocs))*baseMap.llcrnrlat
+        
     def __call__(self):
         xlocs, ylocs = self.baseMap(self.lonlocs,self.latlocs)
         return xlocs
-
+    
 class BasemapYaxisLocator(matplotlib.ticker.FixedLocator):
     u"""
     緯度目盛りを等間隔でふるためのLocator。
@@ -36,7 +37,7 @@ class BasemapYaxisLocator(matplotlib.ticker.FixedLocator):
         self.latlocs = np.asarray(latlocs)
     def __call__(self):
         xlocs, ylocs = self.baseMap(self.lonlocs,self.latlocs)
-        return ylocs
+        return ylocs    
 
 class BasemapXaxisFormatter(matplotlib.ticker.Formatter):
     u"""
@@ -87,3 +88,22 @@ class DateFormatter(matplotlib.ticker.Formatter):
     def __call__(self, t, pos=1):
         d = matplotlib.dates.num2date(t, self.tz) 
         return tools.d2s(d, fmt=self.fmt)
+
+class DegreeAxisFormatter(matplotlib.ticker.Formatter):
+    def __init__(self, fmt='%g'):
+        self.fmt = fmt
+    def __call__(self, deg, pos=None):
+        fmt = self.fmt
+        labstr =  u'%s\N{DEGREE SIGN}'%fmt
+        return labstr%deg
+
+class ScaleFormatter(matplotlib.ticker.Formatter):
+    u"""
+    経度ラベルのためのFormatter
+    """
+    def __init__(self, scale=1.):
+        self.scale = scale
+    def __call__(self, d, pos=None):
+        return d/scale.
+    
+    
