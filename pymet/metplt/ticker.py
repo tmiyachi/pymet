@@ -11,8 +11,7 @@ import pymet.tools as tools
 __all__ = ['BasemapXaxisLocator','BasemapYaxisLocator',
            'BasemapXaxisFormatter','BasemapYaxisFormatter',
            'XaxisFormatter','YaxisFormatter',
-           'DateFormatter', 'ScaleFormatter
-    ']
+           'DateFormatter', 'ScaleFormatter']
 
 
 class BasemapXaxisLocator(matplotlib.ticker.FixedLocator):
