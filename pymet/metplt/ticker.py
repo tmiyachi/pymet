@@ -11,7 +11,8 @@ import pymet.tools as tools
 __all__ = ['BasemapXaxisLocator','BasemapYaxisLocator',
            'BasemapXaxisFormatter','BasemapYaxisFormatter',
            'XaxisFormatter','YaxisFormatter',
-           'DateFormatter', 'ScaleFormatter']
+           'DateFormatter', 'ScaleFormatter
+    ']
 
 
 class BasemapXaxisLocator(matplotlib.ticker.FixedLocator):
@@ -104,6 +105,6 @@ class ScaleFormatter(matplotlib.ticker.Formatter):
     def __init__(self, scale=1.):
         self.scale = scale
     def __call__(self, d, pos=None):
-        return d/scale.
+        return d/self.scale
     
     
