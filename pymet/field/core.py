@@ -155,6 +155,21 @@ class McGrid:
             elif name == 'edim':
                 dname = 'ens'
                 return self.dims.index('ens')
+            elif name == 'xn':
+                dname = 'lon'
+                return len(self.lon)
+            elif name == 'yn':
+                dname = 'lat'                
+                return len(self.lat)
+            elif name == 'zn':
+                dname = 'lev'                
+                return len(self.lev)
+            elif name == 'tn':                
+                dname = 'time'
+                return len(self.time)
+            elif name == 'en':
+                dname = 'ens'                
+                return len(self.ens)
         except ValueError:
             raise AttributeError, "McGrid instance has no dimension '{0}'".format(dname)
         raise AttributeError, "McGrid instance has no attribute '{0}'".format(name)
@@ -216,7 +231,42 @@ class McGrid:
             shape += (dn,)
 
         return shape
-        
+
+    def dimindex(self, **kwargs):
+        u"""
+        各次元の値のインデックスを返す。次元が存在しないときはKeyError、
+        値が存在しないときはValueErrorを発生する。
+
+        :Arguments:
+         **lon, lat, lev, time, ens** : int or datetime object
+          次元名とその値。
+
+        **Exmaple**
+         >>> grid.lev
+         array([1000., 925., 850., 700.], dtype=float32)
+         >>> grid.time
+         array([2009-10-11 00:00:00, 2009-10-12 00:00:00], dtype=object)
+         >>> grid.dimidx(lev=700)
+         3
+         >>> grid.dimidx(lev=700, time=datetime(2009,10,11,0))
+         (3, 0)
+        """
+        idx_out = ()
+        for key, value in kwargs.items():
+            dimvalue = getattr(self, key)
+            if dimvalue is None:
+                return KeyError, "McGrid instance has no dimension '{0}'".format(key)
+            idx = list(dimvalue).index(value)
+            if idx < 0:
+                raise ValueError, "McGrid instance has no value '{0}' in '{1}' dimension".format(value, key)
+            else:
+                idx_out += (idx,)
+
+        if len(idx_out) <2:
+            return idx_out[0]
+        else:
+            return idx_out
+
     def gridmask(self, **kwargs):
         u"""
         指定した範囲の値をインデキシングするためのindexing配列を求める。
