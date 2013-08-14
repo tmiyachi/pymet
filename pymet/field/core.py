@@ -232,7 +232,7 @@ class McGrid:
 
         return shape
 
-    def dimindex(self, **kwargs):
+    def dimvalueindex(self, **kwargs):
         u"""
         各次元の値のインデックスを返す。次元が存在しないときはKeyError、
         値が存在しないときはValueErrorを発生する。
