@@ -140,6 +140,8 @@ def dvardx(var, lon, lat, xdim, ydim, cyclic=True, sphere=True):
     dvar = np.rollaxis(dvar,ndim-1,xdim)
     if sphere:
         dx = a0*PI/180.*tools.expand(dx,ndim,xdim) * tools.expand(np.cos(lat*d2r),ndim,ydim)
+    else:
+        dx = tools.expand(dx,ndim,xdim)
     out = dvar/dx
     
     return out
@@ -273,7 +275,7 @@ def dvardp(var, lev, zdim, punit=100.):
 
 # not compleate----------------------------------------------------------------------------------------------------
 
-def d2vardx2(var, lon, lat, xdim, ydim, cyclic=True):
+def d2vardx2(var, lon, lat, xdim, ydim, cyclic=True, sphere=True):
     ur"""
     経度方向の2階x微分を中央差分で計算。
 
@@ -316,14 +318,13 @@ def d2vardx2(var, lon, lat, xdim, ydim, cyclic=True):
     #roll lon dim axis to last
     var = np.rollaxis(var,xdim,ndim)
 
-    if cyclic:
+    if cyclic and sphere:
         dvar = np.concatenate(\
                ((var[...,1]-2*var[...,0]+var[...,-1])[...,NA],\
                 (var[...,2:]-2*var[...,1:-1]+var[...,:-2]),\
                 (var[...,0]-2*var[...,-1]+var[...,-2])[...,NA]),\
                 axis=-1)
-        dx   = PI/180. * \
-               np.r_[(lon[1]+360-lon[-1]),\
+        dx   = np.r_[(lon[1]+360-lon[-1]),\
                     (lon[2:]-lon[:-2]   ),\
                     (lon[0]+360-lon[-2] )]
     else: #edge is zero
@@ -332,20 +333,22 @@ def d2vardx2(var, lon, lat, xdim, ydim, cyclic=True):
                 (var[...,2:]-2*var[...,1:-1]+var[...,:-2]),\
                 (var[...,0]-var[...,0])[...,NA]),\
                 axis=-1)
-        dx   = PI/180. * \
-               np.r_[(lon[1]-lon[0] ),\
+        dx   = np.r_[(lon[1]-lon[0] ),\
                     (lon[2:]-lon[:-2]   ),\
                     (lon[-1]-lon[-2])]
 
-    dvat = np.rollaxis(dvar,ndim-1,xdim)
-    dx   = a0**2 * tools.expand(dx**2,ndim,xdim) * tools.expand(np.cos(lat*d2r)**2,ndim,ydim)
-    out = 4.*dvar/dx
+    dvar = np.rollaxis(dvar,ndim-1,xdim)
+    if sphere:
+        dx2   = a0**2 * (PI/180.)**2 * tools.expand(dx**2,ndim,xdim) * tools.expand(np.cos(lat*d2r)**2,ndim,ydim)
+    else:
+        dx2   = tools.expand(dx**2,ndim,xdim)
+    out = 4.*dvar/dx2
     #reroll lon dim axis to original dim
     out = np.rollaxis(out,ndim-1,xdim)
 
     return out
 
-def d2vardy2(var, lat, ydim):
+def d2vardy2(var, lat, ydim, sphere=True):
     ur"""
     緯度方向の2階微分を中央差分で計算。南北端はゼロとする。
 
@@ -390,12 +393,15 @@ def d2vardy2(var, lat, ydim):
               [(var[...,0] -var[...,0]  )[...,NA],\
                (var[...,2:]-2*var[...,1:-1]+var[...,:-2]),\
                (var[...,0]-var[...,0] )[...,NA]], axis=-1) 
-    dy   = PI/180. * \
-           np.r_[(lat[1]-lat[0]),\
+    dy   = np.r_[(lat[1]-lat[0]),\
                  (lat[2:]-lat[:-2]),\
                  (lat[-1]-lat[-2])]
 
-    out = 4.*dvar/dy/dy/a0/a0
+    if sphere:
+        dy2 = a0**2 * dy**2
+    else:
+        dy2 = dy**2
+    out = 4.*dvar/dy2
     #reroll lat dim axis to original dim
     out = np.rollaxis(out,ndim-1,ydim)
 
@@ -506,7 +512,7 @@ def rot(u, v, lon, lat, xdim, ydim, cyclic=True, sphere=True):
     
     return out
 
-def laplacian(var, xdim, ydim, lon, lat, cyclic=True):
+def laplacian(var, lon, lat, xdim, ydim, cyclic=True, sphere=True):
     ur"""
     球面上での2次元ラプラシアンを計算する。
 
@@ -545,8 +551,11 @@ def laplacian(var, xdim, ydim, lon, lat, cyclic=True):
     var = np.asarray(var)
     ndim = var.ndim
 
-    out = d2vardx2(var, lon, lat, xdim, ydim, cyclic=cyclic) + d2vardy2(var, lat, ydim) - tools.expand(np.tan(lat*d2r),ndim,ydim)*dvardy(var, lat, ydim)/a0
-    
+    if sphere:
+        out = d2vardx2(var, lon, lat, xdim, ydim, cyclic=cyclic, sphere=sphere) + d2vardy2(var, lat, ydim, sphere=sphere) - tools.expand(np.tan(lat*d2r),ndim,ydim)*dvardy(var, lat, ydim)/a0
+    else:
+        out = d2vardx2(var, lon, lat, xdim, ydim, cyclic=cyclic, sphere=sphere) + d2vardy2(var, lat, ydim, sphere=sphere)
+        
     return out
 
 def dvardvar(var1, var2, dim, cyclic=True):
