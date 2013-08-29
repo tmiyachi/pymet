@@ -15,8 +15,11 @@ u"""
    McGrid
    McGrid.copy
    McGrid.latlon
-   McGrid.gridmask
    McGrid.dimindex
+   McGrid.dimshape
+   McGrid.gridmask
+   McGrid.getgrid
+   
 
 ------------------------
 格子点データを扱うクラス
@@ -49,6 +52,8 @@ pymet.gridへのラッパー
    d2vardy2
    div
    rot
+   grad
+   skgrad   
 
 ---------------------------   
 pymet.dynamicsへのラッパー
@@ -61,7 +66,6 @@ pymet.dynamicsへのラッパー
    stability
    tnflux2d
    tnflux3d
-
 
 ----------------------------
 

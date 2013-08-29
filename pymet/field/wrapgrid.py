@@ -4,7 +4,7 @@ import numpy as np
 from core import *
 import pymet.tools as tools
 
-__all__ = ['dvardx', 'dvardy', 'dvardp', 'div', 'rot', 'd2vardx2', 'd2vardy2',
+__all__ = ['dvardx', 'dvardy', 'dvardp', 'div', 'rot', 'd2vardx2', 'd2vardy2', 'grad', 'skgrad',
            'vint', 'dvardt', 'vmean']
 
 def dvardx(field, cyclic=True):
@@ -32,11 +32,13 @@ def dvardx(field, cyclic=True):
         raise TypeError, "field must be McField instance"
     grid = field.grid.copy()
     data = np.ma.getdata(field, subok=False)
-    mask = np.ma.getmask(field)
+    mask = np.ma.getmaskarray(field)
 
     result = pymet.grid.dvardx(data, grid.lon, grid.lat, grid.xdim, grid.ydim, cyclic=True, sphere=grid.sphere)
     if np.size(result)<2:
         return result
+
+    mask = mask | np.isnan(result)
     return McField(result, name=field.name, grid=grid, mask=mask)
 
 def dvardy(field):
@@ -60,11 +62,13 @@ def dvardy(field):
         raise TypeError, "field must be McField instance"
     grid = field.grid.copy()
     data = np.ma.getdata(field, subok=False)
-    mask = np.ma.getmask(field)
+    mask = np.ma.getmaskarray(field)
 
     result = pymet.grid.dvardy(data, grid.lat, grid.ydim, sphere=grid.sphere)
     if np.size(result)<2:
         return result
+
+    mask = mask | np.isnan(result)    
     return McField(result, name=field.name, grid=grid, mask=mask)
 
 def dvardp(field):
@@ -125,6 +129,8 @@ def d2vardx2(field, cyclic=True):
     result = pymet.grid.d2vardx2(data, grid.lon, grid.lat, grid.xdim, grid.ydim, cyclic=True)
     if np.size(result) < 2:
         return result
+
+    mask = mask | np.isnan(result)    
     return McField(result, name=field.name, grid=grid, mask=mask)
 
 def d2vardy2(field):
@@ -153,6 +159,8 @@ def d2vardy2(field):
     result = grid.d2vardy2(data, grid.lat, grid.ydim)
     if np.size(result) < 2:
         return result
+
+    mask = mask | np.isnan(result)    
     return McField(result, name=field.name, grid=grid, mask=mask)
 
 def div(ufield, vfield, cyclic=True):
@@ -187,6 +195,8 @@ def div(ufield, vfield, cyclic=True):
     result = pymet.grid.div(u, v, grid.lon, grid.lat, grid.xdim, grid.ydim, cyclic=True, sphere=grid.sphere)
     if np.size(result) < 2:
         return result
+
+    mask = mask | np.isnan(result)    
     return McField(result, name='div', grid=grid, mask=mask)
 
 def rot(ufield, vfield, cyclic=True):
@@ -220,7 +230,83 @@ def rot(ufield, vfield, cyclic=True):
     result = pymet.grid.rot(u, v, grid.lon, grid.lat, grid.xdim, grid.ydim, cyclic=True, sphere=grid.sphere)
     if np.size(result) < 2:
         return result
+    
+    mask = mask | np.isnan(result)
     return McField(result, name='rot', grid=grid, mask=mask)
+
+def grad(field, cyclic=True):
+    u"""
+    水平勾配を計算する。
+
+    :Arguments:
+     **field** : McField object
+      スカラー場
+
+     **cyclic** : bool, optional
+       東西の境界を周期境界として扱うかどうか。False の場合は周期境界を用いずに
+       前方、後方差分で計算する。デフォルトは True。
+       
+    :Returns:
+     **resultu, resultv** : McField object
+     勾配ベクトルのx,y成分
+
+    .. seealso::
+
+     .. autosummary::
+        :nosignatures:
+     
+        pymet.grid.grad
+    """
+    if not isinstance(field, McField):
+        raise TypeError, "input must be McField instance"
+    grid = field.grid.copy()
+    data = np.ma.getdata(field, subok=False)    
+    mask = np.ma.getmask(field)
+
+    resultu, resultv = pymet.grid.grad(data, grid.lon, grid.lat, grid.xdim, grid.ydim, cyclic=True, sphere=grid.sphere)
+    if np.size(resultu) < 2:
+        return resultu, resultv
+
+    mask = mask | np.isnan(resultu) | np.isnan(resultv)
+        
+    return McField(resultu, name='gradu', grid=grid, mask=mask), McField(resultv, name='gradv', grid=grid, mask=mask)
+
+def skgrad(field, cyclic=True):
+    u"""
+    skew-gradientを計算する。
+
+    :Arguments:
+     **field** : McField object
+      スカラー場
+
+     **cyclic** : bool, optional
+       東西の境界を周期境界として扱うかどうか。False の場合は周期境界を用いずに
+       前方、後方差分で計算する。デフォルトは True。
+       
+    :Returns:
+     **resultu, resultv** : McField object
+     勾配ベクトルのx,y成分
+
+    .. seealso::
+
+     .. autosummary::
+        :nosignatures:
+     
+        pymet.grid.skgrad
+    """
+    if not isinstance(field, McField):
+        raise TypeError, "input must be McField instance"
+    grid = field.grid.copy()
+    data = np.ma.getdata(field, subok=False)    
+    mask = np.ma.getmask(field)
+
+    resultu, resultv = pymet.grid.skgrad(data, grid.lon, grid.lat, grid.xdim, grid.ydim, cyclic=True, sphere=grid.sphere)
+    if np.size(resultu) < 2:
+        return resultu, resultv
+
+    mask = mask | np.isnan(resultu) | np.isnan(resultv)
+     
+    return McField(resultu, name='gradu', grid=grid, mask=mask), McField(resultv, name='gradv', grid=grid, mask=mask)
 
 def vint(field, bottom, top):
     u"""
@@ -300,6 +386,7 @@ def dvardt(field, bound='mask'):
     elif bound == 'valid':
         grid.time = grid.time[1:-1]
         out = np.ma.asarray(dvar/dt)
+                
     return McField(out, name=grid.name, grid=grid, mask=out.mask | mask)
        
         

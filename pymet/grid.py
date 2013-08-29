@@ -16,6 +16,8 @@ u"""
    d2vardy2
    div
    rot
+   grad
+   skgrad
    laplacian
 
 積分
@@ -32,7 +34,12 @@ u"""
 
    vinterp
 
+その他
+======
 
+.. autosummary::
+   distance
+   
 -----------------------   
 """
 
@@ -48,7 +55,7 @@ g = constants.earth_gravity
 PI = constants.pi
 d2r=PI/180.
 
-__all__ = ['dvardx', 'dvardy', 'dvardp', 'd2vardx2', 'd2vardy2', 'div', 'rot', 'laplacian', #'dvardvar',
+__all__ = ['dvardx', 'dvardy', 'dvardp', 'd2vardx2', 'd2vardy2', 'div', 'rot', 'grads', 'skgrad', 'laplacian', #'dvardvar',
            'vint', 'vmean',
            'vinterp',
            'distance']
@@ -63,9 +70,9 @@ def dvardx(var, lon, lat, xdim, ydim, cyclic=True, sphere=True):
      **var** : ndarray
        微分を計算する領域の格子点の値
      **lon** : array_like
-       経度
+       経度, もしくはx座標
      **lat** : array_like
-       緯度
+       緯度, もしくはy座標
      **xdim, ydim**: int
        入力配列の経度、緯度次元のインデックス
      **cyclic** : bool, optional
@@ -96,7 +103,12 @@ def dvardx(var, lon, lat, xdim, ydim, cyclic=True, sphere=True):
                  \left( \frac{\partial \Phi}{\partial x} \right)_{N-1,j}
                = \frac{1}{a\cos\phi_{j}}\frac{\Phi_{N-1,j} - \Phi_{N-2,j}}{\lambda_{N-1} - \lambda_{N-2}}
 
-       で計算する。
+       で計算する。sphere=Falseの場合は、
+       
+       .. math:: \left( \frac{\partial \Phi}{\partial x} \right)_{i,j}
+                  = \frac{\Phi_{i+1,j} - \Phi_{i-1,j}}{x_{i+1} - x_{i-1}}
+
+
                
     **Examples**    
      >>> var.shape
@@ -154,7 +166,7 @@ def dvardy(var, lat, ydim, sphere=True):
      **var** : ndarray
        微分を計算する領域の格子点の値
      **lat** : array_like
-       緯度
+       緯度、もしくはy座標
      **ydim**: int
        緯度次元のインデックス。len(var.shape[ydim]) == len(lat)でなければならない。       
      **sphere** : bool, optional
@@ -283,14 +295,15 @@ def d2vardx2(var, lon, lat, xdim, ydim, cyclic=True, sphere=True):
      **var** : ndarray
        微分を計算する領域の格子点の値
      **lon** : array_like
-       経度
+       経度、もしくはx座標
      **lat** : array_like
-       緯度
+       緯度、もしくはy座標
      **xdim, ydim** : int 
        経度、緯度次元のインデックス。
      **cyclic** : bool, optional
        経度方向にはサイクリックとするかどうか。デフォルトではTrue。Falseの場合は東西端はゼロとする。
-
+     **sphere** : bool, optional
+       球面緯度経度座標かどうか。デフォルトはTrue。Falseにすると直交座標として扱う。    
 
     :Returns:
      **result** : ndarray
@@ -361,6 +374,8 @@ def d2vardy2(var, lat, ydim, sphere=True):
        緯度
      **ydim** : int 
        緯度次元のインデックス。len(var.shape[ydim]) == len(lat)でなければならない。
+     **sphere** : bool, optional
+       球面緯度経度座標かどうか。デフォルトはTrue。Falseにすると直交座標として扱う。
        
     :Returns:
      **result** : ndarray
@@ -525,6 +540,8 @@ def laplacian(var, lon, lat, xdim, ydim, cyclic=True, sphere=True):
        緯度、経度の軸
      **cyclic** : bool, optional
        経度微分の際に周境界とするかどうか。デフォルトはTrue
+     **sphere** : bool, optional
+       球面緯度経度座標かどうか。デフォルトはTrue。Falseにすると直交座標として扱う。
     
     :Returns:
      **out** : ndarray
@@ -557,6 +574,79 @@ def laplacian(var, lon, lat, xdim, ydim, cyclic=True, sphere=True):
         out = d2vardx2(var, lon, lat, xdim, ydim, cyclic=cyclic, sphere=sphere) + d2vardy2(var, lat, ydim, sphere=sphere)
         
     return out
+
+def grad(var, lon, lat, xdim, ydim, cyclic=True, sphere=True):
+    ur"""
+    水平勾配を計算する
+    :Arguments:
+     **var** : ndarray
+       スカラー場
+     **lon, lat** : array_like
+       緯度と経度、もしくはx座標とy座標
+     **xdim, ydim** : int
+       緯度、経度の軸
+     **cyclic** : bool, optional
+       経度微分の際に周境界とするかどうか。デフォルトはTrue
+     **sphere** : bool, optional
+       球面緯度経度座標かどうか。デフォルトはTrue。Falseにすると直交座標として扱う。
+    
+    :Returns:
+     **outu, outv** : ndarray
+       varと同じ形状のndarray
+
+    .. note::
+    
+       球面緯度経度座標系における勾配は、次のように定義される。
+
+       .. math:: \mbox{\boldmath $\nabla$}\Phi = \frac{\mbox{\boldmath $i$}}{a\cos\phi}\frac{\partial \Phi}{\partial \lambda}
+                                                  + \frac{\mbox{\boldmath $j$}}{a}\frac{\partial \Phi}{\partial \phi}                                               
+
+       ここで、aは地球半径。
+       
+    """
+    var = np.asarray(var)
+
+    outu = dvardx(var,lon,lat,xdim,ydim,cyclic=True, sphere=sphere)
+    outv = dvardy(var,lat,ydim, sphere=sphere)    
+    
+    return outu, outv
+
+def skgrad(var, lon, lat, xdim, ydim, cyclic=True, sphere=True):
+    ur"""
+    skew gradient（流線関数からベクトルを求める）を計算する
+    :Arguments:
+     **var** : ndarray
+       スカラー場
+     **lon, lat** : array_like
+       緯度と経度、もしくはx座標とy座標
+     **xdim, ydim** : int
+       緯度、経度の軸
+     **cyclic** : bool, optional
+       経度微分の際に周境界とするかどうか。デフォルトはTrue
+     **sphere** : bool, optional
+       球面緯度経度座標かどうか。デフォルトはTrue。Falseにすると直交座標として扱う。
+    
+    :Returns:
+     **outu, outv** : ndarray
+       varと同じ形状のndarray
+
+    .. note::
+    
+       球面緯度経度座標系におけるskew gradientは、次のように定義される。
+
+       .. math:: \mbox{\boldmath $k$}\cdot\mbox{\boldmath $\nabla$}\Phi = -\frac{\mbox{\boldmath $i$}}{a}\frac{\partial \Phi}{\partial \phi}
+                                                  + \frac{\mbox{\boldmath $j$}}{a\cos\phi}\frac{\partial \Phi}{\partial \lambda}                                               
+
+
+       ここで、aは地球半径。
+       
+    """
+    var = np.asarray(var)
+ 
+    outu = -dvardy(var,lat,ydim, sphere=sphere)       
+    outv = dvardx(var,lon,lat,xdim,ydim,cyclic=True, sphere=sphere)
+    
+    return outu, outv
 
 def dvardvar(var1, var2, dim, cyclic=True):
     u"""
