@@ -55,7 +55,7 @@ g = constants.earth_gravity
 PI = constants.pi
 d2r=PI/180.
 
-__all__ = ['dvardx', 'dvardy', 'dvardp', 'd2vardx2', 'd2vardy2', 'div', 'rot', 'grads', 'skgrad', 'laplacian', #'dvardvar',
+__all__ = ['dvardx', 'dvardy', 'dvardp', 'd2vardx2', 'd2vardy2', 'div', 'rot', 'grad', 'skgrad', 'laplacian', #'dvardvar',
            'vint', 'vmean',
            'vinterp',
            'distance']
