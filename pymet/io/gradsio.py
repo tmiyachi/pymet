@@ -27,13 +27,14 @@ class GradsIO:
      >>> v = ga.get('v')
      >>> gaio.allclose()
 
-    **Attrubutes**
+    **Attributes**
     
      ======= ===================================================================
      ga      grads.GaCoreクラスのインスタンス
      fn      現在開いているファイル数
      fnames  現在開いているファイル名
      vars    現在開いているファイルに含まれる変数名
+     gdim
      ======= ===================================================================
 
     **Methods**
@@ -44,12 +45,11 @@ class GradsIO:
          allclose
          command
          setdim
+         setgradsdim
          get
-         __init__
-
     """
     def __init__(self, Echo=False):
-        ga = GaCore('grads -b', Echo=Echo)
+        ga = GaCore(Window=False, Echo=Echo)
         self.ga = ga
         self.fn = 0   # 開いているファイル数
         self.vars = []
@@ -65,6 +65,7 @@ class GradsIO:
           ctlファイル、またはnetCDFファイルパス。netCDF形式は拡張子(.nc or .netcdf)で判断する。
          **Quiet** : bool, optional          
         """
+        ga = self.ga
         if fname[:7]!='http://' and not os.path.isfile(fname):
             raise IOError, "cannot find {0}".format(fname)
     
@@ -73,27 +74,30 @@ class GradsIO:
             ftype='SDF'
         else:
             ftype='default'
-        self.ga.open(fname, ftype=ftype, Quiet=Quiet)
+        ga.open(fname, ftype=ftype, Quiet=Quiet)
         
         self.fn = self.fn + 1
-        self.ga('set dfile '+str(self.fn))
-        qfile = self.ga.query('file')
+        ga.cmd('set dfile %d' % self.fn)
+        qfile = ga.query('file')
         self.vars.append(qfile.vars)
         self.fnames.append(fname)
 
         if self._first:
-            coords = self.ga.coords()
-            if coords.lon[-1] - coords.lon[0] == 360.:            
-                self.ga('set lon %f %f' % (coords.lon[0], coords.lon[-2]))
+            coords = ga.coords()
+            denv = coords.denv
+            lon, lat, lev, time, ens = denv.lon, denv.lat, denv.lev, denv.tyme, denv.e
+            if coords.lon[-1] - coords.lon[0] == 360.:
+                lon = (coords.lon[0], coords.lon[-2])
+            self.gdim = GradsDim(lon=lon,lat=lat,lev=lev,time=time,ens=ens)
             self._first = False
             
     def close(self):
         u"""
-        最後に開いたファイルを閉じる。
+        一番最後に開いたファイルを閉じる。
         """
-        self.ga('close %d' % self.fid)
-        self.vars.pop(fid-1)
-        self.fnames.pop(fid-1)
+        self.ga.cmd('close %d' % self.fn)
+        self.vars.pop()
+        self.fnames.pop()
         self.fn = self.fn - 1
         
     def allclose(self):
@@ -116,73 +120,59 @@ class GradsIO:
           コマンド。
         """
         self.ga.cmd(command_string)
-        
-    def setdim(self, lon=None, lat=None, lev=None, time=None, ens=None, x=None, y=None, z=None, t=None):
+
+    def setdim(self, **kwargs):
         u"""
-        GrADSの次元を設定する
+        次元を設定する。
 
         :Arguments:
-         **lon** : tuple or float
-          経度。
-         **lat** : tuple or float
-          緯度。
-         **lev** : tuple or float
-          鉛直次元。
-         **time** : tuple or datetime
-          時間次元。
-         **ens** : tuple or int or str
-          アンサンブル次元。'all'を指定すると全てのアンサンブルメンバーを指定。
-         **x, y, z, t**  : tuple or int
-          x,y,z,t次元で指定する場合。lon,lat,lev,timeが指定してあれば、そちらが優先される。
+         **lon** : float or tuple
+          経度次元
+         **lat** : float or tuple
+          緯度次元
+         **lev** : float or tuple
+          鉛直次元
+         **time** : datetime object or tuple
+          時間次元
+         **ens** : int or tuple or 'all'
+          アンサンブル次元。'all'を指定するとファイルのもつ全てのアンサンブル次元が指定される。
+        .. note::
+         次元情報は、GradsIOオブジェクトのgdim属性にGradsDimクラスのオブジェクトとして設定される。
+         
         """
-        if isinstance(lon, tuple):
-            self.ga.cmd('set lon %f %f' % lon)
-        elif lon != None:
-            self.ga.cmd('set lon %f' % lon)
-        elif isinstance(x, tuple):
-            self.ga('set x %d %d' % x)
-        elif x != None:
-            self.ga('set x %d' % x)
-        else:
-            coords = self.ga.coords()
-            if coords.lon[-1] - coords.lon[0] == 360.:            
-                self.ga.cmd('set lon %f %f' % (coords.lon[0], coords.lon[-2]))
-            
-        if isinstance(lat, tuple):
-            self.ga.cmd('set lat %f %f' % lat)
-        elif lat!=None:
-            self.ga.cmd('set lat %f' % lat)
-        elif isinstance(y, tuple):
-            self.ga('set y %d %d' % y)
-        elif y != None:
-            self.ga('set y %d' % y)
-            
-        if isinstance(lev, tuple):
-            self.ga('set lev %f %f' % lev)
-        elif lev!=None:
-            self.ga('set lev %f' % lev)
-        elif isinstance(t, tuple):
-            self.ga('set z %d %d' % z)
-        elif z != None:
-            self.ga('set z %d' % z)
-
-        if isinstance(time, tuple):
-            self.ga('set time %s %s' % (d2s(time[0],fmt='%H:%MZ%d%b%Y'),d2s(time[1],fmt='%H:%MZ%d%b%Y')))
-        elif time != None:
-            self.ga('set time %s' % d2s(time,fmt='%H:%MZ%d%b%Y'))
-        elif isinstance(t, tuple):
-            self.ga('set t %d %d' % t)
-        elif t != None:
-            self.ga('set t %d' % t)
-            
-        if isinstance(ens, tuple):
-            self.ga('set e %d %d' % ens)
-        elif type(ens) == type(int(1)):
-            self.ga('set e %d' % ens)
-        elif ens=='all':
-            self.ga('set e 1 %d' % self.ga.query('file',Quiet=True).ne)
+        gdim = self.gdim
+        for name, value in kwargs.items():
+            setattr(gdim, name, value)
         
-    def get(self, var, fid=None):
+    def setgradsdim(self):
+        u"""
+        gdim属性がもつGradsDimオブジェクトの情報を次元をGrADSに設定する。
+        """
+        ga = self.ga
+        gdim = self.gdim
+        if gdim.lon: ga.cmd('set lon %f %f' % gdim.lon)
+        if gdim.lat: ga.cmd('set lat %f %f' % gdim.lat)
+        if gdim.lev: ga.cmd('set lev %f %f' % gdim.lev)
+        if gdim.time: ga.cmd('set time %s %s' % (d2s(gdim.time[0],fmt='%H:%MZ%d%b%Y'),d2s(gdim.time[1],fmt='%H:%MZ%d%b%Y')))
+        if gdim.ens:
+            if gdim.ens == 'all':
+                ga.cmd('set e 1 %d' % ga.query('file',Quiet=True).ne)
+            else:
+                ga.cmd('set e %d %d' % gdim.ens)
+
+        # test
+        dh = ga.query('dims', Quiet=True)
+        fdh = ga.query('ctlinfo', Quiet=True)
+
+        x1, x2 = dh.xi
+        if x1 < 1 or x2 > fdh.nx:                
+            ga.cmd('set x %d %d' % (max(x1,1), min(x2, fdh.nx)))
+        y1, y2 = dh.yi
+        if y1 < 1 or y2 > fdh.ny:
+            ga.cmd('set y %d %d' % (max(y1,1), min(y2, fdh.ny)))
+
+                
+    def get(self, var, fid=None, **kwargs):
         u"""
         指定した変数をMcFieldオブジェクトとして取得する。
 
@@ -190,30 +180,45 @@ class GradsIO:
          **var** : str
           変数名または、ave(変数名, dim=, dim=)。
          **fid** : int, optional
-          ファイルを複数開いている場合にファイルidを指定する。指定しない場合は先頭から探して、
+          ファイルを複数開いている場合にファイルidを指定する。指定しない場合は新しく開いたファイルから順に探して、
           指定した変数を含む最もファイルidの小さいファイルから読み込む。
         :Returns:
          **field** : McField object
         """
-        # 開かれているファイルの変数リストから探す
+        ga = self.ga
+        # 開かれているファイルの変数リストからvarを探す
         if 'ave(' in var:
             gavar = var[4:].split(',')[0]
         else:
             gavar = var
-        if fid==None:
-            for i, fvars in enumerate(self.vars):
-                if gavar in fvars:
-                    fid = i+1
-                    break
-        if fid==None:
-            raise ValueError, "Cannot find variable {0} in sill opened files".format(gavar)
+
+        if fid:
+            if fid > self.fn:
+                raise ValueError, "file id '{0}' is larger than number of opened files".format(fid)
+            if self.vars[fid-1].count(gavar) < 1:
+                raise ValueError, "Cannot find variable {0} in opened files".format(gavar)
+        else:
+            var_in_fids = [gavar in fvars for fvars in self.vars]            
+            if var_in_fids.count(True) == 0:
+                raise ValueError, "Cannot find variable '{0}' in opened files".format(gavar)
+            elif var_in_fids.count(True) > 1: 
+                print "Warnig, multiple variables '{0}' are fond in opened files".format(gavar)
+            fid = var_in_fids.index(True,-1) + 1
 
         # デフォルトファイルを変更
-        self.ga('set dfile '+str(fid))
+        ga.cmd('set dfile %d' % fid)
+
+        # 次元をGrADSに送って設定する
+        self.setdim(**kwargs)
+        self.setgradsdim()
+
+        # 有効な次元かどうか確かめる(要検討)
+        self._checkdim()
 
         # 次元を調べる
-        dh = self.ga.query('dims', Quiet=True)
-        info = self.ga.coords()
+        dh = ga.query('dims', Quiet=True)
+        info = ga.coords()
+
         ne, nt, nz, ny, nx = dh.ne, dh.nt, dh.nz, dh.ny, dh.nx
         e1, e2 = dh.ei
         t1, t2 = dh.ti
@@ -224,13 +229,13 @@ class GradsIO:
         lat  = np.asarray(info.lat, dtype=np.float32)
         lev  = np.asarray(info.lev, dtype=np.float32)
         time = np.asarray([s2d(d) for d in info.time])
-        ens  = np.asarray(info.ens)
+        ens  = np.arange(e1, e2+1)
 
         # データを取得
-        out = np.zeros((ne,nt,nz,ny,nx))
+        out = np.ma.zeros((ne,nt,nz,ny,nx))
         ## 4次元以上はgradsでは同時に扱えないのでループする
         ## 少ない次元を優先的にループ
-        
+
         if nz == max(ne, nt, nz):
             try:
                 for i, e in enumerate(range(e1,e2+1)):
@@ -269,12 +274,76 @@ class GradsIO:
                 raise GrADSError, "Syntax Error"
         out  = np.squeeze(out)
         out  = np.ma.array(out, mask=(out==info.undef))
-        self.ga.flush()
+        #       self.ga.flush()
         self.ga.setdim(dh)
 
         # McFieldオブジェクトを作成
         grid = McGrid(name=var, lon=lon, lat=lat, lev=lev, time=time, ens=ens)
         field = McField(out, name=var, grid=grid, mask=out.mask)
-
+        
         return field
 
+    def _checkdim(self):
+        u"""
+        現在の次元の設定が正しくなければ例外を送出
+        """
+        ga = self.ga
+        
+        dh = ga.query('dims', Quiet=True)
+
+        fdh = ga.query('ctlinfo', Quiet=True)
+
+        x1, x2 = dh.xi
+        if x1 > x2:
+            raise GrADSError, "requested x-dimension is invalid. "
+        if x1 < 1 or x2 > fdh.nx:                
+            raise GrADSError, "requested x-dimension is out of bounds"
+        y1, y2 = dh.yi
+        if y1 < 1 or y2 > fdh.ny:
+            raise GrADSError, "requested y-dimension is out of bounds"
+        z1, z2 = dh.zi
+        if (fdh.nz != 1) and (z1 < 1 or z2 > fdh.nz):
+            raise GrADSError, "requested z-dimension is out of bounds"
+        t1, t2 = dh.ti
+        if t1 < 1 or t2 > fdh.nt:
+            raise GrADSError, "requested t-dimension is out of bounds"
+        e1, e2 = dh.ei
+        if e1 < 1 or e2 > fdh.ne:
+            raise GrADSError, "requested e-dimension is out of bounds"
+
+class GradsDim(object):
+    def __init__(self, **kwargs):
+        self.lon  = _num2tuple(kwargs.get('lon', None))
+        self.lat  = _num2tuple(kwargs.get('lat', None))
+        self.lev  = _num2tuple(kwargs.get('lev', None))
+        self.time = _num2tuple(kwargs.get('time', None))
+        self.ens  = _num2tuple(kwargs.get('ens', None))                                
+
+    def __setattr__(self, name, value):
+        if name in ['lon', 'lat', 'lev', 'time', 'ens']:
+            self.__dict__[name] = _num2tuple(value)
+        else:
+            self.__dict__[name] = value
+
+    def __repr__(self):
+        repr = ''
+        repr += 'lon  : ' + str(self.lon) + '\n'
+        repr += 'lat  : ' + str(self.lat) + '\n'
+        repr += 'lev  : ' + str(self.lev) + '\n'
+        repr += 'time : ' + str(self.time) + '\n'
+        repr += 'ens  : ' + str(self.ens)
+
+        return repr
+
+def _num2tuple(a):
+    u"""
+    GradsDim用内部メソッド。
+    """
+    if isinstance(a, tuple) or isinstance(a, list):
+        if len(a) != 2:
+            raise ValueError, "dimension tuple must contain 2 value"
+        return a
+    elif not isinstance(a, str) and a != None:
+        return (a, a)
+    else:
+        return a
