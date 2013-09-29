@@ -51,9 +51,10 @@ class GradsIO:
     def __init__(self, Echo=False):
         ga = GaCore(Window=False, Echo=Echo)
         self.ga = ga
-        self.fn = 0   # 開いているファイル数
-        self.vars = []
-        self.fnames = []
+        self.fn = 0         # 開いているファイル数
+        self.fn_total = 0   # インスタンスが開いたファイル数の合計
+        self.vars = {}
+        self.fnames = {}
         self._first = True
         
     def open(self, fname, Quiet=True):
@@ -77,10 +78,12 @@ class GradsIO:
         ga.open(fname, ftype=ftype, Quiet=Quiet)
         
         self.fn = self.fn + 1
+        self.fn_total = self.fn_total + 1        
         ga.cmd('set dfile %d' % self.fn)
         qfile = ga.query('file')
-        self.vars.append(qfile.vars)
-        self.fnames.append(fname)
+        fid = self.fn_total
+        self.vars[fid] = qfile.vars
+        self.fnames[fid] =fname
 
         if self._first:
             coords = ga.coords()
@@ -90,14 +93,17 @@ class GradsIO:
                 lon = (coords.lon[0], coords.lon[-2])
             self.gdim = GradsDim(lon=lon,lat=lat,lev=lev,time=time,ens=ens)
             self._first = False
+    
+        return fid
             
     def close(self):
         u"""
         一番最後に開いたファイルを閉じる。
         """
         self.ga.cmd('close %d' % self.fn)
-        self.vars.pop()
-        self.fnames.pop()
+        lastfid = max(self.fnames.keys())
+        self.vars.pop(lastfid)
+        self.fnames.pop(lastfid)
         self.fn = self.fn - 1
         
     def allclose(self):
@@ -108,8 +114,8 @@ class GradsIO:
             self.ga.cmd('close %d' % fid)
         self.fn = 0
         self._first = True
-        self.vars = []
-        self.fnames = []
+        self.vars = {}
+        self.fnames = {}
         
     def command(self,command_string):
         u"""
@@ -193,20 +199,20 @@ class GradsIO:
             gavar = var
 
         if fid:
-            if fid > self.fn:
-                raise ValueError, "file id '{0}' is larger than number of opened files".format(fid)
-            if self.vars[fid-1].count(gavar) < 1:
+            if self.vars[fid].count(gavar) < 1:
                 raise ValueError, "Cannot find variable {0} in opened files".format(gavar)
         else:
-            var_in_fids = [gavar in fvars for fvars in self.vars]            
-            if var_in_fids.count(True) == 0:
+            # 現在開いている各ファイルの変数リストの辞書から、gavarを含むファイルのfidを取り出す
+            var_in_fids = [opend_fid for opend_fid, opend_vars in self.vars.items() if gavar in opend_vars]
+            if len(var_in_fids) == 0:
                 raise ValueError, "Cannot find variable '{0}' in opened files".format(gavar)
-            elif var_in_fids.count(True) > 1: 
+            elif len(var_in_fids) > 1: 
                 print "Warnig, multiple variables '{0}' are fond in opened files".format(gavar)
-            fid = var_in_fids.index(True,-1) + 1
+            fid = var_in_fids[-1]
 
         # デフォルトファイルを変更
-        ga.cmd('set dfile %d' % fid)
+        num_closed_file = self.fn_total - self.fn
+        ga.cmd('set dfile %d' % (fid - num_closed_file))
 
         # 次元をGrADSに送って設定する
         self.setdim(**kwargs)
