@@ -10,6 +10,7 @@ import pymet.tools as tools
 import ticker
 from matplotlib.font_manager import FontProperties
 import matplotlib
+import scipy.ndimage
 rcParams = matplotlib.rcParams
 
 __all__ = ['MyBasemap']
@@ -51,6 +52,7 @@ class MyBasemap(Basemap):
       xlint    経度メモリの間隔(degrees)。
       ylint    緯度メモリの間隔(degrees)。
       grid     緯線,経線を引くかどうか。デフォルトはFalse。
+      label    緯度経度のラベルをふるかどうか。デフォルトはTrue
       ======== =================================================================================
       
      **その他**
@@ -102,7 +104,7 @@ class MyBasemap(Basemap):
             slat = -90.
             elat = 90.            
         projection = keys.setdefault('projection','cyl')
-
+        label = keys.pop('label', True)
         # 地図に合わせたデフォルト値
         if projection == 'npstere':
             boundinglat = keys.setdefault('boundinglat',max(slat, 0.))
@@ -128,16 +130,25 @@ class MyBasemap(Basemap):
         if projection == 'npstere' or projection == 'lcc' or grid:
             if xlint is None: xlint=60
             if ylint is None: ylint=20
-            self.drawmeridians(np.arange(0,360,xlint),labels=[0,0,0,1],linewidth=0.5)
-            self.drawparallels(np.arange(0,90.1,ylint),labels=[1,0,0,0],linewidth=0.5)
+            if label:
+                self.drawmeridians(np.arange(0,360,xlint),labels=[1,1,1,1],linewidth=0.5)
+                self.drawparallels(np.arange(0,90.1,ylint),labels=[1,0,0,0],linewidth=0.5)
+            else:
+                self.drawmeridians(np.arange(0,360,xlint),labels=[0,0,0,0],linewidth=0.5)
+                self.drawparallels(np.arange(0,90.1,ylint),labels=[0,0,0,0],linewidth=0.5)
         else:
-            ax.xaxis.set_major_formatter(ticker.BasemapXaxisFormatter(self))   
-            ax.yaxis.set_major_formatter(ticker.BasemapYaxisFormatter(self))
+            if label:
+                ax.xaxis.set_major_formatter(ticker.BasemapXaxisFormatter(self))   
+                ax.yaxis.set_major_formatter(ticker.BasemapYaxisFormatter(self))
+            else:
+                ax.xaxis.set_major_formatter(matplotlib.ticker.NullFormatter())
+                ax.yaxis.set_major_formatter(matplotlib.ticker.NullFormatter())                   
             if xlint != None:
-                self.set_xlint(xlint,sx=slon)
+                self.set_xlint(xlint)
             if ylint != None:
-                self.set_ylint(ylint,sy=slat)
+                self.set_ylint(ylint)
             ax.tick_params(direction='out', top='off', right='off')
+            
             
     def fillcontinents(self,color='lightgray',zorder=0,**keys):
         u"""
@@ -197,6 +208,7 @@ class MyBasemap(Basemap):
           緯度
         """
         x, y = self(lon,lat)
+
         return Basemap.plot(self, x, y, *args, **kwargs)
 
     def contour(self, lon, lat, data, *args, **kwargs):
@@ -246,10 +258,11 @@ class MyBasemap(Basemap):
                 voffset = -FontProperties(size=rcParams['font.size']).get_size_in_points() - rcParams['xtick.major.pad'] - rcParams['xtick.major.size']
                 voffset = kwargs.pop('voffset', voffset)                
                 labunit = kwargs.pop('labunit', '')
-                ax.annotate('contour interval = %g %s' % (cint, labunit),
+                xlabel_fontsize = ax.xaxis.get_label().get_fontsize()                
+                ax.annotate('interval = %g %s' % (cint, labunit),
                             xy=(1, 0), xycoords='axes fraction',
                             xytext=(hoffset, voffset), textcoords='offset points',
-                            ha='right',va='top')
+                            ha='right',va='top', fontsize=xlabel_fontsize*0.9)
                 
         if np.ndim(lon)==1 or np.ndim(lat)==1:
             lon, lat = np.meshgrid(lon, lat)
@@ -257,12 +270,19 @@ class MyBasemap(Basemap):
             if np.ndim(lon)==2: lon = lon[0,:]
             if np.ndim(lat)==2: lat = lat[:,0]                
             lon, lat = np.meshgrid(lon, lat)
-
+            
         # 境界に応じてサイクリックにする
-        if self.urcrnrlon%360.==self.llcrnrlon%360. and (lon[0,-1]-lon[0,-2])>=(lon[0,0]+360.-lon[0,-1]):
+        if ((self.urcrnrlon%360.==self.llcrnrlon%360. or self.projection in ['npstere', 'spstere'])
+                and (lon[0,-1]-lon[0,-2])>=(lon[0,0]+360.-lon[0,-1])):
             lon = np.c_[lon, lon[:,0]+360.]
             lat = np.c_[lat, lat[:,0]]
-            data = np.c_[data, data[:,0]]        
+            data = np.c_[data, data[:,0]]
+
+        if kwargs.pop('zoom', False):
+            data[data.mask] = data.mean()
+            lon  = scipy.ndimage.zoom(lon, 3)
+            lat  = scipy.ndimage.zoom(lat, 3)
+            data = scipy.ndimage.zoom(data, 3)
 
         return Basemap.contour(self, lon[::skip,::skip], lat[::skip,::skip],
                                 data[::skip,::skip], *args, **kwargs)
@@ -307,7 +327,7 @@ class MyBasemap(Basemap):
         """
         skip = kwargs.pop('skip',1)
         kwargs.setdefault('latlon',True)
-        kwargs.setdefault('extend', 'both')
+        kwargs.setdefault('extend', 'both')        
         
         cint = kwargs.pop('cint', None)
         if cint != None:
@@ -319,9 +339,15 @@ class MyBasemap(Basemap):
             if np.ndim(lon)==2: lon = lon[0,:]
             if np.ndim(lat)==2: lat = lat[:,0]                
             lon, lat = np.meshgrid(lon, lat)
-
+            
+        if kwargs.pop('zoom', False):
+            lon  = scipy.ndimage.zoom(lon, 3)
+            lat  = scipy.ndimage.zoom(lat, 3)
+            data = scipy.ndimage.zoom(data, 3)
+            
         # 境界に応じてサイクリックにする
-        if self.urcrnrlon%360.==self.llcrnrlon%360. and (lon[0,-1]-lon[0,-2])>=(lon[0,0]+360.-lon[0,-1]):
+        if ((self.urcrnrlon%360.==self.llcrnrlon%360. or self.projection in ['npstere', 'spstere'])
+                and (lon[0,-1]-lon[0,-2])>=(lon[0,0]+360.-lon[0,-1])):
             lon = np.c_[lon, lon[:,0]+360.]
             lat = np.c_[lat, lat[:,0]]
             data = np.c_[data, data[:,0]]        
@@ -351,6 +377,7 @@ class MyBasemap(Basemap):
          Value           Default Description
          =============== ======= ======================================================
          skip            1       データの表示間隔。data[::skip,::skip]が使われる。
+         zoom            False   smoothingをかけるかどうか
          data_scale              基準長(dot_scale)あたりの実データの長さ。デフォルトは
                                  max(sqrt(u**2+v**2))                                   
          dot_scale       30      基準長さ(ドット,ピクセル)         
@@ -386,11 +413,12 @@ class MyBasemap(Basemap):
             lon, lat = np.meshgrid(lon, lat)
             
         # 境界に応じてサイクリックにする
-        if self.urcrnrlon%360. == self.llcrnrlon%360. and (lon[0,-1]-lon[0,-2])>=(lon[0,0]+360.-lon[0,-1]):
+        if ((self.urcrnrlon%360.==self.llcrnrlon%360. or self.projection in ['npstere', 'spstere'])
+                and (lon[0,-1]-lon[0,-2])>=(lon[0,0]+360.-lon[0,-1])):
             lon = np.c_[lon, lon[:,0]+360.]
             lat = np.c_[lat, lat[:,0]]
-            u = np.c_[u, u[:,0]]
-            v = np.c_[v, v[:,0]]
+            u = np.ma.c_[u, u[:,0]]
+            v = np.ma.c_[v, v[:,0]]
 
         # 緯度経度座標で与えられたu,vを地図座標での座標方向に合わせて回転
         kwargs.setdefault('latlon', True)
@@ -398,26 +426,34 @@ class MyBasemap(Basemap):
             u, v = self.rotate_vector(u,v,lon,lat)
             
         # スケールを決める
-        data_scale = kwargs.pop('data_scale', None)
-        dot_scale  = kwargs.pop('dot_scale', 30.)   
+        ax_width = ax.bbox.width                     # 図の横幅(dot)        
+        data_scale = kwargs.pop('data_scale', None)        
+        dot_scale  = kwargs.pop('dot_scale', ax_width/10.)
+        
         if not kwargs.has_key('scale_units'):
-            kwargs.setdefault('scale_units', 'width')
-            ax_width = ax.bbox.width                     # 図の横幅(dot)
+            kwargs.setdefault('scale_units', 'width')            
             # データの最大値を有効数字1桁で丸めてデータの基準長とする
-            if data_scale == None:
-                data_scale = tools.roundoff(np.hypot(u[::skip,::skip], v[::skip,::skip]).max(), digit=1)
+            if data_scale is None:
+                mask = (lon <= self.urcrnrlon) & (lon >= self.llcrnrlon) & (lat <= self.urcrnrlat) & (lat >= self.llcrnrlat)
+                data_scale = tools.roundoff(np.ma.hypot(u[mask], v[mask]).max(), digit=1)
             scale = data_scale * ax_width / dot_scale           # (test) dot_scale(dot)がdata_scaleになるようにする
             kwargs.setdefault('scale', scale)
 
         # 矢印の形状の設定
-        kwargs.setdefault('headwidth',15)
+        width = kwargs.setdefault('width',0.5/ax_width)    # shaft width (ax_width*<width> dot) => default 0.5pt        
+        kwargs.setdefault('headwidth',10/width/ax_width)   # headwidth   width*(<dot>/width/ax_width)
         kwargs.setdefault('headaxislength',0)
-        kwargs.setdefault('headlength',10)
-        kwargs.setdefault('linewidth',0.5)
-        kwargs.setdefault('width',0.001)
-        
+        kwargs.setdefault('headlength',5/width/ax_width)       
+        kwargs.setdefault('linewidth',0.5/width/ax_width)
+
+        # 色
+        color = kwargs.get('color', None)
+        if color and not 'facecolor' in kwargs and not 'edgecolor' in kwargs:
+            kwargs['facecolor'] = color
+            kwargs['edgecolor'] = color
+                    
         QV = Basemap.quiver(self,lon[::skip,::skip],lat[::skip,::skip],
-                            u[::skip,::skip],v[::skip,::skip],*args,**kwargs)
+                            u[::skip,::skip], v[::skip,::skip],*args, **kwargs)
 
         # quiverkeyのために基準長さを残しておく
         if data_scale!=None:
@@ -451,20 +487,14 @@ class MyBasemap(Basemap):
         :Arguments:
          **QV** :
 
-         **unit** : str, optional
-          referrence arrowの値につける単位。
-         **loc** : tuple, optional
-          referrence arrowの位置。
-
         **Keyword**
          独自キーワード
          
          =============== =========== ======================================================
          Value           Default     Description
          =============== =========== ======================================================
-         loc             (0.95,1.05)
-         data_scale     
-         unit
+         data_scale                  referrence arrowのデータ座標での長さ
+         unit                        referrence arrowにつける単位
          =============== =========== ======================================================
 
          デフォルトを独自に設定しているキーワード
@@ -476,19 +506,41 @@ class MyBasemap(Basemap):
          =============== ======= ======================================================
         """
         ax = self.ax or self._check_ax()
-        unit = kwargs.pop('unit', '')
-        loc = kwargs.pop('loc', (0.95, 1.05))
 
         # referrence arrow の実データでの長さの優先順位
         # 1. data_scaleで与える
         # 2. QVのdata_scale
         # 3. 最大値
-
         data_scale = kwargs.pop('data_scale', None)
+        xlabel_fontsize = ax.xaxis.get_label().get_fontsize()                        
         if data_scale==None:
             data_scale = getattr(QV, 'data_scale', tools.roundoff(np.sqrt(QV.U**2 + QV.V**2).max(), digit=1))
+
+        # referrence arrow の中心位置の決定        
         labelpos = kwargs.get('labelpos', 'N')
-        ax.quiverkey(QV,loc[0],loc[1],data_scale,'%g %s'%(data_scale,unit),labelpos=labelpos)
+        coordinates = kwargs.setdefault('coordinates', 'axes')
+        if coordinates == 'axes':
+            width_dot  = ax.bbox.width  # (dot)
+            height_dot = ax.bbox.height # (dot)
+            data_scale_dot = data_scale / QV.scale * width_dot # (dot)
+            if labelpos == 'N':
+                loc = kwargs.pop('loc', (1-0.5*data_scale_dot/width_dot, 1+10/height_dot))
+                kwargs.setdefault('labelsep', 10/height_dot)
+            elif labelpos == 'W':
+                loc = kwargs.pop('loc', (1-0.5*data_scale_dot/width_dot, 1+10/height_dot))
+                kwargs.setdefault('labelsep', 10/width_dot)
+
+        # fontpropeties
+        fontproperties = kwargs.pop('fontproperties', {})
+        for key in kwargs.keys():
+            if key.find('font')>0:
+                fontproperties[key[4:]] = kwargs.pop(key)
+        xlabel_fontsize = ax.xaxis.get_label().get_fontsize()
+        fontproperties.setdefault('size', xlabel_fontsize*0.9)
+        kwargs['fontproperties'] = fontproperties
+
+        unit = kwargs.pop('unit', '')
+        ax.quiverkey(QV,loc[0],loc[1],data_scale,'%g %s'%(data_scale,unit),**kwargs)
 
     def drawbox(self,lon1,lat1,lon2,lat2,**kwargs):
         u"""
