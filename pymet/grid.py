@@ -716,8 +716,10 @@ def vint(var, bottom, top, lev, zdim, punit=100.):
     #roll lat dim axis to last
     var = tools.mrollaxis(var,zdim,ndim)
     out = var[...,(lev <= bottom)&(lev >= top)] * dp / g * punit
-    out = out.sum(axis=-1)
-
+    if bottom > top:
+        out = out.sum(axis=-1)
+    else:
+        out = -out.sum(axis=-1)
     return out
 
 def vmean(var, bottom, top, lev, zdim, punit=100.):
