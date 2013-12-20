@@ -130,6 +130,8 @@ def expand(a, ndim, axis=0):
      >>> NA = np.newaxis
      >>> y = x[NA, :, NA]     
     """
+    if axis<0:
+        axis=ndim+axis
     res = np.asarray(a)
     if res.ndim != 1:
         raise ValueError, "input array must be one dimensional array"
