@@ -224,7 +224,7 @@ def s2d(datestring):
     yyyy = date[-4:]
     return datetime(int(yyyy), int(mmm), int(dd), int(hh), int(mm))
 
-def lon2txt(lon):
+def lon2txt(lon,fmt='%g'):
     u"""
     経度の値を文字列に変換する。
 
@@ -238,6 +238,8 @@ def lon2txt(lon):
     :Returns:
      **lonlab** : str
       経度のラベル。
+     **fmt** : str, optional
+      フォーマット。デフォルトは'%g'
       
     **Examples**
      >>> lon2txt(135)
@@ -247,20 +249,20 @@ def lon2txt(lon):
      >>> lon2txt(250)
      '110\N{DEGREE SIGN}W'
     """
-    fmt = '%g'
     lon = (lon+360) % 360
     if lon>180:
         lonlabstr = u'%s\N{DEGREE SIGN}W'%fmt
-        lonlab = lonlabstr%abs(lon-360)
+        lonlab = lonlabstr % abs(lon-360)
     elif lon<180 and lon != 0:
         lonlabstr = u'%s\N{DEGREE SIGN}E'%fmt
-        lonlab = lonlabstr%lon
+        lonlab = lonlabstr % lon
     else:
         lonlabstr = u'%s\N{DEGREE SIGN}'%fmt
-        lonlab = lonlabstr%lon
+        lonlab = lonlabstr % lon
+    print lonlabstr
     return lonlab
 
-def lat2txt(lat):
+def lat2txt(lat,fmt='%g'):
     u"""
     緯度の値を文字列に変換する。
 
@@ -270,7 +272,9 @@ def lat2txt(lat):
     :Argumets:
      **lon** : int
       緯度(degrees)。南緯はマイナス、北緯はプラス。
-     
+     **fmt** : str, optional
+      フォーマット。デフォルトは'%g'
+           
     :Returns:
      **lonlab** : str
       緯度のラベル。
@@ -281,7 +285,6 @@ def lat2txt(lat):
      >>> lat2txt(-30)
      '30\N{DEGREE SIGN}S'
     """
-    fmt = '%g'
     if lat<0:
         latlabstr = u'%s\N{DEGREE SIGN}S'%fmt
         latlab = latlabstr%abs(lat)
