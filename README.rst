@@ -27,7 +27,6 @@ Author Information
 -------------------
 tmiyachi 
 
-- https://bitbucket.org/tmiyachi
 - https://github.com/tmiyachi
 
  
